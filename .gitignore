@@ -1,4 +1,8 @@
-main
-shaders/fragment.spv
-shaders/vertex.spv
-SDL3.dll
+#FILE
+*.dll
+*.exe
+
+# DIRECTORY
+shaders/compiled
+oldShaders
+utils

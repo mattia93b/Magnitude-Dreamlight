@@ -16,7 +16,6 @@ Vertex::struct{
 }
 
 
-
 main::proc(){
     context.logger = log.create_console_logger();
     // Window
@@ -40,8 +39,8 @@ main::proc(){
     log.info("Support for METAL", sdl.GPUSupportsShaderFormats({.MSL}, nil));
     log.info("Support for METALLIB", sdl.GPUSupportsShaderFormats({.METALLIB}, nil));
     // Device cration with supported API
-    if sdl.GPUSupportsShaderFormats({.SPIRV}, nil) {
-        mDevice = sdl.CreateGPUDevice({.SPIRV}, true, nil);
+    if sdl.GPUSupportsShaderFormats({.SPIRV, .DXIL}, nil) {
+        mDevice = sdl.CreateGPUDevice({.SPIRV, .DXIL}, true, "direct3d12");
     }
     if mDevice == nil
     {
@@ -55,13 +54,13 @@ main::proc(){
 
     // load vertex shader
     vertexCodeSize:uint;
-    vertexCode := sdl.LoadFile("shaders/vertex.spv", &vertexCodeSize);
+    vertexCode := sdl.LoadFile("shaders/compiled/dx12/vertex.vert.dxil", &vertexCodeSize);
 
     vertexInfo := sdl.GPUShaderCreateInfo{};
     vertexInfo.code = cast(^u8)vertexCode;
     vertexInfo.code_size = vertexCodeSize;
     vertexInfo.entrypoint = "main";
-    vertexInfo.format = {.SPIRV};
+    vertexInfo.format = {.DXIL};
     vertexInfo.stage = .VERTEX;
     vertexInfo.num_samplers = 0;
     vertexInfo.num_storage_buffers = 0;
@@ -73,13 +72,13 @@ main::proc(){
 
     // load fragment shader
     fragmentCodeSize:uint;
-    fragmentCode := sdl.LoadFile("shaders/fragment.spv", &fragmentCodeSize);
+    fragmentCode := sdl.LoadFile("shaders/compiled/dx12/fragment.frag.dxil", &fragmentCodeSize);
 
     fragmentInfo := sdl.GPUShaderCreateInfo{};
     fragmentInfo.code = cast(^u8)fragmentCode;
     fragmentInfo.code_size = fragmentCodeSize;
     fragmentInfo.entrypoint = "main";
-    fragmentInfo.format = {.SPIRV};
+    fragmentInfo.format = {.DXIL};
     fragmentInfo.stage = .FRAGMENT;
     fragmentInfo.num_samplers = 0;
     fragmentInfo.num_storage_buffers = 0;
