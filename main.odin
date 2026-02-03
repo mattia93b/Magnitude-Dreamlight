@@ -41,7 +41,7 @@ main::proc(){
     log.info("Support for METALLIB", sdl.GPUSupportsShaderFormats({.METALLIB}, nil));
     // Device cration with supported API
     if sdl.GPUSupportsShaderFormats({.SPIRV}, nil) {
-        mDevice = sdl.CreateGPUDevice({.SPIRV}, false, nil);
+        mDevice = sdl.CreateGPUDevice({.SPIRV}, true, nil);
     }
     if mDevice == nil
     {
@@ -152,19 +152,21 @@ main::proc(){
         {0.5, -0.5, 0.0, 1.0, 0.0, 1.0, 1.0}     // bottom right vertex
     };
 
+    vertex_bytes := len(vertices) * size_of(Vertex);
+
     bufferInfo := sdl.GPUBufferCreateInfo{};
-    bufferInfo.size = size_of(vertices);
+    bufferInfo.size = cast(u32)vertex_bytes;
     bufferInfo.usage = {.VERTEX};
     vertexBuffer:= sdl.CreateGPUBuffer(mDevice, bufferInfo);
 
     transferInfo := sdl.GPUTransferBufferCreateInfo{};
-    transferInfo.size = size_of(vertices);
+    transferInfo.size = cast(u32)vertex_bytes;
     transferInfo.usage = .UPLOAD;
     transferBuffer := sdl.CreateGPUTransferBuffer(mDevice, transferInfo);
 
     data:^Vertex = cast(^Vertex)sdl.MapGPUTransferBuffer(mDevice, transferBuffer, false);
 
-    sdl.memcpy(data, &vertices, size_of(vertices));
+    sdl.memcpy(data, &vertices[0], cast(uint)vertex_bytes);
 
     sdl.UnmapGPUTransferBuffer(mDevice, transferBuffer);
 
@@ -178,7 +180,7 @@ main::proc(){
 
     region := sdl.GPUBufferRegion{};
     region.buffer = vertexBuffer;
-    region.size = size_of(vertices);
+    region.size = cast(u32)vertex_bytes;
     region.offset = 0;
 
     sdl.UploadToGPUBuffer(copyPass, location, region, true);

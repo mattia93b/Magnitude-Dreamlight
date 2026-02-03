@@ -1,3 +1,4 @@
 main
 shaders/fragment.spv
 shaders/vertex.spv
+SDL3.dll
