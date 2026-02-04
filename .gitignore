@@ -1,6 +1,7 @@
 #FILE
 *.dll
 *.exe
+main
 
 # DIRECTORY
 shaders/compiled

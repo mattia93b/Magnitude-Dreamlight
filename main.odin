@@ -39,8 +39,8 @@ main::proc(){
     log.info("Support for METAL", sdl.GPUSupportsShaderFormats({.MSL}, nil));
     log.info("Support for METALLIB", sdl.GPUSupportsShaderFormats({.METALLIB}, nil));
     // Device cration with supported API
-    if sdl.GPUSupportsShaderFormats({.SPIRV, .DXIL}, nil) {
-        mDevice = sdl.CreateGPUDevice({.SPIRV, .DXIL}, true, "direct3d12");
+    if sdl.GPUSupportsShaderFormats({.SPIRV, .DXIL, .MSL }, nil) {
+        mDevice = sdl.CreateGPUDevice({.SPIRV, .DXIL, .MSL}, true, nil);
     }
     if mDevice == nil
     {
