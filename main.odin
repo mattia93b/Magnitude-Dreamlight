@@ -9,7 +9,7 @@ import sdl "vendor:sdl3"
 DEFAULT_SCREEN_RES_WIDTH :: 1280;
 DEFAULT_SCREEN_RES_HEIGHT :: 720;
 // direct3d12 vulkan metal
-DEFAULT_RENDER_API :: "metal"
+DEFAULT_RENDER_API :: "vulkan"
 DEFAULT_WINDOW_TITLE :: "Magnitude Dreamlight";
 
 Vertex::struct{
@@ -17,80 +17,31 @@ Vertex::struct{
     r,g,b,a: f32,   // vec4 color
 }
 
+loadShader::proc(mDevice:^sdl.GPUDevice, path:cstring, stage:sdl.GPUShaderStage) -> ^sdl.GPUShader {
 
-main::proc(){
-    context.logger = log.create_console_logger();
-    // Window
-    mWindow: ^sdl.Window;
+    shaderCodeSize:uint;
+    shaderCode := sdl.LoadFile(path, &shaderCodeSize);
 
-    if !sdl.Init({.VIDEO}){
-        log.errorf("Unable to initialize SDL3. Error: %s", sdl.GetError());
-    }
-    log.infof("Initialize SDL3.");
+    shaderInfo := sdl.GPUShaderCreateInfo{};
+    shaderInfo.code = cast(^u8)shaderCode;
+    shaderInfo.code_size = shaderCodeSize;
+    shaderInfo.entrypoint = "main";
+    shaderInfo.format = {.SPIRV};
+    shaderInfo.stage = stage;
+    shaderInfo.num_samplers = 0;
+    shaderInfo.num_storage_buffers = 0;
+    shaderInfo.num_storage_textures = 0;
+    shaderInfo.num_uniform_buffers = 0;
+    shader := sdl.CreateGPUShader(mDevice, shaderInfo);
 
-    mWindow = sdl.CreateWindow(DEFAULT_WINDOW_TITLE, DEFAULT_SCREEN_RES_WIDTH, DEFAULT_SCREEN_RES_HEIGHT, {});
-    if mWindow == nil {
-        log.errorf("Couldn't create window: %s", sdl.GetError());
-    }
-    // Device
-    mDevice: ^sdl.GPUDevice
-    // check API
-    log.info("Support for VULKAN", sdl.GPUSupportsShaderFormats({.SPIRV}, nil));
-    log.info("Support for DXBC", sdl.GPUSupportsShaderFormats({.DXBC}, nil));
-    log.info("Support for DXIL", sdl.GPUSupportsShaderFormats({.DXIL}, nil));
-    log.info("Support for METAL", sdl.GPUSupportsShaderFormats({.MSL}, nil));
-    log.info("Support for METALLIB", sdl.GPUSupportsShaderFormats({.METALLIB}, nil));
-    log.info("Set Default Rendering API:", DEFAULT_RENDER_API);
-    // Device cration with supported API
-    if sdl.GPUSupportsShaderFormats({.SPIRV, .MSL, .DXIL}, nil) {
-        mDevice = sdl.CreateGPUDevice({.SPIRV, .MSL, .DXIL}, false, DEFAULT_RENDER_API);
-    }
-    if mDevice == nil
-    {
-        log.errorf("Couldn't create Device: %s", sdl.GetError());
-    }
+    sdl.free(shaderCode);
 
-    if sdl.ClaimWindowForGPUDevice(mDevice, mWindow){
-        log.info("correct bindings between device and window", true);
-    }
+    return shader;
+
+}
 
 
-    // load vertex shader
-    vertexCodeSize:uint;
-    vertexCode := sdl.LoadFile("shaders/compiled/vulkan/vertex.vert.spv", &vertexCodeSize);
-
-    vertexInfo := sdl.GPUShaderCreateInfo{};
-    vertexInfo.code = cast(^u8)vertexCode;
-    vertexInfo.code_size = vertexCodeSize;
-    vertexInfo.entrypoint = "main";
-    vertexInfo.format = {.DXIL};
-    vertexInfo.stage = .VERTEX;
-    vertexInfo.num_samplers = 0;
-    vertexInfo.num_storage_buffers = 0;
-    vertexInfo.num_storage_textures = 0;
-    vertexInfo.num_uniform_buffers = 0;
-    vertexShader := sdl.CreateGPUShader(mDevice, vertexInfo);
-
-    sdl.free(vertexCode);
-
-    // load fragment shader
-    fragmentCodeSize:uint;
-    fragmentCode := sdl.LoadFile("shaders/compiled/vulkan/fragment.frag.spv", &fragmentCodeSize);
-
-    fragmentInfo := sdl.GPUShaderCreateInfo{};
-    fragmentInfo.code = cast(^u8)fragmentCode;
-    fragmentInfo.code_size = fragmentCodeSize;
-    fragmentInfo.entrypoint = "main";
-    fragmentInfo.format = {.DXIL};
-    fragmentInfo.stage = .FRAGMENT;
-    fragmentInfo.num_samplers = 0;
-    fragmentInfo.num_storage_buffers = 0;
-    fragmentInfo.num_storage_textures = 0;
-    fragmentInfo.num_uniform_buffers = 0;
-    fragmentShader := sdl.CreateGPUShader(mDevice, fragmentInfo);
-
-    sdl.free(fragmentCode);
-
+getPipelineInfo::proc(mDevice:^sdl.GPUDevice, mWindow:^sdl.Window, vertexShader:^sdl.GPUShader, fragmentShader:^sdl.GPUShader) -> sdl.GPUGraphicsPipelineCreateInfo{
 
     pipelineInfo := sdl.GPUGraphicsPipelineCreateInfo{};
     //bind shaders
@@ -139,19 +90,65 @@ main::proc(){
     pipelineInfo.target_info.num_color_targets = 1;
     pipelineInfo.target_info.color_target_descriptions = &colorTargetDescriptions[0];
 
-    graphicsPipeline := sdl.CreateGPUGraphicsPipeline(mDevice, pipelineInfo);
+    return pipelineInfo;
+}
 
 
+main::proc(){
+    context.logger = log.create_console_logger();
+    // Window
+    mWindow: ^sdl.Window;
+
+    if !sdl.Init({.VIDEO}){
+        log.errorf("Unable to initialize SDL3. Error: %s", sdl.GetError());
+    }
+    log.infof("Initialize SDL3.");
+
+    mWindow = sdl.CreateWindow(DEFAULT_WINDOW_TITLE, DEFAULT_SCREEN_RES_WIDTH, DEFAULT_SCREEN_RES_HEIGHT, {});
+    if mWindow == nil {
+        log.errorf("Couldn't create window: %s", sdl.GetError());
+    }
+    // Device
+    mDevice: ^sdl.GPUDevice
+    // check API
+    log.info("Support for VULKAN", sdl.GPUSupportsShaderFormats({.SPIRV}, nil));
+    log.info("Support for DXBC", sdl.GPUSupportsShaderFormats({.DXBC}, nil));
+    log.info("Support for DXIL", sdl.GPUSupportsShaderFormats({.DXIL}, nil));
+    log.info("Support for METAL", sdl.GPUSupportsShaderFormats({.MSL}, nil));
+    log.info("Support for METALLIB", sdl.GPUSupportsShaderFormats({.METALLIB}, nil));
+    log.info("Set Default Rendering API:", DEFAULT_RENDER_API);
+    // Device cration with supported API
+    if sdl.GPUSupportsShaderFormats({.SPIRV, .MSL, .DXIL}, nil) {
+        mDevice = sdl.CreateGPUDevice({.SPIRV, .MSL, .DXIL}, false, DEFAULT_RENDER_API);
+    }
+    if mDevice == nil
+    {
+        log.errorf("Couldn't create Device: %s", sdl.GetError());
+    }
+
+    if sdl.ClaimWindowForGPUDevice(mDevice, mWindow){
+        log.info("correct bindings between device and window", true);
+    }
+
+    // load vertex shader
+    vertexShader := loadShader(mDevice, "shaders/compiled/vulkan/vertex.vert.spv", .VERTEX);
+    // load fragment shader
+    fragmentShader := loadShader(mDevice, "shaders/compiled/vulkan/fragment.frag.spv", .FRAGMENT);
+    // create pipeline Info object
+    pipelineInfo:= getPipelineInfo(mDevice,mWindow,vertexShader,fragmentShader);
+    // create Graphics Pipeline
+    graphicsPipeline:= sdl.CreateGPUGraphicsPipeline(mDevice, pipelineInfo);
     // release vertex shader
     sdl.ReleaseGPUShader(mDevice, vertexShader);
     // release fragment shader
     sdl.ReleaseGPUShader(mDevice, fragmentShader);
 
-    // Set up Vertex Buffer
+    // Vertex Buffer
     vertices:=[]Vertex{
-        {0.0, 0.5, 0.0, 1.0, 0.0, 0.0, 1.0},     // top vertex
-        {-0.5, -0.5, 0.0, 1.0, 1.0, 0.0, 1.0},   // bottom left vertex
-        {0.5, -0.5, 0.0, 1.0, 0.0, 1.0, 1.0}     // bottom right vertex
+        {-0.5, 0.5, 0.0, 1.0, 0.0, 0.0, 1.0},  // 0 top left vertex             0 ------ 1
+        {0.5, 0.5, 0.0, 1.0, 1.0, 0.0, 1.0},   // 1 top right vertex            |        |
+        {0.5, -0.5, 0.0, 1.0, 0.0, 1.0, 1.0},  // 2 bottom right vertex         |        |
+        {-0.5, -0.5, 0.0, 1.0, 1.0, 0.0, 1.0}, // 3 bottom left vertex          3 ------ 2
     };
 
     vertex_bytes := len(vertices) * size_of(Vertex);
@@ -161,14 +158,29 @@ main::proc(){
     bufferInfo.usage = {.VERTEX};
     vertexBuffer:= sdl.CreateGPUBuffer(mDevice, bufferInfo);
 
+    // Index Buffer
+    indices:= []u16{
+        0, 1, 2,
+        2, 3, 0 };
+
+    index_bytes := len(indices) * size_of(u16);
+
+    indexBufferInfo := sdl.GPUBufferCreateInfo{};
+    indexBufferInfo.size = cast(u32)index_bytes;
+    indexBufferInfo.usage = {.INDEX};
+    indexBuffer:= sdl.CreateGPUBuffer(mDevice, indexBufferInfo);
+
+    // Transfer Buffer 
     transferInfo := sdl.GPUTransferBufferCreateInfo{};
-    transferInfo.size = cast(u32)vertex_bytes;
+    transferInfo.size = cast(u32)(vertex_bytes + index_bytes);
     transferInfo.usage = .UPLOAD;
     transferBuffer := sdl.CreateGPUTransferBuffer(mDevice, transferInfo);
 
-    data:^Vertex = cast(^Vertex)sdl.MapGPUTransferBuffer(mDevice, transferBuffer, false);
-
+    data:= transmute([^]byte)sdl.MapGPUTransferBuffer(mDevice, transferBuffer, false);
+    // Vertex copy
     sdl.memcpy(data, &vertices[0], cast(uint)vertex_bytes);
+    // Index copy
+    sdl.memcpy(data[vertex_bytes:], &indices[0], cast(uint)index_bytes);
 
     sdl.UnmapGPUTransferBuffer(mDevice, transferBuffer);
 
@@ -176,23 +188,36 @@ main::proc(){
     mBuffer := sdl.AcquireGPUCommandBuffer(mDevice);
     copyPass := sdl.BeginGPUCopyPass(mBuffer);
     
-    location:= sdl.GPUTransferBufferLocation{};
-    location.transfer_buffer = transferBuffer;
-    location.offset = 0;
+    // VERTEX BUFFER UPLOAD
+    vertexLocation:= sdl.GPUTransferBufferLocation{};
+    vertexLocation.transfer_buffer = transferBuffer;
+    vertexLocation.offset = 0;
 
-    region := sdl.GPUBufferRegion{};
-    region.buffer = vertexBuffer;
-    region.size = cast(u32)vertex_bytes;
-    region.offset = 0;
+    vertexRegion := sdl.GPUBufferRegion{};
+    vertexRegion.buffer = vertexBuffer;
+    vertexRegion.size = cast(u32)vertex_bytes;
+    vertexRegion.offset = 0;
+    // Upload Vertex
+    sdl.UploadToGPUBuffer(copyPass, vertexLocation, vertexRegion, true);
 
-    sdl.UploadToGPUBuffer(copyPass, location, region, true);
+
+    // INDEX BUFFER UPLOAD
+    indexLocation:= sdl.GPUTransferBufferLocation{};
+    indexLocation.transfer_buffer = transferBuffer;
+    indexLocation.offset = cast(u32)vertex_bytes;
+    indexRegion := sdl.GPUBufferRegion{};
+    indexRegion.buffer = indexBuffer;
+    indexRegion.size = cast(u32)index_bytes;
+    indexRegion.offset = 0;
+    // Upload Index
+    sdl.UploadToGPUBuffer(copyPass, indexLocation, indexRegion, true);
+
+
 
     sdl.EndGPUCopyPass(copyPass);
     if sdl.SubmitGPUCommandBuffer(mBuffer){
         log.info("Submit buffert to GPU succesfully", true);
     }
-
-
 
 
     isRunning := true;
@@ -240,8 +265,9 @@ main::proc(){
         bufferBindings[0].offset = 0;
 
         sdl.BindGPUVertexBuffers(renderPass, 0, &bufferBindings[0], 1);
-
-        sdl.DrawGPUPrimitives(renderPass, 3, 1, 0, 0);
+        //sdl.DrawGPUPrimitives(renderPass, cast(u32)len(vertices), 1, 0, 0);
+        sdl.BindGPUIndexBuffer(renderPass, {buffer = indexBuffer}, ._16BIT)
+        sdl.DrawGPUIndexedPrimitives(renderPass, 6, 1, 0, 0, 0);
 
         // end render pass
         sdl.EndGPURenderPass(renderPass);
