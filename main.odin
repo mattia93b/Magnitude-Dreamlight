@@ -205,6 +205,7 @@ main::proc(){
     indexLocation:= sdl.GPUTransferBufferLocation{};
     indexLocation.transfer_buffer = transferBuffer;
     indexLocation.offset = cast(u32)vertex_bytes;
+    
     indexRegion := sdl.GPUBufferRegion{};
     indexRegion.buffer = indexBuffer;
     indexRegion.size = cast(u32)index_bytes;

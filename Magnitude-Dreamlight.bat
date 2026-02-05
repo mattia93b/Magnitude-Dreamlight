@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-set SHADERCROSS=utils\SDL_shadercross\shadercross.exe
+set SHADERCROSS=utils\shadercross.exe
 set SHADER_DIR=shaders
 set OUT_DIR=shaders\compiled
 
