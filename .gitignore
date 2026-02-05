@@ -1,9 +1,12 @@
 #FILE
 *.dll
 *.exe
-main
+*.dylib
+app
+app.exe
+shadercross
+shadercross.exe
 
 # DIRECTORY
 shaders/compiled
 oldShaders
-utils
