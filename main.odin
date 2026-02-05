@@ -8,6 +8,8 @@ import sdl "vendor:sdl3"
 // SCREEN RESOLUTION
 DEFAULT_SCREEN_RES_WIDTH :: 1280;
 DEFAULT_SCREEN_RES_HEIGHT :: 720;
+// direct3d12 vulkan metal
+DEFAULT_RENDER_API :: "metal"
 DEFAULT_WINDOW_TITLE :: "Magnitude Dreamlight";
 
 Vertex::struct{
@@ -38,9 +40,10 @@ main::proc(){
     log.info("Support for DXIL", sdl.GPUSupportsShaderFormats({.DXIL}, nil));
     log.info("Support for METAL", sdl.GPUSupportsShaderFormats({.MSL}, nil));
     log.info("Support for METALLIB", sdl.GPUSupportsShaderFormats({.METALLIB}, nil));
+    log.info("Set Default Rendering API:", DEFAULT_RENDER_API);
     // Device cration with supported API
-    if sdl.GPUSupportsShaderFormats({.SPIRV, .DXIL, .MSL }, nil) {
-        mDevice = sdl.CreateGPUDevice({.SPIRV, .DXIL, .MSL}, true, nil);
+    if sdl.GPUSupportsShaderFormats({.SPIRV, .MSL, .DXIL}, nil) {
+        mDevice = sdl.CreateGPUDevice({.SPIRV, .MSL, .DXIL}, false, DEFAULT_RENDER_API);
     }
     if mDevice == nil
     {
@@ -54,7 +57,7 @@ main::proc(){
 
     // load vertex shader
     vertexCodeSize:uint;
-    vertexCode := sdl.LoadFile("shaders/compiled/dx12/vertex.vert.dxil", &vertexCodeSize);
+    vertexCode := sdl.LoadFile("shaders/compiled/vulkan/vertex.vert.spv", &vertexCodeSize);
 
     vertexInfo := sdl.GPUShaderCreateInfo{};
     vertexInfo.code = cast(^u8)vertexCode;
@@ -72,7 +75,7 @@ main::proc(){
 
     // load fragment shader
     fragmentCodeSize:uint;
-    fragmentCode := sdl.LoadFile("shaders/compiled/dx12/fragment.frag.dxil", &fragmentCodeSize);
+    fragmentCode := sdl.LoadFile("shaders/compiled/vulkan/fragment.frag.spv", &fragmentCodeSize);
 
     fragmentInfo := sdl.GPUShaderCreateInfo{};
     fragmentInfo.code = cast(^u8)fragmentCode;
