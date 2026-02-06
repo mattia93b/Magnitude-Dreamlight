@@ -5,7 +5,7 @@ set SHADERCROSS=utils\shadercross.exe
 set SHADER_DIR=shaders
 set OUT_DIR=shaders\compiled
 
-set ODIN_MAIN=main.odin
+set ODIN_MAIN=.\
 set ODIN_EXE=app.exe
 
 mkdir %OUT_DIR%\dx12 2>nul
@@ -54,7 +54,7 @@ REM =============================
 REM ODIN BUILD
 REM =============================
 
-odin build %ODIN_MAIN% -out:%ODIN_EXE% -file
+odin build %ODIN_MAIN% -out:%ODIN_EXE%
 if errorlevel 1 (
     echo Odin build failed
     pause
@@ -63,7 +63,6 @@ if errorlevel 1 (
 REM 
 %ODIN_EXE%
 
-pause
 exit /b
 
 REM =====================================
