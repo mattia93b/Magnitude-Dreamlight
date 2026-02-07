@@ -15,17 +15,24 @@ struct SPIRV_Cross_Output
     float4 gl_Position : SV_Position;
 };
 
-void main_inner()
+void main_inner(float4x4 ProjectionMatrix, float4x4 ModelMatrix)
 {
-    gl_Position = float4(a_position, 1.0f);
+    gl_Position = mul(ProjectionMatrix, mul(ModelMatrix, float4(a_position, 1.0f)));
     v_color = a_color;
 }
+
+// uniforms
+cbuffer UniformBlock : register(b0, space1){
+    float4x4 ProjectionMatrix : packoffset(c0);
+    float4x4 ViewMatrix : packoffset(c4);
+    float4x4 ModelMatrix : packoffset(c8);
+};
 
 SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
 {
     a_position = stage_input.a_position;
     a_color = stage_input.a_color;
-    main_inner();
+    main_inner(ProjectionMatrix, ModelMatrix);
     SPIRV_Cross_Output stage_output;
     stage_output.gl_Position = gl_Position;
     stage_output.v_color = v_color;

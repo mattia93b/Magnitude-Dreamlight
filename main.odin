@@ -4,6 +4,8 @@ package main
 import "core:log"
 // SDL3 bindings
 import sdl "vendor:sdl3"
+// math
+import "core:math/linalg"
 
 // SCREEN RESOLUTION
 DEFAULT_SCREEN_RES_WIDTH :: 1280;
@@ -58,14 +60,29 @@ main::proc(){
     mRenderer.window = mWindow
 
     // load vertex shader
-    loadShader(&mRenderer, "shaders/compiled/vulkan/vertex.vert.spv", .VERTEX);
+    loadShader(&mRenderer, "shaders/compiled/vulkan/vertex.vert.spv", .VERTEX, 1);
     // load fragment shader
-    loadShader(&mRenderer, "shaders/compiled/vulkan/fragment.frag.spv", .FRAGMENT);
+    loadShader(&mRenderer, "shaders/compiled/vulkan/fragment.frag.spv", .FRAGMENT, 0);
     createGraphicPipeline(&mRenderer);
     // release vertex shader
     sdl.ReleaseGPUShader(mRenderer.device, mRenderer.vertexShader);
     // release fragment shader
     sdl.ReleaseGPUShader(mRenderer.device, mRenderer.fragmentShader);
+
+    win_size:[2]i32;
+
+    sdl.GetWindowSize(mWindow, &win_size.x, &win_size.y);
+
+    projMat := linalg.matrix4_perspective_f32(70, f32(win_size.x) / f32(win_size.y), 0.0001, 1000);
+
+    rotationSpeed := linalg.to_radians(f32(90));
+    rotation := f32(0.0);
+
+    UBO::struct{
+        projMat:matrix[4,4]f32,
+        viewMat:matrix[4,4]f32,
+        modelMat:matrix[4,4]f32,
+    }
 
     // Vertex Buffer
     vertices:=[]Vertex{
@@ -81,9 +98,9 @@ main::proc(){
         2, 3, 0 };
 
     vertices2:=[]Vertex{
-        {0.0, 0.7, 0.0, 1.0, 0.0, 0.0, 1.0},  
-        {-0.7, -0.7, 0.0, 1.0, 1.0, 0.0, 1.0},
-        {0.7, -0.7, 0.0, 1.0, 0.0, 1.0, 1.0},
+        {0.0, 0.7, 0.0, 1.0, 0.0, 0.0, 1.0},     // top vertex
+        {-0.7, -0.7, 0.0, 1.0, 1.0, 0.0, 1.0},   // bottom left vertex
+        {0.7, -0.7, 0.0, 1.0, 0.0, 1.0, 1.0}     // bottom right vertex
     };
 
     indices2:= []u16{
@@ -98,9 +115,15 @@ main::proc(){
 
     isRunning := true;
 
+    lastTicks := sdl.GetTicks();
+
     // GameLoop
     for isRunning {
         
+        newTicks:= sdl.GetTicks();
+        detaTime := f32(newTicks - lastTicks) / 1000;
+        lastTicks = newTicks;
+
         event: sdl.Event;
         mRenderer.buffer = sdl.AcquireGPUCommandBuffer(mRenderer.device);
 
@@ -135,6 +158,19 @@ main::proc(){
         // bind pipeline
         sdl.BindGPUGraphicsPipeline(renderPass, mRenderer.graphicsPipeline);
 
+
+        rotation += rotationSpeed * detaTime;
+
+        modelMat := linalg.matrix4_translate_f32({0, 0, -5}) * linalg.matrix4_rotate_f32(rotation, {0,1,0});
+
+        uniformBuffer := UBO{
+            projMat= projMat,
+            viewMat= modelMat,
+            modelMat= modelMat,
+        }
+
+        sdl.PushGPUVertexUniformData(mRenderer.buffer, 0, &uniformBuffer, size_of(uniformBuffer));
+
         // bind vertexBuffer
         bufferBindings :[1]sdl.GPUBufferBinding;
         bufferBindings[0].buffer = mRenderer.vertexBuffer;
@@ -143,7 +179,7 @@ main::proc(){
         sdl.BindGPUVertexBuffers(renderPass, 0, &bufferBindings[0], 1);
         //sdl.DrawGPUPrimitives(renderPass, cast(u32)len(vertices), 1, 0, 0);
         sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.indexBuffer}, ._16BIT)
-        sdl.DrawGPUIndexedPrimitives(renderPass, 6, 1, 0, 0, 0);
+        sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)len(mRenderer.allIndices), 1, 0, 0, 0);
 
         // end render pass
         sdl.EndGPURenderPass(renderPass);

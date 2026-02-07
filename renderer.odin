@@ -32,7 +32,7 @@ Renderer::struct{
 }
 
 
-loadShader::proc(mRenderer:^Renderer, path:cstring, stage:sdl.GPUShaderStage){
+loadShader::proc(mRenderer:^Renderer, path:cstring, stage:sdl.GPUShaderStage, num_uniform_buffers:u32){
 
     shaderCodeSize:uint;
     shaderCode := sdl.LoadFile(path, &shaderCodeSize);
@@ -46,7 +46,7 @@ loadShader::proc(mRenderer:^Renderer, path:cstring, stage:sdl.GPUShaderStage){
     shaderInfo.num_samplers = 0;
     shaderInfo.num_storage_buffers = 0;
     shaderInfo.num_storage_textures = 0;
-    shaderInfo.num_uniform_buffers = 0;
+    shaderInfo.num_uniform_buffers = num_uniform_buffers;
     shader := sdl.CreateGPUShader(mRenderer.device, shaderInfo);
 
     sdl.free(shaderCode);
@@ -127,15 +127,18 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
 
     for el in mRenderer.renderable{
 
-        vertex_offset := u16(len(mRenderer.allVertices))
+        vertex_offset := u16(len(mRenderer.allVertices));
+        //log.info("Length of vertex_offset: ", vertex_offset);
 
-        append(&mRenderer.allVertices, ..el.vertex)
+        append(&mRenderer.allVertices, ..el.vertex);
 
         for idx in el.index {
-            append(&mRenderer.allIndices, u16(idx) + vertex_offset)
+            append(&mRenderer.allIndices, u16(idx) + vertex_offset);
+            //log.info("index inside el.index: ", idx);
+            //log.info("index sum: ", u16(idx) + vertex_offset);
         }
-        log.info("Length of mRenderer.allVertices: ", len(mRenderer.allVertices));
-        log.info("Length of mRenderer.allIndices: ", len(mRenderer.allIndices));
+        //log.info("Length of mRenderer.allVertices: ", len(mRenderer.allVertices));
+        //log.info("Length of mRenderer.allIndices: ", len(mRenderer.allIndices));
     }
 
     vertex_bytes := len(mRenderer.allVertices) * size_of(Vertex);
