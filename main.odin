@@ -14,10 +14,6 @@ DEFAULT_SCREEN_RES_HEIGHT :: 720;
 DEFAULT_RENDER_API :: "vulkan"
 DEFAULT_WINDOW_TITLE :: "Magnitude Dreamlight";
 
-Vertex::struct{
-    x,y,z :f32,     // vec3 position
-    r,g,b,a: f32,   // vec4 color
-}
 
 main::proc(){
     context.logger = log.create_console_logger();
@@ -33,15 +29,17 @@ main::proc(){
     if mWindow == nil {
         log.errorf("Couldn't create window: %s", sdl.GetError());
     }
-    // Device
+
+    // GPU Device
     mDevice: ^sdl.GPUDevice
-    // check API
+    // Check Graphic API
     log.info("Support for VULKAN", sdl.GPUSupportsShaderFormats({.SPIRV}, nil));
     log.info("Support for DXBC", sdl.GPUSupportsShaderFormats({.DXBC}, nil));
     log.info("Support for DXIL", sdl.GPUSupportsShaderFormats({.DXIL}, nil));
     log.info("Support for METAL", sdl.GPUSupportsShaderFormats({.MSL}, nil));
     log.info("Support for METALLIB", sdl.GPUSupportsShaderFormats({.METALLIB}, nil));
     log.info("Set Default Rendering API:", DEFAULT_RENDER_API);
+    
     // Device cration with supported API
     if sdl.GPUSupportsShaderFormats({.SPIRV, .MSL, .DXIL}, nil) {
         mDevice = sdl.CreateGPUDevice({.SPIRV, .MSL, .DXIL}, false, DEFAULT_RENDER_API);
@@ -55,64 +53,30 @@ main::proc(){
         log.info("correct bindings between device and window", true);
     }
 
-    mRenderer : Renderer
-    mRenderer.device = mDevice
-    mRenderer.window = mWindow
+    // Renderer definition
+    mRenderer : Renderer = {device = mDevice, window = mWindow}
 
-    // load vertex shader
-    loadShader(&mRenderer, "shaders/compiled/vulkan/vertex.vert.spv", .VERTEX, 1);
-    // load fragment shader
-    loadShader(&mRenderer, "shaders/compiled/vulkan/fragment.frag.spv", .FRAGMENT, 0);
+    // Load vertex shader
+    loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert.spv", .VERTEX, 1);
+    // Load fragment shader
+    loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragment.frag.spv", .FRAGMENT, 0);
+    // Create Graphic Pipeline
     createGraphicPipeline(&mRenderer);
-    // release vertex shader
-    sdl.ReleaseGPUShader(mRenderer.device, mRenderer.vertexShader);
-    // release fragment shader
-    sdl.ReleaseGPUShader(mRenderer.device, mRenderer.fragmentShader);
 
-    win_size:[2]i32;
+    // Cube 1
+    cube := createColoredCube(0.0, -5.0, -10.0, 5.0, 5.0, {1.0, 0.0, 0.0, 1.0})
 
-    sdl.GetWindowSize(mWindow, &win_size.x, &win_size.y);
+    addRenderable(&mRenderer, cube)
 
-    projMat := linalg.matrix4_perspective_f32(70, f32(win_size.x) / f32(win_size.y), 0.0001, 1000);
+    // Cube 2
+    cube2 := createColoredCube(0.0, 5.0, -20.0, 5.0, 5.0, {1.0, 0.0, 0.0, 1.0})
 
-    rotationSpeed := linalg.to_radians(f32(90));
-    rotation := f32(0.0);
+    addRenderable(&mRenderer, cube2)
 
-    UBO::struct{
-        projMat:matrix[4,4]f32,
-        viewMat:matrix[4,4]f32,
-        modelMat:matrix[4,4]f32,
-    }
-
-    // Vertex Buffer
-    vertices:=[]Vertex{
-        {-0.5, 0.5, 0.0, 1.0, 0.0, 0.0, 1.0},  // 0 top left vertex             0 ------ 1
-        {0.5, 0.5, 0.0, 1.0, 1.0, 0.0, 1.0},   // 1 top right vertex            |        |
-        {0.5, -0.5, 0.0, 1.0, 0.0, 1.0, 1.0},  // 2 bottom right vertex         |        |
-        {-0.5, -0.5, 0.0, 1.0, 1.0, 0.0, 1.0}, // 3 bottom left vertex          3 ------ 2
-    };
-
-    // Index Buffer
-    indices:= []u16{
-        0, 1, 2,
-        2, 3, 0 };
-
-    vertices2:=[]Vertex{
-        {0.0, 0.7, 0.0, 1.0, 0.0, 0.0, 1.0},     // top vertex
-        {-0.7, -0.7, 0.0, 1.0, 1.0, 0.0, 1.0},   // bottom left vertex
-        {0.7, -0.7, 0.0, 1.0, 0.0, 1.0, 1.0}     // bottom right vertex
-    };
-
-    indices2:= []u16{
-        0, 1, 2,
-    };
-
-    addRenderable(&mRenderer, {vertices,indices});
-
-    addRenderable(&mRenderer, {vertices2,indices2});
-
+    // Upload renderable in buffer
     pushRenderableInBuffer(&mRenderer);
 
+    // Set isRunning true to start the loop
     isRunning := true;
 
     lastTicks := sdl.GetTicks();
@@ -124,10 +88,8 @@ main::proc(){
         detaTime := f32(newTicks - lastTicks) / 1000;
         lastTicks = newTicks;
 
-        event: sdl.Event;
-        mRenderer.buffer = sdl.AcquireGPUCommandBuffer(mRenderer.device);
-
         // Read all event loop
+        event: sdl.Event;
         for sdl.PollEvent(&event) {
 
             #partial switch event.type {
@@ -140,59 +102,9 @@ main::proc(){
                 }
             }
         }
-
-        // get the swapchain texture
-        swapChainTexture : ^sdl.GPUTexture;
-        if sdl.WaitAndAcquireGPUSwapchainTexture(mRenderer.buffer, mRenderer.window, &swapChainTexture, nil, nil){
-            //log.info("correct bindings between device and window", true);
-        }
-        // create color target
-        color : sdl.GPUColorTargetInfo;
-        color.clear_color = {255/255.0, 219/255.0, 187/255.0, 255/255.0};
-        color.load_op = .CLEAR;
-        color.store_op = .STORE;
-        color.texture = swapChainTexture;
-        // begin render pass
-        renderPass := sdl.BeginGPURenderPass(mRenderer.buffer, &color, 1, nil);
-
-        // bind pipeline
-        sdl.BindGPUGraphicsPipeline(renderPass, mRenderer.graphicsPipeline);
-
-
-        rotation += rotationSpeed * detaTime;
-
-        modelMat := linalg.matrix4_translate_f32({0, 0, -5}) * linalg.matrix4_rotate_f32(rotation, {0,1,0});
-
-        uniformBuffer := UBO{
-            projMat= projMat,
-            viewMat= modelMat,
-            modelMat= modelMat,
-        }
-
-        sdl.PushGPUVertexUniformData(mRenderer.buffer, 0, &uniformBuffer, size_of(uniformBuffer));
-
-        // bind vertexBuffer
-        bufferBindings :[1]sdl.GPUBufferBinding;
-        bufferBindings[0].buffer = mRenderer.vertexBuffer;
-        bufferBindings[0].offset = 0;
-
-        sdl.BindGPUVertexBuffers(renderPass, 0, &bufferBindings[0], 1);
-        //sdl.DrawGPUPrimitives(renderPass, cast(u32)len(vertices), 1, 0, 0);
-        sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.indexBuffer}, ._16BIT)
-        sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)len(mRenderer.allIndices), 1, 0, 0, 0);
-
-        // end render pass
-        sdl.EndGPURenderPass(renderPass);
-
-        // submit command buffer
-        if sdl.SubmitGPUCommandBuffer(mRenderer.buffer){
-            //log.info("Send buffer to GPU done correctly", true);
-        }
+        // Renderer update 
+        update(&mRenderer, detaTime);
     }
 
-    sdl.ReleaseGPUBuffer(mRenderer.device, mRenderer.vertexBuffer);
-    sdl.ReleaseGPUTransferBuffer(mRenderer.device, mRenderer.transferBuffer);
-    sdl.ReleaseGPUGraphicsPipeline(mRenderer.device, mRenderer.graphicsPipeline);
-    sdl.DestroyGPUDevice(mRenderer.device);
-    sdl.DestroyWindow(mRenderer.window);
+    cleanRenderer(&mRenderer);
 }

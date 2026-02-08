@@ -1,12 +1,15 @@
+#pragma pack_matrix(column_major)
 static float4 gl_Position;
 static float3 a_position;
 static float4 v_color;
 static float4 a_color;
+static uint modelMatrixIndex;
 
 struct SPIRV_Cross_Input
 {
     float3 a_position : TEXCOORD0;
     float4 a_color : TEXCOORD1;
+    uint modelMatrixIndex : TEXCOORD2;
 };
 
 struct SPIRV_Cross_Output
@@ -15,24 +18,32 @@ struct SPIRV_Cross_Output
     float4 gl_Position : SV_Position;
 };
 
-void main_inner(float4x4 ProjectionMatrix, float4x4 ModelMatrix)
+void main_inner(float4x4 projectionMatrix, float4x4 viewMatrix, float4x4 modelMatrix)
 {
-    gl_Position = mul(ProjectionMatrix, mul(ModelMatrix, float4(a_position, 1.0f)));
+    float4 worldPos = mul(modelMatrix, float4(a_position, 1.0f));
+    float4 viewPos  = mul(viewMatrix, worldPos);
+    gl_Position     = mul(projectionMatrix, viewPos);
     v_color = a_color;
+
+    //v_color = float4(1.0, 0.0, 0.0, 1.0);
 }
 
-// uniforms
+// Uniforms
+#define MAX_OBJECTS 100
 cbuffer UniformBlock : register(b0, space1){
     float4x4 ProjectionMatrix : packoffset(c0);
     float4x4 ViewMatrix : packoffset(c4);
-    float4x4 ModelMatrix : packoffset(c8);
+    float4x4 ModelMatrix[MAX_OBJECTS] : packoffset(c8);
 };
 
 SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
 {
     a_position = stage_input.a_position;
     a_color = stage_input.a_color;
-    main_inner(ProjectionMatrix, ModelMatrix);
+
+    uint safeIndex = min(stage_input.modelMatrixIndex, MAX_OBJECTS - 1);
+    main_inner(ProjectionMatrix, ViewMatrix, ModelMatrix[safeIndex]);
+    
     SPIRV_Cross_Output stage_output;
     stage_output.gl_Position = gl_Position;
     stage_output.v_color = v_color;

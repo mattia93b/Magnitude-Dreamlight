@@ -13,7 +13,7 @@ ODIN_MAIN="main.odin"
 ODIN_EXE="app" # Removed .exe for macOS
 
 # Create directories (-p creates them only if they don't exist, suppressing errors)
-mkdir -p "$OUT_DIR/dx12"
+mkdir -p "$OUT_DIR/direct3d12"
 mkdir -p "$OUT_DIR/vulkan"
 mkdir -p "$OUT_DIR/metal"
 
@@ -71,7 +71,7 @@ for f in "$SHADER_DIR"/*.hlsl; do
     if [ -n "$STAGE" ]; then
         # Call the compile function for each backend
         compile_shader "$f" "$NAME" "spirv" "$OUT_DIR/vulkan/$NAME.spv"
-        compile_shader "$f" "$NAME" "dxil"  "$OUT_DIR/dx12/$NAME.dxil"
+        compile_shader "$f" "$NAME" "dxil"  "$OUT_DIR/direct3d12/$NAME.dxil"
         compile_shader "$f" "$NAME" "metal" "$OUT_DIR/metal/$NAME.msl"
     else
         echo "[SKIP] $FILENAME stage not recognized"

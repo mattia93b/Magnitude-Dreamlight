@@ -8,7 +8,7 @@ set OUT_DIR=shaders\compiled
 set ODIN_MAIN=.\
 set ODIN_EXE=app.exe
 
-mkdir %OUT_DIR%\dx12 2>nul
+mkdir %OUT_DIR%\direct3d12 2>nul
 mkdir %OUT_DIR%\vulkan 2>nul
 mkdir %OUT_DIR%\metal 2>nul
 
@@ -32,7 +32,7 @@ for %%f in (%SHADER_DIR%\*.hlsl) do (
     if defined STAGE (
 
         call :compile_shader "%%f" "!NAME!" spirv "%OUT_DIR%\vulkan\!NAME!.spv"
-        call :compile_shader "%%f" "!NAME!" dxil  "%OUT_DIR%\dx12\!NAME!.dxil"
+        call :compile_shader "%%f" "!NAME!" dxil  "%OUT_DIR%\direct3d12\!NAME!.dxil"
         call :compile_shader "%%f" "!NAME!" metal "%OUT_DIR%\metal\!NAME!.msl"
 
     ) else (
