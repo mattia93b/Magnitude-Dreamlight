@@ -12,8 +12,11 @@ DEFAULT_SCREEN_RES_WIDTH :: 1280;
 DEFAULT_SCREEN_RES_HEIGHT :: 720;
 // direct3d12 vulkan metal
 DEFAULT_RENDER_API :: "vulkan"
+SHADER_EXT :: "spv"  when DEFAULT_RENDER_API == "vulkan" else 
+              "dxil" when DEFAULT_RENDER_API == "direct3d12"  else 
+              "msl"  when DEFAULT_RENDER_API == "metal"  else "bin"
+// Window Name
 DEFAULT_WINDOW_TITLE :: "Magnitude Dreamlight";
-
 
 main::proc(){
     context.logger = log.create_console_logger();
@@ -57,9 +60,9 @@ main::proc(){
     mRenderer : Renderer = {device = mDevice, window = mWindow}
 
     // Load vertex shader
-    loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert.spv", .VERTEX, 1);
+    loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 1);
     // Load fragment shader
-    loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragment.frag.spv", .FRAGMENT, 0);
+    loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragment.frag." + SHADER_EXT, .FRAGMENT, 0);
     // Create Graphic Pipeline
     createGraphicPipeline(&mRenderer);
 
@@ -88,22 +91,9 @@ main::proc(){
         detaTime := f32(newTicks - lastTicks) / 1000;
         lastTicks = newTicks;
 
-        // Read all event loop
-        event: sdl.Event;
-        for sdl.PollEvent(&event) {
 
-            #partial switch event.type {
-            case .QUIT:
-                isRunning = false;
-
-            case .KEY_DOWN:
-                if event.key.scancode == .ESCAPE {
-                    isRunning = false;
-                }
-            }
-        }
         // Renderer update 
-        update(&mRenderer, detaTime);
+        isRunning = update(&mRenderer, detaTime);
     }
 
     cleanRenderer(&mRenderer);

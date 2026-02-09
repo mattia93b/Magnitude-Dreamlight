@@ -15,11 +15,19 @@ UBO::struct #align(16){
     modelMat:[100]matrix[4,4]f32,
 }
 
+Camera::struct {
+    position : linalg.Vector3f32,
+    front : linalg.Vector3f32,
+    up : linalg.Vector3f32,
+    yaw: f32,
+    pitch: f32,
+    firstMouse: bool,
+}
+
 
 Renderer::struct{
     device: ^sdl.GPUDevice,
     window: ^sdl.Window,
-    pipelineInfo: sdl.GPUGraphicsPipelineCreateInfo,
     graphicsPipeline: ^sdl.GPUGraphicsPipeline,
     vertexShader: ^sdl.GPUShader,
     fragmentShader: ^sdl.GPUShader,
@@ -31,7 +39,8 @@ Renderer::struct{
     indexBuffer:^sdl.GPUBuffer,
     transferBuffer:^sdl.GPUTransferBuffer,
     allModelMatrix:[dynamic]matrix[4,4]f32,
-    modelViewPorjectionMatrixUniform:UBO,
+    rCamera:Camera,
+    inputHandler:mouseKeyboardInput,
 }
 
 
@@ -229,10 +238,23 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
         log.info("Submit buffert to GPU succesfully", true);
     }
 
+    // Input handler definition
+    mRenderer.inputHandler = mouseKeyboardInput{}
+    mRenderer.inputHandler.mouseDown = false;
+    mRenderer.inputHandler.first = true;
+
+    // Camera set up
+    mRenderer.rCamera.position = linalg.Vector3f32{0, 0, 20};
+    mRenderer.rCamera.front = linalg.Vector3f32{0, 0, -10};
+    mRenderer.rCamera.up = linalg.Vector3f32{0, 1, 0};
+    mRenderer.rCamera.yaw = -90.0;
+    mRenderer.rCamera.pitch = 0.0;
+    mRenderer.rCamera.firstMouse = true;
+
 }
 
 
-update::proc(mRenderer:^Renderer, deltatime:f32){
+update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
 
     mRenderer.buffer = sdl.AcquireGPUCommandBuffer(mRenderer.device);
 
@@ -254,12 +276,16 @@ update::proc(mRenderer:^Renderer, deltatime:f32){
     // bind pipeline
     sdl.BindGPUGraphicsPipeline(renderPass, mRenderer.graphicsPipeline);
 
+    // Update camera
+    updateCamera(mRenderer, &mRenderer.inputHandler, deltatime);
+    viewMat := linalg.matrix4_look_at_f32(mRenderer.rCamera.position, mRenderer.rCamera.position + mRenderer.rCamera.front, mRenderer.rCamera.up)
+
     // Get Windows size to calculate the projection Matrix
     win_size:[2]i32;
     sdl.GetWindowSize(mRenderer.window, &win_size.x, &win_size.y);
     uniformBuffer := UBO{
         projMat = linalg.matrix4_perspective_f32(70, f32(win_size.x) / f32(win_size.y), 0.1, 1000),
-        viewMat = linalg.matrix4_translate_f32({0, 0, -5}),
+        viewMat = viewMat,
     }
 
     n_to_copy := min(len(mRenderer.allModelMatrix), 100)
@@ -289,6 +315,10 @@ update::proc(mRenderer:^Renderer, deltatime:f32){
     if sdl.SubmitGPUCommandBuffer(mRenderer.buffer){
         //log.info("Send buffer to GPU done correctly", true);
     }
+
+    
+
+    return inputHandler(&mRenderer.inputHandler);
 
 }
 
