@@ -11,7 +11,7 @@ import "core:math/linalg"
 DEFAULT_SCREEN_RES_WIDTH :: 1280;
 DEFAULT_SCREEN_RES_HEIGHT :: 720;
 // direct3d12 vulkan metal
-DEFAULT_RENDER_API :: "vulkan"
+DEFAULT_RENDER_API :: "direct3d12"
 SHADER_EXT :: "spv"  when DEFAULT_RENDER_API == "vulkan" else 
               "dxil" when DEFAULT_RENDER_API == "direct3d12"  else 
               "msl"  when DEFAULT_RENDER_API == "metal"  else "bin"
@@ -28,7 +28,7 @@ main::proc(){
     }
     log.infof("Initialize SDL3.");
 
-    mWindow = sdl.CreateWindow(DEFAULT_WINDOW_TITLE, DEFAULT_SCREEN_RES_WIDTH, DEFAULT_SCREEN_RES_HEIGHT, {});
+    mWindow = sdl.CreateWindow(DEFAULT_WINDOW_TITLE + " - " + DEFAULT_RENDER_API, DEFAULT_SCREEN_RES_WIDTH, DEFAULT_SCREEN_RES_HEIGHT, {});
     if mWindow == nil {
         log.errorf("Couldn't create window: %s", sdl.GetError());
     }

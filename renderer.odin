@@ -15,6 +15,13 @@ UBO::struct #align(16){
     modelMat:[100]matrix[4,4]f32,
 }
 
+Vertex::struct{
+    position :linalg.Vector3f32,    // vec3 position
+    rgba: linalg.Vector4f32,        // vec4 color
+    modelMatrixIndex: u32,
+    normals: linalg.Vector3f32,
+}
+
 Camera::struct {
     position : linalg.Vector3f32,
     front : linalg.Vector3f32,
@@ -23,7 +30,6 @@ Camera::struct {
     pitch: f32,
     firstMouse: bool,
 }
-
 
 Renderer::struct{
     device: ^sdl.GPUDevice,
@@ -76,7 +82,7 @@ loadShader::proc(mRenderer:^Renderer, path:cstring, stage:sdl.GPUShaderStage, nu
 createGraphicPipeline::proc(mRenderer:^Renderer){
 
     pipelineInfo := sdl.GPUGraphicsPipelineCreateInfo{};
-    //bind shaders
+    // bind shaders
     pipelineInfo.vertex_shader = mRenderer.vertexShader;
     pipelineInfo.fragment_shader = mRenderer.fragmentShader;
 
@@ -91,8 +97,7 @@ createGraphicPipeline::proc(mRenderer:^Renderer){
     pipelineInfo.vertex_input_state.num_vertex_buffers = 1;
     pipelineInfo.vertex_input_state.vertex_buffer_descriptions = &vertexBufferDescriptions[0];
 
-
-    vertexAttributes :[3]sdl.GPUVertexAttribute;
+    vertexAttributes :[4]sdl.GPUVertexAttribute;
     // Position
     vertexAttributes[0].buffer_slot = 0;
     vertexAttributes[0].location = 0; // layout (location = 0) in shader
@@ -103,13 +108,19 @@ createGraphicPipeline::proc(mRenderer:^Renderer){
     vertexAttributes[1].buffer_slot = 0;
     vertexAttributes[1].location = 1; // layout (location = 1) in shader
     vertexAttributes[1].format = .FLOAT4;
-    vertexAttributes[1].offset = cast(u32)offset_of(Vertex, r); // 4th float from current buffer position OLD: size_of(f32) * 3
+    vertexAttributes[1].offset = cast(u32)offset_of(Vertex, rgba); // 4th float from current buffer position OLD: size_of(f32) * 3
 
     // ModelMatrixIndex
     vertexAttributes[2].buffer_slot = 0;
     vertexAttributes[2].location = 2; // layout (location = 2) in shader
     vertexAttributes[2].format = .UINT;
     vertexAttributes[2].offset = cast(u32)offset_of(Vertex, modelMatrixIndex); // 8th float from current buffer position OLD: size_of(f32) * 7
+
+    // ModelMatrixIndex
+    vertexAttributes[3].buffer_slot = 0;
+    vertexAttributes[3].location = 3; // layout (location = 3) in shader
+    vertexAttributes[3].format = .FLOAT3;
+    vertexAttributes[3].offset = cast(u32)offset_of(Vertex, normals); // 8th float from current buffer position OLD: size_of(f32) * 7
 
     pipelineInfo.vertex_input_state.num_vertex_attributes = 3;
     pipelineInfo.vertex_input_state.vertex_attributes = &vertexAttributes[0];
@@ -155,20 +166,16 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
 
         modelMatrixIndex := cast(u32)len(mRenderer.allModelMatrix)
         append(&mRenderer.allModelMatrix, el.modelMatrix)
-
+        // Calculate the offset before pushing new data to the VertexBuffer
         vertex_offset := u16(len(mRenderer.allVertices));
-        //append(&mRenderer.allVertices, ..el.vertex[:]);
-        for &vx in el.vertex{
-            vx.modelMatrixIndex = modelMatrixIndex;
-            //append(&mRenderer.allVertices, vx);
-        }
-
-        append(&mRenderer.allVertices, ..el.vertex[:])
-
+        // Push all vertex indices information inside the IndexBuffer of the renderer
         for idx in el.index {
             append(&mRenderer.allIndices, u16(idx) + vertex_offset);
         }
-        
+        // Push all vertex information inside a Vertex Object and store it in the VertexBuffer of the renderer
+        for numberProcessedVertex:= 0; numberProcessedVertex < len(el.vertex); numberProcessedVertex = numberProcessedVertex + 1 {
+            append(&mRenderer.allVertices, Vertex{position = el.vertex[numberProcessedVertex], rgba = el.rgba,  modelMatrixIndex = modelMatrixIndex, normals= el.normals[numberProcessedVertex]})
+        }
     }
 
     log.info("Model Matrix Index: ", mRenderer.allVertices[30]);

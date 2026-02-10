@@ -10,6 +10,7 @@ struct SPIRV_Cross_Input
     float3 a_position : TEXCOORD0;
     float4 a_color : TEXCOORD1;
     uint modelMatrixIndex : TEXCOORD2;
+    float3 a_normals : TEXCOORD3;
 };
 
 struct SPIRV_Cross_Output
