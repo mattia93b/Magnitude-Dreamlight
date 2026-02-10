@@ -116,7 +116,7 @@ createGraphicPipeline::proc(mRenderer:^Renderer){
     vertexAttributes[2].format = .UINT;
     vertexAttributes[2].offset = cast(u32)offset_of(Vertex, modelMatrixIndex); // 8th float from current buffer position OLD: size_of(f32) * 7
 
-    // ModelMatrixIndex
+    // Normals
     vertexAttributes[3].buffer_slot = 0;
     vertexAttributes[3].location = 3; // layout (location = 3) in shader
     vertexAttributes[3].format = .FLOAT3;
@@ -251,7 +251,7 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
     mRenderer.inputHandler.first = true;
 
     // Camera set up
-    mRenderer.rCamera.position = linalg.Vector3f32{0, 0, 20};
+    mRenderer.rCamera.position = linalg.Vector3f32{0, 10, 30};
     mRenderer.rCamera.front = linalg.Vector3f32{0, 0, -10};
     mRenderer.rCamera.up = linalg.Vector3f32{0, 1, 0};
     mRenderer.rCamera.yaw = -90.0;
@@ -272,8 +272,8 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     }
     // create color target
     color : sdl.GPUColorTargetInfo;
-    color.clear_color = {255/255.0, 219/255.0, 187/255.0, 255/255.0};
-    //color.clear_color = {0, 0, 0, 0};
+    //color.clear_color = {255/255.0, 219/255.0, 187/255.0, 255/255.0};
+    color.clear_color = {0, 0, 0, 0};
     color.load_op = .CLEAR;
     color.store_op = .STORE;
     color.texture = swapChainTexture;

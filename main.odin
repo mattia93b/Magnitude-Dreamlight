@@ -66,15 +66,31 @@ main::proc(){
     // Create Graphic Pipeline
     createGraphicPipeline(&mRenderer);
 
-    // Cube 1
-    cube := createColoredCube(0.0, -5.0, -10.0, 5.0, 5.0, {1.0, 0.0, 0.0, 1.0})
 
-    addRenderable(&mRenderer, cube)
+
+    box   := createColoredCube(0.0, 6.0, -10.0, 5.0, 5.0, {1.0, 0.5, 0.31, 1.0});
+    base  := createColoredCube(-16., 3.0, -10.0, 32.0, 0.5, {0.2, 0.2, 0.2, 1.0});
+	cube1 := createColoredCube(4.0, 4.0, 0.0, 3.0, 3.0, {0.8, 0.0, 0.0, 1.0});
+	cube2 := createColoredCube(0.0, 4.0, 0.0, 3.0, 3.0, {0.0, 0.8, 0.0, 1.0});
+	cube3 := createColoredCube(-4.0, 4.0, 0.0, 3.0, 3.0, {0.0, 0.0, 0.8, 1.0});
+	cube4 := createColoredCube(-8.0, 4.0, 0.0, 3.0, 3.0, {0.5, 0.5, 0.5, 1.0});
+
+    addRenderable(&mRenderer, box)
+    addRenderable(&mRenderer, base)
+    addRenderable(&mRenderer, cube1)
+    addRenderable(&mRenderer, cube2)
+    addRenderable(&mRenderer, cube3)
+    addRenderable(&mRenderer, cube4)
+
+    // Cube 1
+    //cube := createColoredCube(0.0, -5.0, -10.0, 5.0, 5.0, {1.0, 0.0, 0.0, 1.0})
+
+    //addRenderable(&mRenderer, cube)
 
     // Cube 2
-    cube2 := createColoredCube(0.0, 5.0, -20.0, 5.0, 5.0, {1.0, 0.0, 0.0, 1.0})
+    //cube2 := createColoredCube(0.0, 5.0, -20.0, 5.0, 5.0, {1.0, 0.0, 0.0, 1.0})
 
-    addRenderable(&mRenderer, cube2)
+    //addRenderable(&mRenderer, cube2)
 
     // Upload renderable in buffer
     pushRenderableInBuffer(&mRenderer);

@@ -18,7 +18,8 @@ void main_inner()
 
 SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
 {
-    v_color = stage_input.v_color;
+    float4 lightColor = float4(1.0, 1.0, 1.0, 1.0);
+    v_color = stage_input.v_color * lightColor;
     main_inner();
     SPIRV_Cross_Output stage_output;
     stage_output.FragColor = FragColor;
