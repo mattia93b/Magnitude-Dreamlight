@@ -47,6 +47,7 @@ Renderer::struct{
     allModelMatrix:[dynamic]matrix[4,4]f32,
     rCamera:Camera,
     inputHandler:mouseKeyboardInput,
+    depthTexture : ^sdl.GPUTexture,
 }
 
 
@@ -122,8 +123,16 @@ createGraphicPipeline::proc(mRenderer:^Renderer){
     vertexAttributes[3].format = .FLOAT3;
     vertexAttributes[3].offset = cast(u32)offset_of(Vertex, normals); // 8th float from current buffer position OLD: size_of(f32) * 7
 
-    pipelineInfo.vertex_input_state.num_vertex_attributes = 3;
+    pipelineInfo.vertex_input_state.num_vertex_attributes = 4;
     pipelineInfo.vertex_input_state.vertex_attributes = &vertexAttributes[0];
+    
+    // Depth
+    depthStencilState := sdl.GPUDepthStencilState{}
+    depthStencilState.enable_depth_test = true;
+    depthStencilState.enable_depth_write = true;
+    depthStencilState.compare_op = .LESS;
+
+    pipelineInfo.depth_stencil_state = depthStencilState;
 
 
     colorTargetDescriptions :[1]sdl.GPUColorTargetDescription;
@@ -139,8 +148,9 @@ createGraphicPipeline::proc(mRenderer:^Renderer){
 
     pipelineInfo.target_info.num_color_targets = 1;
     pipelineInfo.target_info.color_target_descriptions = &colorTargetDescriptions[0];
-
-    pipelineInfo.depth_stencil_state.enable_depth_test = true
+    pipelineInfo.target_info.has_depth_stencil_target = true;
+    pipelineInfo.target_info.depth_stencil_format = .D24_UNORM;
+    
     pipelineInfo.rasterizer_state.cull_mode = .NONE
     pipelineInfo.rasterizer_state.fill_mode = .FILL
     // createGraphicPipeline
@@ -245,6 +255,20 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
         log.info("Submit buffert to GPU succesfully", true);
     }
 
+    // Define depth texture
+    win_size:[2]i32;
+    sdl.GetWindowSize(mRenderer.window, &win_size.x, &win_size.y);
+    depthTextureInfo := sdl.GPUTextureCreateInfo{};
+    depthTextureInfo.format = .D24_UNORM;
+    depthTextureInfo.usage = {.DEPTH_STENCIL_TARGET};
+    depthTextureInfo.width = u32(win_size.x);
+    depthTextureInfo.height = u32(win_size.y);
+    depthTextureInfo.layer_count_or_depth = 1;
+    depthTextureInfo.num_levels = 1;
+
+    mRenderer.depthTexture = sdl.CreateGPUTexture(mRenderer.device, depthTextureInfo);
+
+
     // Input handler definition
     mRenderer.inputHandler = mouseKeyboardInput{}
     mRenderer.inputHandler.mouseDown = false;
@@ -277,8 +301,15 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     color.load_op = .CLEAR;
     color.store_op = .STORE;
     color.texture = swapChainTexture;
+    // Depth
+    depthTargetInfo := sdl.GPUDepthStencilTargetInfo{};
+    depthTargetInfo.texture = mRenderer.depthTexture;
+    depthTargetInfo.load_op = .CLEAR;
+    depthTargetInfo.clear_depth = 1;
+    depthTargetInfo.store_op = .DONT_CARE;
+
     // begin render pass
-    renderPass := sdl.BeginGPURenderPass(mRenderer.buffer, &color, 1, nil);
+    renderPass := sdl.BeginGPURenderPass(mRenderer.buffer, &color, 1, &depthTargetInfo);
 
     // bind pipeline
     sdl.BindGPUGraphicsPipeline(renderPass, mRenderer.graphicsPipeline);

@@ -18,8 +18,8 @@ void main_inner()
 
 SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
 {
-    float ambientStrenght = 0.1;
-    float4 lightColor = float4(1.0, 1.0, 1.0, 1.0) * ambientStrenght;
+    float ambientStrenght = 0.5;
+    float4 lightColor = float4(float3(1.0, 1.0, 1.0) * ambientStrenght, 1.0);
     v_color = stage_input.v_color * lightColor;
     main_inner();
     SPIRV_Cross_Output stage_output;
