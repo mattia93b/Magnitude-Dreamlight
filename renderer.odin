@@ -15,6 +15,12 @@ UBO::struct #align(16){
     modelMat:[100]matrix[4,4]f32,
 }
 
+LightInfo::struct #align(16){
+    lightPosition:  linalg.Vector4f32,
+    lightColor:     linalg.Vector4f32, 
+    lightIntensity: linalg.Vector4f32, 
+}
+
 Vertex::struct{
     position :linalg.Vector3f32,    // vec3 position
     rgba: linalg.Vector4f32,        // vec4 color
@@ -335,6 +341,14 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     //log.info("UNIFORM Model Matrix: ", uniformBuffer.modelMat[:]);
 
     sdl.PushGPUVertexUniformData(mRenderer.buffer, 0, &uniformBuffer, size_of(uniformBuffer));
+
+    lightInfo := LightInfo{
+        lightPosition = {0.0, 15.0, 10.0, 0.0},
+        lightColor = {1.0, 1.0, 1.0, 1.0},
+        lightIntensity = {1.0, 1.0, 1.0, 1.0},
+    }
+
+    sdl.PushGPUVertexUniformData(mRenderer.buffer, 1, &lightInfo, size_of(lightInfo));
 
     // bind vertexBuffer
     bufferBindings :[1]sdl.GPUBufferBinding;

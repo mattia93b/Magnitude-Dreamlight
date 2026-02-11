@@ -66,7 +66,7 @@ main::proc(){
     mRenderer : Renderer = {device = mDevice, window = mWindow}
 
     // Load vertex shader
-    loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 1);
+    loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 2);
     // Load fragment shader
     loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragment.frag." + SHADER_EXT, .FRAGMENT, 0);
     // Create Graphic Pipeline

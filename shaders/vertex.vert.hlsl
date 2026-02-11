@@ -16,6 +16,9 @@ struct SPIRV_Cross_Input
 struct SPIRV_Cross_Output
 {
     float4 v_color : TEXCOORD0;
+    float3 v_position : TEXCOORD1;
+    float3 v_normals : TEXCOORD2;
+    float4 l_position :TEXCOORD3;
     float4 gl_Position : SV_Position;
 };
 
@@ -37,6 +40,13 @@ cbuffer UniformBlock : register(b0, space1){
     float4x4 ModelMatrix[MAX_OBJECTS] : packoffset(c8);
 };
 
+cbuffer lightInfo : register(b1, space1){
+    float4 lightPosition :  packoffset(c0);
+    float4 lightColor :     packoffset(c1);
+    float4 lightIntensity : packoffset(c2);
+};
+
+// MAIN
 SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
 {
     a_position = stage_input.a_position;
@@ -47,6 +57,9 @@ SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
     
     SPIRV_Cross_Output stage_output;
     stage_output.gl_Position = gl_Position;
+    stage_output.v_normals = stage_input.a_normals;
+    stage_output.v_position = mul(ModelMatrix[safeIndex], float4(stage_input.a_position, 1.0)).xyz;
     stage_output.v_color = v_color;
+    stage_output.l_position = lightPosition;
     return stage_output;
 }
