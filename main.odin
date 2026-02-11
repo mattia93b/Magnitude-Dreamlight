@@ -11,7 +11,10 @@ import "core:math/linalg"
 DEFAULT_SCREEN_RES_WIDTH :: 1280;
 DEFAULT_SCREEN_RES_HEIGHT :: 720;
 // direct3d12 vulkan metal
-DEFAULT_RENDER_API :: "direct3d12"
+//DEFAULT_RENDER_API :: "direct3d12"
+DEFAULT_RENDER_API :: "direct3d12" when ODIN_OS == .Windows else 
+                      "metal"      when ODIN_OS == .Darwin  else 
+                      "vulkan"
 SHADER_EXT :: "spv"  when DEFAULT_RENDER_API == "vulkan" else 
               "dxil" when DEFAULT_RENDER_API == "direct3d12"  else 
               "msl"  when DEFAULT_RENDER_API == "metal"  else "bin"
@@ -36,12 +39,15 @@ main::proc(){
     // GPU Device
     mDevice: ^sdl.GPUDevice
     // Check Graphic API
-    log.info("Support for VULKAN", sdl.GPUSupportsShaderFormats({.SPIRV}, nil));
-    log.info("Support for DXBC", sdl.GPUSupportsShaderFormats({.DXBC}, nil));
-    log.info("Support for DXIL", sdl.GPUSupportsShaderFormats({.DXIL}, nil));
-    log.info("Support for METAL", sdl.GPUSupportsShaderFormats({.MSL}, nil));
-    log.info("Support for METALLIB", sdl.GPUSupportsShaderFormats({.METALLIB}, nil));
-    log.info("Set Default Rendering API:", DEFAULT_RENDER_API);
+    log.info("Operating System:", ODIN_OS);
+    log.info("Default Rendering API:", DEFAULT_RENDER_API);
+    log.info("Shader Extension:", SHADER_EXT);
+    //log.info("Support for VULKAN", sdl.GPUSupportsShaderFormats({.SPIRV}, nil));
+    //log.info("Support for DXBC", sdl.GPUSupportsShaderFormats({.DXBC}, nil));
+    //log.info("Support for DXIL", sdl.GPUSupportsShaderFormats({.DXIL}, nil));
+    //log.info("Support for METAL", sdl.GPUSupportsShaderFormats({.MSL}, nil));
+    //log.info("Support for METALLIB", sdl.GPUSupportsShaderFormats({.METALLIB}, nil));
+    //log.info("Set Default Rendering API:", DEFAULT_RENDER_API);
     
     // Device cration with supported API
     if sdl.GPUSupportsShaderFormats({.SPIRV, .MSL, .DXIL}, nil) {

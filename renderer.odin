@@ -156,7 +156,7 @@ createGraphicPipeline::proc(mRenderer:^Renderer){
 
 addRenderable::proc(mRenderer:^Renderer, renderable:Renderable){
     append(&mRenderer.renderable, renderable)
-    log.info("Length of mRenderer.renderable: ", len(mRenderer.renderable));
+    //log.info("Length of mRenderer.renderable: ", len(mRenderer.renderable));
 }
 
 
@@ -178,8 +178,8 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
         }
     }
 
-    log.info("Model Matrix Index: ", mRenderer.allVertices[30]);
-    log.info("Model Matrix: ", mRenderer.allModelMatrix[:]);
+    //log.info("Model Matrix Index: ", mRenderer.allVertices[30]);
+    //log.info("Model Matrix: ", mRenderer.allModelMatrix[:]);
 
     vertex_bytes := len(mRenderer.allVertices) * size_of(Vertex);
 

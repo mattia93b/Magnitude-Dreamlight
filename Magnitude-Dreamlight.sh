@@ -9,7 +9,7 @@ export DYLD_LIBRARY_PATH="$(pwd)/utils:$DYLD_LIBRARY_PATH"
 SHADER_DIR="shaders"
 OUT_DIR="shaders/compiled"
 
-ODIN_MAIN="main.odin"
+ODIN_MAIN="./"
 ODIN_EXE="app" # Removed .exe for macOS
 
 # Create directories (-p creates them only if they don't exist, suppressing errors)
@@ -92,7 +92,7 @@ echo "ODIN BUILD"
 echo "============================="
 
 # Build Odin project
-odin build "$ODIN_MAIN" -out:"$ODIN_EXE" -file
+odin build "$ODIN_MAIN" -out:"$ODIN_EXE"
 
 if [ $? -ne 0 ]; then
     echo "Odin build failed"
