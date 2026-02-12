@@ -91,5 +91,11 @@ updateCamera :: proc(mRenderer: ^Renderer, state: ^mouseKeyboardInput, dt: f32){
     if state.keys[.E] do cam.position += cam.up * speed;
     if state.keys[.Q] do cam.position -= cam.up * speed;
     
+    if state.keys[.DOWN] do mRenderer.lightInfo.lightPosition.z += speed;
+    if state.keys[.UP] do mRenderer.lightInfo.lightPosition.z -= speed;
+    if state.keys[.RIGHT] do mRenderer.lightInfo.lightPosition.x += speed;
+    if state.keys[.LEFT] do mRenderer.lightInfo.lightPosition.x -= speed;
+    if state.keys[.PAGEUP] do mRenderer.lightInfo.lightPosition.y += speed;
+    if state.keys[.PAGEDOWN] do mRenderer.lightInfo.lightPosition.y -= speed;
 
 }

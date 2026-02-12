@@ -66,7 +66,7 @@ main::proc(){
     mRenderer : Renderer = {device = mDevice, window = mWindow}
 
     // Load vertex shader
-    loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 2);
+    loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 3);
     // Load fragment shader
     loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragment.frag." + SHADER_EXT, .FRAGMENT, 0);
     // Create Graphic Pipeline
@@ -81,12 +81,16 @@ main::proc(){
 	cube3 := createColoredCube(-4.0, 4.0, 0.0, 3.0, 3.0, {0.0, 0.0, 0.8, 1.0});
 	cube4 := createColoredCube(-8.0, 4.0, 0.0, 3.0, 3.0, {0.5, 0.5, 0.5, 1.0});
 
-    addRenderable(&mRenderer, box)
-    addRenderable(&mRenderer, base)
-    addRenderable(&mRenderer, cube1)
-    addRenderable(&mRenderer, cube2)
-    addRenderable(&mRenderer, cube3)
-    addRenderable(&mRenderer, cube4)
+    addRenderable(&mRenderer, box);
+    addRenderable(&mRenderer, base);
+    addRenderable(&mRenderer, cube1);
+    addRenderable(&mRenderer, cube2);
+    addRenderable(&mRenderer, cube3);
+    addRenderable(&mRenderer, cube4);
+
+    sphere1 := createColoredSphere(-8.0, 10.0, 0.0, 2.0, 25.0, 25.0 ,{0.5, 0.5, 0.5, 1.0});
+
+    addRenderable(&mRenderer, sphere1);
 
     // Cube 1
     //cube := createColoredCube(0.0, -5.0, -10.0, 5.0, 5.0, {1.0, 0.0, 0.0, 1.0})

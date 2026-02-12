@@ -54,6 +54,7 @@ Renderer::struct{
     rCamera:Camera,
     inputHandler:mouseKeyboardInput,
     depthTexture : ^sdl.GPUTexture,
+    lightInfo : LightInfo,
 }
 
 
@@ -288,6 +289,11 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
     mRenderer.rCamera.pitch = 0.0;
     mRenderer.rCamera.firstMouse = true;
 
+    // Light set up
+
+    mRenderer.lightInfo.lightPosition = {0.0, 15.0, 10.0, 0.0};
+    mRenderer.lightInfo.lightColor = {1.0, 1.0, 1.0, 1.0};
+    mRenderer.lightInfo.lightIntensity = {1.0, 1.0, 1.0, 1.0};
 }
 
 
@@ -341,14 +347,15 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     //log.info("UNIFORM Model Matrix: ", uniformBuffer.modelMat[:]);
 
     sdl.PushGPUVertexUniformData(mRenderer.buffer, 0, &uniformBuffer, size_of(uniformBuffer));
+    
+    // Light Uniform 
 
-    lightInfo := LightInfo{
-        lightPosition = {0.0, 15.0, 10.0, 0.0},
-        lightColor = {1.0, 1.0, 1.0, 1.0},
-        lightIntensity = {1.0, 1.0, 1.0, 1.0},
-    }
+    sdl.PushGPUVertexUniformData(mRenderer.buffer, 1, &mRenderer.lightInfo, size_of(LightInfo));
 
-    sdl.PushGPUVertexUniformData(mRenderer.buffer, 1, &lightInfo, size_of(lightInfo));
+    // Camera Uniform
+    camera:= linalg.Vector4f32{mRenderer.rCamera.position.x, mRenderer.rCamera.position.y, mRenderer.rCamera.position.z, 0.0};
+
+    sdl.PushGPUVertexUniformData(mRenderer.buffer, 2, &camera, size_of(camera));
 
     // bind vertexBuffer
     bufferBindings :[1]sdl.GPUBufferBinding;

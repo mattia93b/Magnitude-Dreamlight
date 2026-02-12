@@ -111,7 +111,7 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, color:[4]f32
 }
 
 
-createColoredSphere::proc(radius:f64, stackCount:int, sectorCount:int){
+createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, color:[4]f32)  -> Renderable {
 
     sphere := Renderable{};
 
@@ -119,7 +119,7 @@ createColoredSphere::proc(radius:f64, stackCount:int, sectorCount:int){
 
     x, y, z, xy:f64;                              // vertex position
     nx, ny, nz : f64; 
-    lengthInv :f64= 1.0 / radius;    // normal
+    lengthInv :f64= 1.0 / radius;                 // normal
     s, t:f32;                                     // texCoord
 
     sectorStep :f64= 2 * PI / cast(f64)sectorCount;
@@ -171,8 +171,7 @@ createColoredSphere::proc(radius:f64, stackCount:int, sectorCount:int){
         k2 = k1 + sectorCount + 1;      // beginning of next stack
 
         for j :int= 0; j < sectorCount; j=j+1 {
-            k1=k1+1;
-            k2=k2+1;
+           
             // 2 triangles per sector excluding 1st and last stacks
             if (i != 0)
             {
@@ -187,11 +186,15 @@ createColoredSphere::proc(radius:f64, stackCount:int, sectorCount:int){
                 append(&sphere.index ,cast(u16)(k2)); // k1+1---k2---k2+1
                 append(&sphere.index, cast(u16)(k2 + 1)); // k1+1---k2---k2+1
             }
+            // increment at the end of operation
+            k1=k1+1;
+            k2=k2+1;
         }
     }
 
 
     i, j:int;
+    j = 0;
     count :int= len(verticesV);
     for i = 0; i < count - 1; i = i + 3 {
         j = j + 2;
@@ -206,6 +209,14 @@ createColoredSphere::proc(radius:f64, stackCount:int, sectorCount:int){
         //interleavedVertices.push_back(texCoords[j]);
         //interleavedVertices.push_back(texCoords[j + 1]);
     }
+
+    // COLOR
+    sphere.rgba = color;
+
+    // MODEL MATRIX
+    sphere.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos});
+
+    return sphere;
 
 }
 

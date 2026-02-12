@@ -7,6 +7,7 @@ struct SPIRV_Cross_Input
     float3 v_position : TEXCOORD1;
     float3 v_normals : TEXCOORD2;
     float4 l_position : TEXCOORD3;
+    float4 cameraPosition : TEXCOORD4;
 };
 
 struct SPIRV_Cross_Output
@@ -28,7 +29,14 @@ SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
     float3 lightDir = normalize(lightPos.xyz - stage_input.v_position);
     float diff = max(dot(norm, lightDir), 0.0);
     float3 diffuse = diff * lightColor.xyz;
-    float3 result = (ambient + diffuse) * stage_input.v_color.xyz;
+    //float3 result = (ambient + diffuse) * stage_input.v_color.xyz;
+    // Specular
+    float specularStrength = 0.5;
+    float3 viewDir = normalize(stage_input.cameraPosition.xyz - stage_input.v_position);
+    float3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    float3 specular = specularStrength * spec * lightColor.xyz;
+    float3 result = (ambient + diffuse + specular) * stage_input.v_color.xyz;
 
     SPIRV_Cross_Output stage_output;
     stage_output.FragColor = float4(result, 1.0);
