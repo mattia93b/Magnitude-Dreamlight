@@ -66,14 +66,21 @@ main::proc(){
     mRenderer : Renderer = {device = mDevice, window = mWindow}
 
     // Load vertex shader
-    loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 3);
+    vertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 3);
     // Load fragment shader
-    loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragment.frag." + SHADER_EXT, .FRAGMENT, 0);
+    fragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragment.frag." + SHADER_EXT, .FRAGMENT, 0);
+
+    // Load Light vertex shader
+    lightVertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.vert." + SHADER_EXT, .VERTEX, 3);
+    // Load Light fragment shader
+    lightFragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.frag." + SHADER_EXT, .FRAGMENT, 0);
+
     // Create Graphic Pipeline
-    createGraphicPipeline(&mRenderer);
+    createGraphicPipeline(&mRenderer, vertexShader, fragmentShader);
+    // Create Light Graphic Pipeline
+    createGraphicPipeline(&mRenderer, lightVertexShader, lightFragmentShader);
 
-
-
+    // Scene
     box   := createColoredCube(0.0, 6.0, -10.0, 5.0, 5.0, {1.0, 0.5, 0.31, 1.0});
     base  := createColoredCube(-16., 3.0, -10.0, 32.0, 0.5, {0.2, 0.2, 0.2, 1.0});
 	cube1 := createColoredCube(4.0, 4.0, 0.0, 3.0, 3.0, {0.8, 0.0, 0.0, 1.0});
@@ -101,6 +108,8 @@ main::proc(){
     //cube2 := createColoredCube(0.0, 5.0, -20.0, 5.0, 5.0, {1.0, 0.0, 0.0, 1.0})
 
     //addRenderable(&mRenderer, cube2)
+
+    addLight(&mRenderer, {0.0, 15.0, 10.0});
 
     // Upload renderable in buffer
     pushRenderableInBuffer(&mRenderer);
