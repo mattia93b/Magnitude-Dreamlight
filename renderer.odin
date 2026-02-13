@@ -346,7 +346,7 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
 
     // Update camera
     updateCamera(mRenderer, &mRenderer.inputHandler, deltatime);
-    viewMat := linalg.matrix4_look_at_f32(mRenderer.rCamera.position, mRenderer.rCamera.position + mRenderer.rCamera.front, mRenderer.rCamera.up)
+    viewMat := linalg.matrix4_look_at_f32(mRenderer.rCamera.position, mRenderer.rCamera.position + mRenderer.rCamera.front, mRenderer.rCamera.up);
 
     // Update Light position
 
@@ -358,10 +358,10 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
         viewMat = viewMat,
     }
 
-    n_to_copy := min(len(mRenderer.allModelMatrix), 100)
+    n_to_copy := min(len(mRenderer.allModelMatrix), 100);
     
     if n_to_copy > 0 {
-        copy(uniformBuffer.modelMat[:n_to_copy], mRenderer.allModelMatrix[:n_to_copy])
+        copy(uniformBuffer.modelMat[:n_to_copy], mRenderer.allModelMatrix[:n_to_copy]);
     }
 
     //log.info("UNIFORM Model Matrix: ", uniformBuffer.modelMat[:]);
@@ -387,17 +387,17 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
 
     sdl.BindGPUVertexBuffers(renderPass, 0, &bufferBindings[0], 1);
     //sdl.DrawGPUPrimitives(renderPass, cast(u32)len(vertices), 1, 0, 0);
-    sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.indexBuffer}, ._16BIT)
+    sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.indexBuffer}, ._16BIT);
     sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)len(mRenderer.allIndices[mRenderer.lightNumberOfIndexInBuffer:]), 1, cast(u32)mRenderer.lightNumberOfIndexInBuffer, 0, 0);
 
     // Light 
     // Bind pipeline
     sdl.BindGPUGraphicsPipeline(renderPass, mRenderer.graphicsPipeline[1]);
-    uniformBuffer.modelMat[0] = linalg.matrix4_translate_f32(mRenderer.lightInfo.lightPosition.xyz)
+    uniformBuffer.modelMat[0] = linalg.matrix4_translate_f32(mRenderer.lightInfo.lightPosition.xyz);
     // Uniform 
     sdl.PushGPUVertexUniformData(mRenderer.buffer, 0, &uniformBuffer, size_of(uniformBuffer));
     sdl.BindGPUVertexBuffers(renderPass, 0, &bufferBindings[0], 1);
-    sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.indexBuffer}, ._16BIT)
+    sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.indexBuffer}, ._16BIT);
     sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)mRenderer.lightNumberOfIndexInBuffer, 1, 0, 0, 0);
 
     // end render pass
