@@ -11,6 +11,7 @@ struct SPIRV_Cross_Input
     float4 a_color : TEXCOORD1;
     uint modelMatrixIndex : TEXCOORD2;
     float3 a_normals : TEXCOORD3;
+    uint materialIndex : TEXCOORD4; 
 };
 
 struct SPIRV_Cross_Output
@@ -20,6 +21,7 @@ struct SPIRV_Cross_Output
     float3 v_normals : TEXCOORD2;
     float4 l_position :TEXCOORD3;
     float4 cameraPosition : TEXCOORD4;
+    uint materialIndex:TEXCOORD5; 
     float4 gl_Position : SV_Position;
 };
 
@@ -67,5 +69,6 @@ SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
     stage_output.v_color = v_color;
     stage_output.l_position = lightPosition;
     stage_output.cameraPosition = cameraPosition;
+    stage_output.materialIndex = stage_input.materialIndex;
     return stage_output;
 }

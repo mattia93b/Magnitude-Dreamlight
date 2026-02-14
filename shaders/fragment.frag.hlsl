@@ -8,6 +8,7 @@ struct SPIRV_Cross_Input
     float3 v_normals : TEXCOORD2;
     float4 l_position : TEXCOORD3;
     float4 cameraPosition : TEXCOORD4;
+    uint materialIndex : TEXCOORD5;
 };
 
 struct SPIRV_Cross_Output
