@@ -3,25 +3,26 @@ static float4 gl_Position;
 static float3 a_position;
 static float4 v_color;
 static float4 a_color;
-static uint modelMatrixIndex;
+static float modelMatrixIndex;
+static float materialIndex;
 
 struct SPIRV_Cross_Input
 {
     float3 a_position : TEXCOORD0;
     float4 a_color : TEXCOORD1;
-    uint modelMatrixIndex : TEXCOORD2;
+    float modelMatrixIndex : TEXCOORD2;
     float3 a_normals : TEXCOORD3;
-    uint materialIndex : TEXCOORD4; 
+    float materialIndex : TEXCOORD4; 
 };
 
 struct SPIRV_Cross_Output
 {
-    float4 v_color : TEXCOORD0;
+    //float4 v_color : TEXCOORD0;
     float3 v_position : TEXCOORD1;
     float3 v_normals : TEXCOORD2;
     float4 l_position :TEXCOORD3;
     float4 cameraPosition : TEXCOORD4;
-    uint materialIndex:TEXCOORD5; 
+    float materialIndex:TEXCOORD5; 
     float4 gl_Position : SV_Position;
 };
 
@@ -62,11 +63,14 @@ SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
     uint safeIndex = min(stage_input.modelMatrixIndex, MAX_OBJECTS - 1);
     main_inner(ProjectionMatrix, ViewMatrix, ModelMatrix[safeIndex]);
     
+    float3x3 normalMatrix = (float3x3)ModelMatrix[safeIndex];
+
     SPIRV_Cross_Output stage_output;
     stage_output.gl_Position = gl_Position;
-    stage_output.v_normals = stage_input.a_normals;
+    stage_output.v_normals = normalize(mul(normalMatrix, stage_input.a_normals));
+    //stage_output.v_normals = stage_input.a_normals;
     stage_output.v_position = mul(ModelMatrix[safeIndex], float4(stage_input.a_position, 1.0)).xyz;
-    stage_output.v_color = v_color;
+    //stage_output.v_color = v_color;
     stage_output.l_position = lightPosition;
     stage_output.cameraPosition = cameraPosition;
     stage_output.materialIndex = stage_input.materialIndex;

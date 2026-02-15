@@ -219,7 +219,7 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
     // MODEL MATRIX
     sphere.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos});
 
-    sphere.material = obsidian();
+    sphere.material = gold();
 
     return sphere;
 

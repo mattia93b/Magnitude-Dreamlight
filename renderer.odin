@@ -21,12 +21,13 @@ LightInfo::struct #align(16){
     lightIntensity: linalg.Vector4f32, 
 }
 
-Vertex::struct{
+Vertex::struct #align(16){
     position :linalg.Vector3f32,    // vec3 position
     rgba: linalg.Vector4f32,        // vec4 color
-    modelMatrixIndex: u32,
+    modelMatrixIndex: f32,
     normals: linalg.Vector3f32,
-    materialIndex: u32,
+    materialIndex: f32,
+    _padding:[3]f32,
 }
 
 Camera::struct {
@@ -61,7 +62,7 @@ Renderer::struct{
 }
 
 
-loadShader::proc(mRenderer:^Renderer, path:cstring, stage:sdl.GPUShaderStage, num_uniform_buffers:u32) -> ^sdl.GPUShader{
+loadShader::proc(mRenderer:^Renderer, path:cstring, stage:sdl.GPUShaderStage, num_uniform_buffers:u32, num_storage_buffers:u32) -> ^sdl.GPUShader{
 
     shaderCodeSize:uint;
     shaderCode := sdl.LoadFile(path, &shaderCodeSize);
@@ -73,7 +74,7 @@ loadShader::proc(mRenderer:^Renderer, path:cstring, stage:sdl.GPUShaderStage, nu
     shaderInfo.format = {.SPIRV, .DXIL, .MSL};
     shaderInfo.stage = stage;
     shaderInfo.num_samplers = 0;
-    shaderInfo.num_storage_buffers = 0;
+    shaderInfo.num_storage_buffers = num_storage_buffers;
     shaderInfo.num_storage_textures = 0;
     shaderInfo.num_uniform_buffers = num_uniform_buffers;
     shader := sdl.CreateGPUShader(mRenderer.device, shaderInfo);
@@ -119,7 +120,7 @@ createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fr
     // ModelMatrixIndex
     vertexAttributes[2].buffer_slot = 0;
     vertexAttributes[2].location = 2; // layout (location = 2) in shader
-    vertexAttributes[2].format = .UINT;
+    vertexAttributes[2].format = .FLOAT;
     vertexAttributes[2].offset = cast(u32)offset_of(Vertex, modelMatrixIndex); // 8th float from current buffer position OLD: size_of(f32) * 7
 
     // Normals
@@ -131,7 +132,7 @@ createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fr
     // Material Index
     vertexAttributes[4].buffer_slot = 0;
     vertexAttributes[4].location = 4; // layout (location = 4) in shader
-    vertexAttributes[4].format = .UINT;
+    vertexAttributes[4].format = .FLOAT;
     vertexAttributes[4].offset = cast(u32)offset_of(Vertex, materialIndex); // 9th float from current buffer position OLD: size_of(f32) * 7
 
     pipelineInfo.vertex_input_state.num_vertex_attributes = 5;
@@ -164,9 +165,25 @@ createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fr
     
     pipelineInfo.rasterizer_state.cull_mode = .NONE
     pipelineInfo.rasterizer_state.fill_mode = .FILL
+    
     // createGraphicPipeline
-    append(&mRenderer.graphicsPipeline, sdl.CreateGPUGraphicsPipeline(mRenderer.device, pipelineInfo));
+    //append(&mRenderer.graphicsPipeline, sdl.CreateGPUGraphicsPipeline(mRenderer.device, pipelineInfo));
     //mRenderer.graphicsPipeline = sdl.CreateGPUGraphicsPipeline(mRenderer.device, pipelineInfo);
+
+    newPipeline := sdl.CreateGPUGraphicsPipeline(mRenderer.device, pipelineInfo)
+
+    if newPipeline == nil {
+        errorMsg := sdl.GetError()
+        log.error("---------------------------------------------------")
+        log.error("FATAL ERROR: Pipeline Creation failed!")
+        log.error("ERROR:", errorMsg)
+        log.error("---------------------------------------------------")
+        return
+
+    }
+
+    append(&mRenderer.graphicsPipeline, newPipeline)
+    log.info("Pipeline creation done") 
     
     // release vertex shader
     sdl.ReleaseGPUShader(mRenderer.device, vertexShader);
@@ -182,17 +199,20 @@ addRenderable::proc(mRenderer:^Renderer, renderable:Renderable){
 }
 
 addLight::proc(mRenderer:^Renderer, lightPos:linalg.Vector3f32){
-    append(&mRenderer.light, createColoredCube(mRenderer.lightInfo.lightPosition.x, mRenderer.lightInfo.lightPosition.y, mRenderer.lightInfo.lightPosition.z,1.0,1.0,{1.0,1.0,1.0,1.0}));
+    append(&mRenderer.light, createColoredCube(mRenderer.lightInfo.lightPosition.x, mRenderer.lightInfo.lightPosition.y, mRenderer.lightInfo.lightPosition.z,0.5,0.5,{1.0,1.0,1.0,1.0}));
     //log.info("Length of mRenderer.renderable: ", len(mRenderer.renderable));
 }
 
 
+alignUp :: proc(value: int, alignment: int) -> int {
+    return (value + alignment - 1) & ~(alignment - 1)
+}
 
 pushRenderableInBuffer::proc(mRenderer:^Renderer){
     
     for el in mRenderer.light{
 
-        modelMatrixIndex := cast(u32)len(mRenderer.allModelMatrix)
+        modelMatrixIndex := cast(f32)len(mRenderer.allModelMatrix)
         append(&mRenderer.allModelMatrix, el.modelMatrix)
         // Calculate the offset before pushing new data to the VertexBuffer
         vertex_offset := u16(len(mRenderer.allVertices));
@@ -211,10 +231,10 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
     // Push renderable after light object
     for el in mRenderer.renderable{
         // calculate model matrix Index and append model matrix to allModelMatrixArray
-        modelMatrixIndex := cast(u32)len(mRenderer.allModelMatrix);
+        modelMatrixIndex := cast(f32)len(mRenderer.allModelMatrix);
         append(&mRenderer.allModelMatrix, el.modelMatrix);
         // Calculate the materia Index and append material to allMaterialsArray
-        materialIndex := cast(u32)len(mRenderer.allMaterials);
+        materialIndex := cast(f32)len(mRenderer.allMaterials);
         append(&mRenderer.allMaterials, el.material);
         // Calculate the offset before pushing new data to the VertexBuffer
         vertex_offset := u16(len(mRenderer.allVertices));
@@ -254,20 +274,24 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
     materialsBufferInfo.usage = {.GRAPHICS_STORAGE_READ};
     mRenderer.materialBuffer= sdl.CreateGPUBuffer(mRenderer.device, materialsBufferInfo);
 
+    vertex_offset_in_transfer := 0
+    index_offset_in_transfer  := alignUp(vertex_bytes, 256)
+    materials_offset_in_transfer := alignUp(index_offset_in_transfer + index_bytes, 256)
+    total_transfer_size := materials_offset_in_transfer + materials_bytes
 
     // Transfer Buffer 
     transferInfo := sdl.GPUTransferBufferCreateInfo{};
-    transferInfo.size = cast(u32)(vertex_bytes + index_bytes + materials_bytes);
+    transferInfo.size = cast(u32)total_transfer_size;//cast(u32)(vertex_bytes + index_bytes + materials_bytes);
     transferInfo.usage = .UPLOAD;
     mRenderer.transferBuffer = sdl.CreateGPUTransferBuffer(mRenderer.device, transferInfo);
 
     data:= transmute([^]byte)sdl.MapGPUTransferBuffer(mRenderer.device, mRenderer.transferBuffer, false);
     // Vertex copy
-    sdl.memcpy(data, &mRenderer.allVertices[0], cast(uint)vertex_bytes);
+    sdl.memcpy(data, raw_data(mRenderer.allVertices), cast(uint)vertex_bytes);
     // Index copy
-    sdl.memcpy(data[vertex_bytes:], &mRenderer.allIndices[0], cast(uint)index_bytes);
+    sdl.memcpy(data[index_offset_in_transfer:], raw_data(mRenderer.allIndices), cast(uint)index_bytes);
     // Materials copy
-    sdl.memcpy(data[(vertex_bytes + index_bytes):], &mRenderer.allMaterials[0], cast(uint)materials_bytes);
+    sdl.memcpy(data[materials_offset_in_transfer:], raw_data(mRenderer.allMaterials), cast(uint)materials_bytes);
 
     sdl.UnmapGPUTransferBuffer(mRenderer.device, mRenderer.transferBuffer);
 
@@ -291,7 +315,7 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
     // INDEX BUFFER UPLOAD
     indexLocation:= sdl.GPUTransferBufferLocation{};
     indexLocation.transfer_buffer = mRenderer.transferBuffer;
-    indexLocation.offset = cast(u32)vertex_bytes;
+    indexLocation.offset = cast(u32)index_offset_in_transfer;//cast(u32)vertex_bytes;
     
     indexRegion := sdl.GPUBufferRegion{};
     indexRegion.buffer = mRenderer.indexBuffer;
@@ -304,11 +328,11 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
     // MATERIALS BUFFER UPLOAD
     materialsLocation:= sdl.GPUTransferBufferLocation{};   
     materialsLocation.transfer_buffer = mRenderer.transferBuffer;
-    materialsLocation.offset = cast(u32)vertex_bytes + cast(u32)index_bytes;
+    materialsLocation.offset = cast(u32)materials_offset_in_transfer;//cast(u32)vertex_bytes + cast(u32)index_bytes;
 
     materialsRegion := sdl.GPUBufferRegion{};
     materialsRegion.buffer = mRenderer.materialBuffer;
-    materialsRegion.size = cast(u32)materials_bytes; // to fix
+    materialsRegion.size = cast(u32)materials_bytes;
     materialsRegion.offset = 0;
     // Upload Materials
     sdl.UploadToGPUBuffer(copyPass, materialsLocation, materialsRegion, true);
@@ -414,6 +438,9 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     camera:= linalg.Vector4f32{mRenderer.rCamera.position.x, mRenderer.rCamera.position.y, mRenderer.rCamera.position.z, 0.0};
 
     sdl.PushGPUVertexUniformData(mRenderer.buffer, 2, &camera, size_of(camera));
+
+
+    sdl.BindGPUFragmentStorageBuffers(renderPass, 0, &mRenderer.materialBuffer, 1);
 
     // bind vertexBuffer
     bufferBindings :[1]sdl.GPUBufferBinding;

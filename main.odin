@@ -51,7 +51,7 @@ main::proc(){
     
     // Device cration with supported API
     if sdl.GPUSupportsShaderFormats({.SPIRV, .MSL, .DXIL}, nil) {
-        mDevice = sdl.CreateGPUDevice({.SPIRV, .MSL, .DXIL}, false, DEFAULT_RENDER_API);
+        mDevice = sdl.CreateGPUDevice({.SPIRV, .MSL, .DXIL}, true, DEFAULT_RENDER_API);
     }
     if mDevice == nil
     {
@@ -66,14 +66,14 @@ main::proc(){
     mRenderer : Renderer = {device = mDevice, window = mWindow}
 
     // Load vertex shader
-    vertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 3);
+    vertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 3, 0);
     // Load fragment shader
-    fragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragment.frag." + SHADER_EXT, .FRAGMENT, 0);
+    fragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragment.frag." + SHADER_EXT, .FRAGMENT, 0, 1);
 
     // Load Light vertex shader
-    lightVertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.vert." + SHADER_EXT, .VERTEX, 3);
+    lightVertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.vert." + SHADER_EXT, .VERTEX, 3, 0);
     // Load Light fragment shader
-    lightFragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.frag." + SHADER_EXT, .FRAGMENT, 0);
+    lightFragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.frag." + SHADER_EXT, .FRAGMENT, 0, 0);
 
     // Create Graphic Pipeline
     createGraphicPipeline(&mRenderer, vertexShader, fragmentShader);
@@ -82,8 +82,11 @@ main::proc(){
 
     // Scene
     box   := createColoredCube(0.0, 6.0, -10.0, 5.0, 5.0, {1.0, 0.5, 0.31, 1.0});
+    box.material = jade();
     base  := createColoredCube(-16., 3.0, -10.0, 32.0, 0.5, {0.2, 0.2, 0.2, 1.0});
+    base.material = obsidian();
 	cube1 := createColoredCube(4.0, 4.0, 0.0, 3.0, 3.0, {0.8, 0.0, 0.0, 1.0});
+    cube1.material = bronze();
 	cube2 := createColoredCube(0.0, 4.0, 0.0, 3.0, 3.0, {0.0, 0.8, 0.0, 1.0});
 	cube3 := createColoredCube(-4.0, 4.0, 0.0, 3.0, 3.0, {0.0, 0.0, 0.8, 1.0});
 	cube4 := createColoredCube(-8.0, 4.0, 0.0, 3.0, 3.0, {0.5, 0.5, 0.5, 1.0});
