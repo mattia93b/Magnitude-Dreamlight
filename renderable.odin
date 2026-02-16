@@ -18,37 +18,45 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, color:[4]f32
     // RENDERABLE
     cube := Renderable{}
 
-    // VERTEX
+    hw := width / 2.0
+    hh := height / 2.0
+    hd := width / 2.0
+
     // front
-    append(&cube.vertex, linalg.Vector3f32{0.0, 0.0, 0.0}); //0
-    append(&cube.vertex, linalg.Vector3f32{width, 0.0, 0.0}); //1
-    append(&cube.vertex, linalg.Vector3f32{width, height, 0.0}); //2
-    append(&cube.vertex, linalg.Vector3f32{0.0, height, 0.0}); //3
+    append(&cube.vertex, linalg.Vector3f32{-hw, -hh, -hd}) // 0
+    append(&cube.vertex, linalg.Vector3f32{ hw, -hh, -hd}) // 1
+    append(&cube.vertex, linalg.Vector3f32{ hw,  hh, -hd}) // 2
+    append(&cube.vertex, linalg.Vector3f32{-hw,  hh, -hd}) // 3
+
     // back
-    append(&cube.vertex, linalg.Vector3f32{0.0, 0.0, width}); //4
-    append(&cube.vertex, linalg.Vector3f32{width, 0.0, width}); //5
-    append(&cube.vertex, linalg.Vector3f32{width, height, width}); //6
-    append(&cube.vertex, linalg.Vector3f32{0.0, height, width}); //7
-    //left
-    append(&cube.vertex, linalg.Vector3f32{0.0, 0.0, width}); //4
-    append(&cube.vertex, linalg.Vector3f32{0.0, 0.0, 0.0}); //0
-    append(&cube.vertex, linalg.Vector3f32{0.0, height, 0.0}); //3
-    append(&cube.vertex, linalg.Vector3f32{0.0, height, width}); //7
-    //right
-    append(&cube.vertex, linalg.Vector3f32{width, 0.0, 0.0}); //1
-    append(&cube.vertex, linalg.Vector3f32{width, 0.0, width}); //5
-    append(&cube.vertex, linalg.Vector3f32{width, height, width}); //6
-    append(&cube.vertex, linalg.Vector3f32{width, height, 0.0}); //2
-    //top
-    append(&cube.vertex, linalg.Vector3f32{0.0, height, 0.0}); //3
-    append(&cube.vertex, linalg.Vector3f32{width, height, 0.0}); //2
-    append(&cube.vertex, linalg.Vector3f32{width, height, width}); //6
-    append(&cube.vertex, linalg.Vector3f32{0.0, height, width}); //7
-    //bottom
-    append(&cube.vertex, linalg.Vector3f32{0.0, 0.0, width}); //4
-    append(&cube.vertex, linalg.Vector3f32{width, 0.0, width}); //5
-    append(&cube.vertex, linalg.Vector3f32{width, 0.0, 0.0}); //1
-    append(&cube.vertex, linalg.Vector3f32{0.0, 0.0, 0.0}); //0
+    append(&cube.vertex, linalg.Vector3f32{-hw, -hh,  hd}) // 4
+    append(&cube.vertex, linalg.Vector3f32{ hw, -hh,  hd}) // 5
+    append(&cube.vertex, linalg.Vector3f32{ hw,  hh,  hd}) // 6
+    append(&cube.vertex, linalg.Vector3f32{-hw,  hh,  hd}) // 7
+
+    // left
+    append(&cube.vertex, linalg.Vector3f32{-hw, -hh,  hd}) 
+    append(&cube.vertex, linalg.Vector3f32{-hw, -hh, -hd}) 
+    append(&cube.vertex, linalg.Vector3f32{-hw,  hh, -hd}) 
+    append(&cube.vertex, linalg.Vector3f32{-hw,  hh,  hd}) 
+
+    // right
+    append(&cube.vertex, linalg.Vector3f32{ hw, -hh, -hd}) 
+    append(&cube.vertex, linalg.Vector3f32{ hw, -hh,  hd}) 
+    append(&cube.vertex, linalg.Vector3f32{ hw,  hh,  hd}) 
+    append(&cube.vertex, linalg.Vector3f32{ hw,  hh, -hd}) 
+
+    // top 
+    append(&cube.vertex, linalg.Vector3f32{-hw,  hh, -hd}) 
+    append(&cube.vertex, linalg.Vector3f32{ hw,  hh, -hd}) 
+    append(&cube.vertex, linalg.Vector3f32{ hw,  hh,  hd}) 
+    append(&cube.vertex, linalg.Vector3f32{-hw,  hh,  hd}) 
+
+    // bottom 
+    append(&cube.vertex, linalg.Vector3f32{-hw, -hh,  hd}) 
+    append(&cube.vertex, linalg.Vector3f32{ hw, -hh,  hd}) 
+    append(&cube.vertex, linalg.Vector3f32{ hw, -hh, -hd}) 
+    append(&cube.vertex, linalg.Vector3f32{-hw, -hh, -hd})
 
 
     // INDEX 
@@ -108,7 +116,7 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, color:[4]f32
     // MODEL MATRIX
     cube.modelMatrix = linalg.matrix4_translate_f32({x, y, z});
 
-    cube.material = obsidian();
+    cube.material = redPlastic();
 
     return cube;
 }

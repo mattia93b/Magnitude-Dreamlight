@@ -42,12 +42,6 @@ main::proc(){
     log.info("Operating System:", ODIN_OS);
     log.info("Default Rendering API:", DEFAULT_RENDER_API);
     log.info("Shader Extension:", SHADER_EXT);
-    //log.info("Support for VULKAN", sdl.GPUSupportsShaderFormats({.SPIRV}, nil));
-    //log.info("Support for DXBC", sdl.GPUSupportsShaderFormats({.DXBC}, nil));
-    //log.info("Support for DXIL", sdl.GPUSupportsShaderFormats({.DXIL}, nil));
-    //log.info("Support for METAL", sdl.GPUSupportsShaderFormats({.MSL}, nil));
-    //log.info("Support for METALLIB", sdl.GPUSupportsShaderFormats({.METALLIB}, nil));
-    //log.info("Set Default Rendering API:", DEFAULT_RENDER_API);
     
     // Device cration with supported API
     if sdl.GPUSupportsShaderFormats({.SPIRV, .MSL, .DXIL}, nil) {
@@ -81,15 +75,18 @@ main::proc(){
     createGraphicPipeline(&mRenderer, lightVertexShader, lightFragmentShader);
 
     // Scene
-    box   := createColoredCube(0.0, 6.0, -10.0, 5.0, 5.0, {1.0, 0.5, 0.31, 1.0});
+    box   := createColoredCube(0.0, 10.0, -20.0, 5.0, 5.0, {1.0, 0.5, 0.31, 1.0});
     box.material = jade();
-    base  := createColoredCube(-16., 3.0, -10.0, 32.0, 0.5, {0.2, 0.2, 0.2, 1.0});
+    base  := createColoredCube(0.0, 3.0, -10.0, 32.0, 0.5, {0.2, 0.2, 0.2, 1.0});
     base.material = obsidian();
-	cube1 := createColoredCube(4.0, 4.0, 0.0, 3.0, 3.0, {0.8, 0.0, 0.0, 1.0});
+	cube1 := createColoredCube(2.0, 5.0, -10.0, 3.0, 3.0, {0.8, 0.0, 0.0, 1.0});
     cube1.material = bronze();
-	cube2 := createColoredCube(0.0, 4.0, 0.0, 3.0, 3.0, {0.0, 0.8, 0.0, 1.0});
-	cube3 := createColoredCube(-4.0, 4.0, 0.0, 3.0, 3.0, {0.0, 0.0, 0.8, 1.0});
-	cube4 := createColoredCube(-8.0, 4.0, 0.0, 3.0, 3.0, {0.5, 0.5, 0.5, 1.0});
+	cube2 := createColoredCube(6.0, 5.0, -10.0, 3.0, 3.0, {0.0, 0.8, 0.0, 1.0});
+    cube2.material = silver();
+	cube3 := createColoredCube(-2.0, 5.0, -10.0, 3.0, 3.0, {0.0, 0.0, 0.8, 1.0});
+    cube3.material = emerald();
+	cube4 := createColoredCube(-6.0, 5.0, -10.0, 3.0, 3.0, {0.5, 0.5, 0.5, 1.0});
+    cube4.material = redPlastic()
 
     addRenderable(&mRenderer, box);
     addRenderable(&mRenderer, base);
@@ -98,19 +95,13 @@ main::proc(){
     addRenderable(&mRenderer, cube3);
     addRenderable(&mRenderer, cube4);
 
-    sphere1 := createColoredSphere(-8.0, 10.0, 0.0, 2.0, 25.0, 25.0 ,{0.5, 0.5, 0.5, 1.0});
+    sphere1 := createColoredSphere(-6.0, 10.0, -10.0, 2.0, 25.0, 25.0 ,{0.5, 0.5, 0.5, 1.0});
 
     addRenderable(&mRenderer, sphere1);
 
-    // Cube 1
-    //cube := createColoredCube(0.0, -5.0, -10.0, 5.0, 5.0, {1.0, 0.0, 0.0, 1.0})
+    sphere2 := createColoredSphere(6.0, 10.0, -10.0, 2.0, 25.0, 25.0 ,{0.5, 0.5, 0.5, 1.0});
 
-    //addRenderable(&mRenderer, cube)
-
-    // Cube 2
-    //cube2 := createColoredCube(0.0, 5.0, -20.0, 5.0, 5.0, {1.0, 0.0, 0.0, 1.0})
-
-    //addRenderable(&mRenderer, cube2)
+    addRenderable(&mRenderer, sphere2);
 
     addLight(&mRenderer, {0.0, 15.0, 10.0});
 

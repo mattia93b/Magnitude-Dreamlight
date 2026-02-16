@@ -23,11 +23,12 @@ LightInfo::struct #align(16){
 
 Vertex::struct #align(16){
     position :linalg.Vector3f32,    // vec3 position
+    _pad0: f32,
     rgba: linalg.Vector4f32,        // vec4 color
-    modelMatrixIndex: f32,
     normals: linalg.Vector3f32,
-    materialIndex: f32,
-    _padding:[3]f32,
+    modelMatrixIndex: u32,
+    materialIndex: u32,
+    _pad1:[3]f32,
 }
 
 Camera::struct {
@@ -117,22 +118,22 @@ createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fr
     vertexAttributes[1].format = .FLOAT4;
     vertexAttributes[1].offset = cast(u32)offset_of(Vertex, rgba); // 4th float from current buffer position OLD: size_of(f32) * 3
 
-    // ModelMatrixIndex
-    vertexAttributes[2].buffer_slot = 0;
-    vertexAttributes[2].location = 2; // layout (location = 2) in shader
-    vertexAttributes[2].format = .FLOAT;
-    vertexAttributes[2].offset = cast(u32)offset_of(Vertex, modelMatrixIndex); // 8th float from current buffer position OLD: size_of(f32) * 7
-
     // Normals
+    vertexAttributes[2].buffer_slot = 0;
+    vertexAttributes[2].location = 2; // layout (location = 3) in shader
+    vertexAttributes[2].format = .FLOAT3;
+    vertexAttributes[2].offset = cast(u32)offset_of(Vertex, normals); // 8th float from current buffer position OLD: size_of(f32) * 7
+
+    // ModelMatrixIndex
     vertexAttributes[3].buffer_slot = 0;
-    vertexAttributes[3].location = 3; // layout (location = 3) in shader
-    vertexAttributes[3].format = .FLOAT3;
-    vertexAttributes[3].offset = cast(u32)offset_of(Vertex, normals); // 8th float from current buffer position OLD: size_of(f32) * 7
+    vertexAttributes[3].location = 3; // layout (location = 2) in shader
+    vertexAttributes[3].format = .UINT;
+    vertexAttributes[3].offset = cast(u32)offset_of(Vertex, modelMatrixIndex); // 8th float from current buffer position OLD: size_of(f32) * 7
 
     // Material Index
     vertexAttributes[4].buffer_slot = 0;
     vertexAttributes[4].location = 4; // layout (location = 4) in shader
-    vertexAttributes[4].format = .FLOAT;
+    vertexAttributes[4].format = .UINT;
     vertexAttributes[4].offset = cast(u32)offset_of(Vertex, materialIndex); // 9th float from current buffer position OLD: size_of(f32) * 7
 
     pipelineInfo.vertex_input_state.num_vertex_attributes = 5;
@@ -179,7 +180,6 @@ createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fr
         log.error("ERROR:", errorMsg)
         log.error("---------------------------------------------------")
         return
-
     }
 
     append(&mRenderer.graphicsPipeline, newPipeline)
@@ -222,7 +222,7 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
         }
         // Push all vertex information inside a Vertex Object and store it in the VertexBuffer of the renderer
         for numberProcessedVertex:= 0; numberProcessedVertex < len(el.vertex); numberProcessedVertex = numberProcessedVertex + 1 {
-            append(&mRenderer.allVertices, Vertex{position = el.vertex[numberProcessedVertex], rgba = el.rgba,  modelMatrixIndex = modelMatrixIndex, normals= el.normals[numberProcessedVertex]})
+            append(&mRenderer.allVertices, Vertex{position = el.vertex[numberProcessedVertex], rgba = el.rgba,  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= el.normals[numberProcessedVertex]})
         }
     }
 
@@ -244,7 +244,7 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
         }
         // Push all vertex information inside a Vertex Object and store it in the VertexBuffer of the renderer
         for numberProcessedVertex:= 0; numberProcessedVertex < len(el.vertex); numberProcessedVertex = numberProcessedVertex + 1 {
-            append(&mRenderer.allVertices, Vertex{position = el.vertex[numberProcessedVertex], rgba = el.rgba,  modelMatrixIndex = modelMatrixIndex, normals= el.normals[numberProcessedVertex], materialIndex = materialIndex})
+            append(&mRenderer.allVertices, Vertex{position = el.vertex[numberProcessedVertex], rgba = el.rgba,  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= el.normals[numberProcessedVertex], materialIndex = cast(u32)materialIndex});
         }
     }
 
@@ -362,7 +362,7 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
     mRenderer.inputHandler.first = true;
 
     // Camera set up
-    mRenderer.rCamera.position = linalg.Vector3f32{0, 10, 30};
+    mRenderer.rCamera.position = linalg.Vector3f32{0, 10, 20};
     mRenderer.rCamera.front = linalg.Vector3f32{0, 0, -10};
     mRenderer.rCamera.up = linalg.Vector3f32{0, 1, 0};
     mRenderer.rCamera.yaw = -90.0;
@@ -371,7 +371,7 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
 
     // Light set up
 
-    mRenderer.lightInfo.lightPosition = {0.0, 15.0, 10.0, 0.0};
+    mRenderer.lightInfo.lightPosition = {0.0, 15.0, -10.0, 0.0};
     mRenderer.lightInfo.lightColor = {1.0, 1.0, 1.0, 1.0};
     mRenderer.lightInfo.lightIntensity = {1.0, 1.0, 1.0, 1.0};
 }
@@ -470,8 +470,6 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
         //log.info("Send buffer to GPU done correctly", true);
     }
 
-    
-
     return inputHandler(&mRenderer.inputHandler);
 
 }
@@ -479,8 +477,12 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
 
 cleanRenderer::proc(mRenderer:^Renderer){
     sdl.ReleaseGPUBuffer(mRenderer.device, mRenderer.vertexBuffer);
+    sdl.ReleaseGPUBuffer(mRenderer.device, mRenderer.indexBuffer);
+    sdl.ReleaseGPUBuffer(mRenderer.device, mRenderer.materialBuffer);
     sdl.ReleaseGPUTransferBuffer(mRenderer.device, mRenderer.transferBuffer);
+    sdl.ReleaseGPUTexture(mRenderer.device, mRenderer.depthTexture);
     sdl.ReleaseGPUGraphicsPipeline(mRenderer.device, mRenderer.graphicsPipeline[0]);
+    sdl.ReleaseGPUGraphicsPipeline(mRenderer.device, mRenderer.graphicsPipeline[1]);
     sdl.DestroyGPUDevice(mRenderer.device);
     sdl.DestroyWindow(mRenderer.window);
 }
