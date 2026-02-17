@@ -71,8 +71,8 @@ loadShader::proc(mRenderer:^Renderer, path:cstring, stage:sdl.GPUShaderStage, nu
     shaderInfo := sdl.GPUShaderCreateInfo{};
     shaderInfo.code = cast(^u8)shaderCode;
     shaderInfo.code_size = shaderCodeSize;
-    shaderInfo.entrypoint = "main";
-    shaderInfo.format = {.SPIRV, .DXIL, .MSL};
+    shaderInfo.entrypoint = SHADER_ENTRY_POINT;
+    shaderInfo.format = {SHADER_FORMAT};
     shaderInfo.stage = stage;
     shaderInfo.num_samplers = 0;
     shaderInfo.num_storage_buffers = num_storage_buffers;
@@ -162,7 +162,7 @@ createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fr
     pipelineInfo.target_info.num_color_targets = 1;
     pipelineInfo.target_info.color_target_descriptions = &colorTargetDescriptions[0];
     pipelineInfo.target_info.has_depth_stencil_target = true;
-    pipelineInfo.target_info.depth_stencil_format = .D24_UNORM;
+    pipelineInfo.target_info.depth_stencil_format = .D32_FLOAT;
     
     pipelineInfo.rasterizer_state.cull_mode = .NONE
     pipelineInfo.rasterizer_state.fill_mode = .FILL
@@ -346,7 +346,7 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
     win_size:[2]i32;
     sdl.GetWindowSize(mRenderer.window, &win_size.x, &win_size.y);
     depthTextureInfo := sdl.GPUTextureCreateInfo{};
-    depthTextureInfo.format = .D24_UNORM;
+    depthTextureInfo.format = .D32_FLOAT;
     depthTextureInfo.usage = {.DEPTH_STENCIL_TARGET};
     depthTextureInfo.width = u32(win_size.x);
     depthTextureInfo.height = u32(win_size.y);
