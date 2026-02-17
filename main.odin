@@ -75,10 +75,17 @@ main::proc(){
     // Load Light fragment shader
     lightFragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.frag." + SHADER_EXT, .FRAGMENT, 0, 0);
 
+    // Load Light vertex shader
+    //instanceVertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/instanceVertex.vert." + SHADER_EXT, .VERTEX, 1, 0);
+    // Load Light fragment shader
+    //instanceFragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/instanceFragment.frag." + SHADER_EXT, .FRAGMENT, 2, 1);
+
     // Create Graphic Pipeline
     createGraphicPipeline(&mRenderer, vertexShader, fragmentShader);
     // Create Light Graphic Pipeline
     createGraphicPipeline(&mRenderer, lightVertexShader, lightFragmentShader);
+    // Create Instance Graphic Pipeline
+    //createGraphicPipeline(&mRenderer, instanceVertexShader, instanceFragmentShader);
 
     // Scene
     box   := createColoredCube(0.0, 10.0, -20.0, 5.0, 5.0, {1.0, 0.5, 0.31, 1.0});
@@ -113,6 +120,8 @@ main::proc(){
 
     // Upload renderable in buffer
     pushRenderableInBuffer(&mRenderer);
+    //pushRenderableInBufferForInstance(&mRenderer);
+
 
     // Set isRunning true to start the loop
     isRunning := true;
@@ -129,6 +138,7 @@ main::proc(){
 
         // Renderer update 
         isRunning = update(&mRenderer, detaTime);
+        //isRunning = updateInstance(&mRenderer, detaTime);
     }
 
     cleanRenderer(&mRenderer);
