@@ -1,5 +1,3 @@
-static float4 FragColor;
-static float4 v_color;
 
 struct Material 
 {
@@ -8,28 +6,35 @@ struct Material
     float4 specular;
     float shininess;
 };
-
+// MATERIAL BUFFER
 StructuredBuffer<Material> materials : register(t0, space2);
-
+// INPUT
 struct SPIRV_Cross_Input
 {
-    //float4 v_color : TEXCOORD0;
     float3 v_position : TEXCOORD0;
     float3 v_normals : TEXCOORD1;
-    float4 l_position : TEXCOORD2;
-    float4 cameraPosition : TEXCOORD3;
-    uint materialIndex : TEXCOORD4;
+    uint materialIndex : TEXCOORD2;
 };
-
+// OUTPUT
 struct SPIRV_Cross_Output
 {
     float4 FragColor : SV_Target0;
+};
+// UNIFORMS
+cbuffer lightInfo : register(b0, space3){
+    float4 u_lightPosition :  packoffset(c0);
+    float4 u_lightColor :     packoffset(c1);
+    float4 u_lightIntensity : packoffset(c2);
+};
+
+cbuffer cameraInfo : register(b1, space3){
+    float4 u_cameraPosition :  packoffset(c0);
 };
 
 // MAIN 
 SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
 {
-    float4 lightPos = stage_input.l_position;//float4(0.0, 15.0, 10.0, 0.0);
+    float4 lightPos = u_lightPosition;
 
     uint index = stage_input.materialIndex;
 
@@ -40,7 +45,7 @@ SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
     
     // Ambient
     float ambientStrength = 0.5;
-    float4 lightColor = float4(float3(1.0, 1.0, 1.0), 1.0);
+    float4 lightColor = u_lightColor;
     float3 ambient = lightColor.xyz * matAmbient.xyz;
     // Diffuse
     float3 norm = normalize(stage_input.v_normals);
@@ -50,7 +55,7 @@ SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
     //float3 result = (ambient + diffuse) * stage_input.v_color.xyz;
     // Specular
     //float specularStrength = 0.5;
-    float3 viewDir = normalize(stage_input.cameraPosition.xyz - stage_input.v_position);
+    float3 viewDir = normalize(u_cameraPosition.xyz - stage_input.v_position);
     float3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), matShininess);
     float3 specular = lightColor.xyz * (spec * matSpecular.xyz);
