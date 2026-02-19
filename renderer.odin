@@ -181,7 +181,7 @@ addRenderable::proc(mRenderer:^Renderer, renderable:Renderable){
 }
 
 addLight::proc(mRenderer:^Renderer, lightPos:linalg.Vector3f32){
-    append(&mRenderer.light, createColoredSphere(mRenderer.lightInfo.lightPosition.x, mRenderer.lightInfo.lightPosition.y, mRenderer.lightInfo.lightPosition.z,0.25, 25.0, 25.0,{1.0,1.0,1.0,1.0}));
+    append(&mRenderer.light, createColoredSphere(mRenderer.lightInfo.lightPosition.x, mRenderer.lightInfo.lightPosition.y, mRenderer.lightInfo.lightPosition.z,0.25, 25.0, 25.0));
     //log.info("Length of mRenderer.renderable: ", len(mRenderer.renderable));
 }
 

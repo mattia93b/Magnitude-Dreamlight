@@ -9,3 +9,5 @@ shadercross.exe
 
 # DIRECTORY
 shaders/compiled
+resources/models
+resources/textures

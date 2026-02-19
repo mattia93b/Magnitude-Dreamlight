@@ -33,11 +33,9 @@ inputHandler :: proc(state: ^mouseKeyboardInput) -> bool {
                 state.keys[event.key.scancode] = false;
             case .MOUSE_BUTTON_DOWN:
                 state.mouseDown = true;
-                log.info("Mouse Presed");
             case .MOUSE_BUTTON_UP:
                 state.first = true;
                 state.mouseDown = false;
-                log.info("Mouse Release");
         }
     }
 

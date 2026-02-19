@@ -155,7 +155,7 @@ pushRenderableInBufferForInstance::proc(mRenderer:^Renderer){
     }
 
     // VERTEX BUFFER
-    vertex_bytes := len(mRenderer.allVerticesForInstance) * size_of(Vertex);
+    vertex_bytes := len(mRenderer.allVerticesForInstance) * size_of(VertexInstance);
 
     bufferInfo := sdl.GPUBufferCreateInfo{};
     bufferInfo.size = cast(u32)vertex_bytes;

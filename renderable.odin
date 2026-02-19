@@ -2,6 +2,8 @@ package main
 
 // logger
 import "core:log"
+// SDL3 bindings
+import sdl "vendor:sdl3"
 // math
 import "core:math/linalg"
 
@@ -9,12 +11,12 @@ Renderable::struct{
     vertex: [dynamic]linalg.Vector3f32,
     index: [dynamic]u16,
     normals: [dynamic]linalg.Vector3f32,
-    rgba: linalg.Vector4f32,
     modelMatrix:matrix[4,4]f32,
     material:Material,
+    texture:^sdl.Surface,
 }
 
-createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, color:[4]f32) -> Renderable{
+createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, texturePath:cstring = "") -> Renderable{
     // RENDERABLE
     cube := Renderable{}
 
@@ -109,9 +111,11 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, color:[4]f32
     append(&cube.normals, linalg.Vector3f32{0.0, -1.0, 0.0}); //7
 
 
-    // COLOR
-    cube.rgba = color;
-
+    // TEXTURE
+    if texturePath != "" {
+        cube.texture = loadTexturePNG(texturePath, 4);
+    }
+    
 
     // MODEL MATRIX
     cube.modelMatrix = linalg.matrix4_translate_f32({x, y, z});
@@ -122,7 +126,7 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, color:[4]f32
 }
 
 
-createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, color:[4]f32)  -> Renderable {
+createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int)  -> Renderable {
 
     sphere := Renderable{};
 
@@ -221,8 +225,7 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
         //interleavedVertices.push_back(texCoords[j + 1]);
     }
 
-    // COLOR
-    sphere.rgba = color;
+    // TEXTURE
 
     // MODEL MATRIX
     sphere.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos});

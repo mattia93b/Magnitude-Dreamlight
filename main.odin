@@ -88,17 +88,17 @@ main::proc(){
     //createGraphicPipeline(&mRenderer, instanceVertexShader, instanceFragmentShader);
 
     // Scene
-    box   := createColoredCube(0.0, 10.0, -20.0, 5.0, 5.0, {1.0, 0.5, 0.31, 1.0});
+    box   := createColoredCube(0.0, 10.0, -20.0, 5.0, 5.0);
     box.material = jade();
-    base  := createColoredCube(0.0, 3.0, -10.0, 32.0, 0.5, {0.2, 0.2, 0.2, 1.0});
+    base  := createColoredCube(0.0, 3.0, -10.0, 32.0, 0.5, "resources/textures/textureDefault.png");
     base.material = obsidian();
-	cube1 := createColoredCube(2.0, 5.0, -10.0, 3.0, 3.0, {0.8, 0.0, 0.0, 1.0});
+	cube1 := createColoredCube(2.0, 5.0, -10.0, 3.0, 3.0);
     cube1.material = bronze();
-	cube2 := createColoredCube(6.0, 5.0, -10.0, 3.0, 3.0, {0.0, 0.8, 0.0, 1.0});
+	cube2 := createColoredCube(6.0, 5.0, -10.0, 3.0, 3.0);
     cube2.material = silver();
-	cube3 := createColoredCube(-2.0, 5.0, -10.0, 3.0, 3.0, {0.0, 0.0, 0.8, 1.0});
+	cube3 := createColoredCube(-2.0, 5.0, -10.0, 3.0, 3.0);
     cube3.material = emerald();
-	cube4 := createColoredCube(-6.0, 5.0, -10.0, 3.0, 3.0, {0.5, 0.5, 0.5, 1.0});
+	cube4 := createColoredCube(-6.0, 5.0, -10.0, 3.0, 3.0);
     cube4.material = redPlastic()
 
     addRenderable(&mRenderer, box);
@@ -108,11 +108,11 @@ main::proc(){
     addRenderable(&mRenderer, cube3);
     addRenderable(&mRenderer, cube4);
 
-    sphere1 := createColoredSphere(-6.0, 10.0, -10.0, 2.0, 25.0, 25.0 ,{0.5, 0.5, 0.5, 1.0});
+    sphere1 := createColoredSphere(-6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
 
     addRenderable(&mRenderer, sphere1);
 
-    sphere2 := createColoredSphere(6.0, 10.0, -10.0, 2.0, 25.0, 25.0 ,{0.5, 0.5, 0.5, 1.0});
+    sphere2 := createColoredSphere(6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
 
     addRenderable(&mRenderer, sphere2);
 
