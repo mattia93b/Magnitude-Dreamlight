@@ -146,7 +146,7 @@ pushRenderableInBufferForInstance::proc(mRenderer:^Renderer){
         append(&mRenderer.allModelMatrix, renderable.modelMatrix);
 
         materialIndex := cast(u32)len(mRenderer.allMaterials);
-        append(&mRenderer.allMaterials, renderable.material);
+        append(&mRenderer.allMaterials, renderable.materialPBR);
 
         append(&mRenderer.allInstance, InstanceData{
             modelMatrixIndex = modelMatrixIndex,

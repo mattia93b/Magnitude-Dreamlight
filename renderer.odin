@@ -52,7 +52,7 @@ Renderer::struct{
     allVertices : [dynamic]Vertex,
     allVerticesForInstance : [dynamic]VertexInstance,
     allIndices : [dynamic]u16,
-    allMaterials : [dynamic]Material,
+    allMaterials : [dynamic]MaterialPBR,
     allVerticesInstance : [dynamic]VertexInstance,
     allInstance : [dynamic]InstanceData,
     buffer : ^sdl.GPUCommandBuffer,
@@ -217,7 +217,7 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
         append(&mRenderer.allModelMatrix, el.modelMatrix);
         // Calculate the materia Index and append material to allMaterialsArray
         materialIndex := cast(f32)len(mRenderer.allMaterials);
-        append(&mRenderer.allMaterials, el.material);
+        append(&mRenderer.allMaterials, el.materialPBR);
         // Calculate the offset before pushing new data to the VertexBuffer
         vertex_offset := u16(len(mRenderer.allVertices));
         // Push all vertex indices information inside the IndexBuffer of the renderer
@@ -249,7 +249,7 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
     mRenderer.indexBuffer= sdl.CreateGPUBuffer(mRenderer.device, indexBufferInfo);
 
 
-    materials_bytes := len(mRenderer.allMaterials) * size_of(Material);
+    materials_bytes := len(mRenderer.allMaterials) * size_of(MaterialPBR);
 
     materialsBufferInfo := sdl.GPUBufferCreateInfo{};
     materialsBufferInfo.size = cast(u32)materials_bytes;
@@ -355,7 +355,7 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
 
     mRenderer.lightInfo.lightPosition = {0.0, 15.0, -10.0, 0.0};
     mRenderer.lightInfo.lightColor = {1.0, 1.0, 1.0, 1.0};
-    mRenderer.lightInfo.lightIntensity = {1.0, 1.0, 1.0, 1.0};
+    mRenderer.lightInfo.lightIntensity = {1000000.0, 1000000.0, 1000000.0, 1000000.0};
 }
 
 

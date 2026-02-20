@@ -68,7 +68,8 @@ main::proc(){
     // Load vertex shader
     vertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 1, 0);
     // Load fragment shader
-    fragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragment.frag." + SHADER_EXT, .FRAGMENT, 2, 1);
+    //fragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragment.frag." + SHADER_EXT, .FRAGMENT, 2, 1);
+    fragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragmentMaterialPBR.frag." + SHADER_EXT, .FRAGMENT, 2, 1);
 
     // Load Light vertex shader
     lightVertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.vert." + SHADER_EXT, .VERTEX, 3, 0);
@@ -90,16 +91,22 @@ main::proc(){
     // Scene
     box   := createColoredCube(0.0, 10.0, -20.0, 5.0, 5.0);
     box.material = jade();
+    box.materialPBR = SR_Aluminum();
     base  := createColoredCube(0.0, 3.0, -10.0, 32.0, 0.5, "resources/textures/textureDefault.png");
     base.material = obsidian();
+    base.materialPBR = SR_Aluminum();
 	cube1 := createColoredCube(2.0, 5.0, -10.0, 3.0, 3.0);
     cube1.material = bronze();
+    cube1.materialPBR = SR_Aluminum();
 	cube2 := createColoredCube(6.0, 5.0, -10.0, 3.0, 3.0);
     cube2.material = silver();
+    cube2.materialPBR = SR_Aluminum();
 	cube3 := createColoredCube(-2.0, 5.0, -10.0, 3.0, 3.0);
     cube3.material = emerald();
+    cube3.materialPBR = SR_Aluminum();
 	cube4 := createColoredCube(-6.0, 5.0, -10.0, 3.0, 3.0);
     cube4.material = redPlastic()
+    cube4.materialPBR = SR_Aluminum();
 
     addRenderable(&mRenderer, box);
     addRenderable(&mRenderer, base);

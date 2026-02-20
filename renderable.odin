@@ -13,6 +13,7 @@ Renderable::struct{
     normals: [dynamic]linalg.Vector3f32,
     modelMatrix:matrix[4,4]f32,
     material:Material,
+    materialPBR: MaterialPBR,
     texture:^sdl.Surface,
 }
 
@@ -231,6 +232,8 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
     sphere.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos});
 
     sphere.material = gold();
+
+    sphere.materialPBR = SR_Gold();
 
     return sphere;
 
