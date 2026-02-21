@@ -29,8 +29,8 @@ loadTexturePNG::proc(path:cstring, desiredChannels:int) -> ^sdl.Surface {
 
     if result.format != format {
         next := sdl.ConvertSurface(result, format);
-        sdl.DestroySurface(result); 
-        result = next; 
+        sdl.DestroySurface(result);
+        result = next;
     }
 
     return result;

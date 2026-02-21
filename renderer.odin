@@ -66,6 +66,9 @@ Renderer::struct{
     inputHandler : mouseKeyboardInput,
     depthTexture : ^sdl.GPUTexture,
     lightInfo : LightInfo,
+    textures : [16]^sdl.GPUTexture,
+    sampler  : ^sdl.GPUSampler,
+    defaultTexture : ^sdl.GPUTexture,
 }
 
 
@@ -148,6 +151,17 @@ createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fr
     
     pipelineInfo.rasterizer_state.cull_mode = .NONE
     pipelineInfo.rasterizer_state.fill_mode = .FILL
+
+    // Sampler
+    samplerInfo := sdl.GPUSamplerCreateInfo{};
+    samplerInfo.min_filter = .LINEAR;
+    samplerInfo.mag_filter = .LINEAR;
+    samplerInfo.mipmap_mode = .LINEAR;
+    samplerInfo.address_mode_u = .REPEAT;
+    samplerInfo.address_mode_v = .REPEAT;
+    samplerInfo.address_mode_w = .REPEAT;
+
+    mRenderer.sampler = sdl.CreateGPUSampler(mRenderer.device, samplerInfo);
     
     // createGraphicPipeline
     //append(&mRenderer.graphicsPipeline, sdl.CreateGPUGraphicsPipeline(mRenderer.device, pipelineInfo));
@@ -204,7 +218,7 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
         }
         // Push all vertex information inside a Vertex Object and store it in the VertexBuffer of the renderer
         for numberProcessedVertex:= 0; numberProcessedVertex < len(el.vertex); numberProcessedVertex = numberProcessedVertex + 1 {
-            append(&mRenderer.allVertices, Vertex{position = el.vertex[numberProcessedVertex], uv = {0.0, 0.0},  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= el.normals[numberProcessedVertex]})
+            append(&mRenderer.allVertices, Vertex{position = el.vertex[numberProcessedVertex], uv = el.UVs[numberProcessedVertex],  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= el.normals[numberProcessedVertex]})
         }
     }
 
@@ -226,7 +240,7 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
         }
         // Push all vertex information inside a Vertex Object and store it in the VertexBuffer of the renderer
         for numberProcessedVertex:= 0; numberProcessedVertex < len(el.vertex); numberProcessedVertex = numberProcessedVertex + 1 {
-            append(&mRenderer.allVertices, Vertex{position = el.vertex[numberProcessedVertex], uv = {0.0,0.0},  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= el.normals[numberProcessedVertex], materialIndex = cast(u32)materialIndex});
+            append(&mRenderer.allVertices, Vertex{position = el.vertex[numberProcessedVertex], uv =  el.UVs[numberProcessedVertex],  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= el.normals[numberProcessedVertex], materialIndex = cast(u32)materialIndex});
         }
     }
 
@@ -356,6 +370,52 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
     mRenderer.lightInfo.lightPosition = {0.0, 15.0, -10.0, 0.0};
     mRenderer.lightInfo.lightColor = {1.0, 1.0, 1.0, 1.0};
     mRenderer.lightInfo.lightIntensity = {1000000.0, 1000000.0, 1000000.0, 1000000.0};
+
+    // Default Texture load
+    surface := loadTexturePNG("resources/textures/textureDefault.png", 4);
+    mRenderer.defaultTexture = sdl.CreateGPUTexture(mRenderer.device, sdl.GPUTextureCreateInfo{
+		type = .D2,
+		format = .R8G8B8A8_UNORM,
+		width = cast(u32)surface.w,
+		height = cast(u32)surface.h,
+		layer_count_or_depth = 1,
+		num_levels = 1,
+		usage = {.SAMPLER},
+    });
+
+    pixel_bytes := cast(u32)(surface.w * surface.h * 4)
+    
+    texTransferBuffer := sdl.CreateGPUTransferBuffer(mRenderer.device, sdl.GPUTransferBufferCreateInfo{
+        usage = .UPLOAD,
+        size = pixel_bytes,
+    })
+    
+    texData := sdl.MapGPUTransferBuffer(mRenderer.device, texTransferBuffer, false)
+
+    sdl.memcpy(texData, surface.pixels, cast(uint)pixel_bytes) 
+    sdl.UnmapGPUTransferBuffer(mRenderer.device, texTransferBuffer)
+
+    texCmdBuf := sdl.AcquireGPUCommandBuffer(mRenderer.device)
+    texCopyPass := sdl.BeginGPUCopyPass(texCmdBuf)
+    
+    texLoc := sdl.GPUTextureTransferInfo{
+        transfer_buffer = texTransferBuffer,
+        offset = 0,
+    }
+    texReg := sdl.GPUTextureRegion{
+        texture = mRenderer.defaultTexture,
+        w = cast(u32)surface.w,
+        h = cast(u32)surface.h,
+        d = 1,
+    }
+    sdl.UploadToGPUTexture(texCopyPass, texLoc, texReg, false)
+    
+    sdl.EndGPUCopyPass(texCopyPass)
+    ret := sdl.SubmitGPUCommandBuffer(texCmdBuf)
+
+    sdl.ReleaseGPUTransferBuffer(mRenderer.device, texTransferBuffer)
+    
+
 }
 
 
@@ -423,6 +483,20 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
 
 
     sdl.BindGPUFragmentStorageBuffers(renderPass, 0, &mRenderer.materialBuffer, 1);
+
+    textureBindings: [16]sdl.GPUTextureSamplerBinding;
+
+    for i in 0..<16 {
+        tex := mRenderer.textures[i]
+        if tex == nil {
+            tex = mRenderer.defaultTexture
+        }
+        
+        textureBindings[i].texture = tex
+        textureBindings[i].sampler = mRenderer.sampler
+    }
+
+    sdl.BindGPUFragmentSamplers(renderPass, 0, &textureBindings[0], 16)
 
     // bind vertexBuffer
     bufferBindings :[1]sdl.GPUBufferBinding;

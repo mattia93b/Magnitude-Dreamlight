@@ -6,15 +6,22 @@ struct Material
     float4 specular_color;
     float roughness;
     float metallic;
+    uint texture_idx;
 };
+
+// TEXTURE
+Texture2D u_Textures[16] : register(t0, space2);
+SamplerState u_Sampler   : register(s0, space2);
 // MATERIAL BUFFER
-StructuredBuffer<Material> materials : register(t0, space2);
+StructuredBuffer<Material> materials : register(t16, space2);
+
 // INPUT
 struct SPIRV_Cross_Input
 {
     float3 v_position : TEXCOORD0;
     float3 v_normals : TEXCOORD1;
     uint materialIndex : TEXCOORD2;
+    float2 v_uv : TEXCOORD3;
 };
 // OUTPUT
 struct SPIRV_Cross_Output
@@ -70,9 +77,12 @@ float3 FresnelSchlick(float cosTheta, float3 F0) {
 // MAIN 
 SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
 {
-uint index = stage_input.materialIndex;
+    uint index = stage_input.materialIndex;
+    uint texIdx = materials[index].texture_idx;
 
-    float3 albedo = materials[index].base_color.rgb;
+    float4 texColor = u_Textures[texIdx].Sample(u_Sampler, stage_input.v_uv);
+
+    float3 albedo = materials[index].base_color.rgb * texColor.rgb;
     float metallic = materials[index].metallic;
     float roughness = materials[index].roughness;
     roughness = max(roughness, 0.03);

@@ -13,6 +13,7 @@ struct SPIRV_Cross_Output
     float3 v_position : TEXCOORD0;
     float3 v_normals : TEXCOORD1;
     uint materialIndex : TEXCOORD2;
+    float2 v_uv : TEXCOORD3;
     float4 gl_Position : SV_Position;
 };
 // UNIFORMS
@@ -40,5 +41,6 @@ SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
     stage_output.v_normals      = normalize(mul(normalMatrix, stage_input.a_normals));
     stage_output.v_position     = mul(u_ModelMatrix[safeIndex], float4(stage_input.a_position, 1.0)).xyz;
     stage_output.materialIndex  = stage_input.materialIndex;
+    stage_output.v_uv           = stage_input.a_uv; 
     return stage_output;
 }

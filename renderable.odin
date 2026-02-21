@@ -11,6 +11,7 @@ Renderable::struct{
     vertex: [dynamic]linalg.Vector3f32,
     index: [dynamic]u16,
     normals: [dynamic]linalg.Vector3f32,
+    UVs: [dynamic]linalg.Vector2f32,
     modelMatrix:matrix[4,4]f32,
     material:Material,
     materialPBR: MaterialPBR,
@@ -111,6 +112,37 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, texturePath:
     append(&cube.normals, linalg.Vector3f32{0.0, -1.0, 0.0}); //6
     append(&cube.normals, linalg.Vector3f32{0.0, -1.0, 0.0}); //7
 
+    // UVs
+    append(&cube.UVs, linalg.Vector2f32{0, 0});
+    append(&cube.UVs, linalg.Vector2f32{0, 1});
+    append(&cube.UVs, linalg.Vector2f32{1, 1});
+    append(&cube.UVs, linalg.Vector2f32{1, 0});
+
+    append(&cube.UVs, linalg.Vector2f32{0, 0});
+    append(&cube.UVs, linalg.Vector2f32{0, 1});
+    append(&cube.UVs, linalg.Vector2f32{1, 1});
+    append(&cube.UVs, linalg.Vector2f32{1, 0});
+
+    append(&cube.UVs, linalg.Vector2f32{0, 0});
+    append(&cube.UVs, linalg.Vector2f32{0, 1});
+    append(&cube.UVs, linalg.Vector2f32{1, 1});
+    append(&cube.UVs, linalg.Vector2f32{1, 0});
+
+    append(&cube.UVs, linalg.Vector2f32{0, 0});
+    append(&cube.UVs, linalg.Vector2f32{0, 1});
+    append(&cube.UVs, linalg.Vector2f32{1, 1});
+    append(&cube.UVs, linalg.Vector2f32{1, 0});
+
+    append(&cube.UVs, linalg.Vector2f32{0, 0});
+    append(&cube.UVs, linalg.Vector2f32{0, 1});
+    append(&cube.UVs, linalg.Vector2f32{1, 1});
+    append(&cube.UVs, linalg.Vector2f32{1, 0});
+
+    append(&cube.UVs, linalg.Vector2f32{0, 0});
+    append(&cube.UVs, linalg.Vector2f32{0, 1});
+    append(&cube.UVs, linalg.Vector2f32{1, 1});
+    append(&cube.UVs, linalg.Vector2f32{1, 0});
+
 
     // TEXTURE
     if texturePath != "" {
@@ -142,9 +174,9 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
     stackStep :f64= PI / cast(f64)stackCount;
     sectorAngle, stackAngle:f64;
 
-    verticesV :[dynamic] linalg.Vector3f32;
-    normalsV:[dynamic] linalg.Vector3f32;
-    //std::vector<maths::vec3> textureCoordV;
+    verticesV : [dynamic] linalg.Vector3f32;
+    normalsV : [dynamic] linalg.Vector3f32;
+    uvsV : [dynamic]linalg.Vector2f32;
 
     for i :int= 0; i <= stackCount; i=i+1 {
         stackAngle = PI / 2 - cast(f64)i * cast(f64)stackStep;        // starting from pi/2 to -pi/2
@@ -168,9 +200,9 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
             append(&normalsV, linalg.Vector3f32{cast(f32)nx, cast(f32)ny, cast(f32)nz});
 
             // vertex tex coord between [0, 1]
-            //s = (float)j / sectorCount;
-            //t = (float)i / stackCount;
-            //addTexCoord(s, t);
+            s = cast(f32)j / cast(f32)sectorCount;
+            t = cast(f32)i / cast(f32)stackCount;
+            append(&uvsV, linalg.Vector2f32{s, t});
         }
 
     }
@@ -212,19 +244,14 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
     i, j:int;
     j = 0;
     count :int= len(verticesV);
-    for i = 0; i < count - 1; i = i + 3 {
-        j = j + 2;
-        append(&sphere.vertex, verticesV[i]);
-        append(&sphere.vertex, verticesV[i + 1]);
-        append(&sphere.vertex, verticesV[i + 2]);
+for i = 0; i < count; i = i + 1 {
+    
+    append(&sphere.vertex, verticesV[i])
 
-        append(&sphere.normals, normalsV[i]);
-        append(&sphere.normals, normalsV[i + 1]);
-        append(&sphere.normals, normalsV[i + 2]);
+    append(&sphere.normals, normalsV[i])
 
-        //interleavedVertices.push_back(texCoords[j]);
-        //interleavedVertices.push_back(texCoords[j + 1]);
-    }
+    append(&sphere.UVs, uvsV[i])
+}
 
     // TEXTURE
 
