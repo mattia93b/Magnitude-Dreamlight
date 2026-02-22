@@ -29,6 +29,9 @@ DEFAULT_WINDOW_TITLE :: "Magnitude Dreamlight";
 
 main::proc(){
     context.logger = log.create_console_logger();
+
+    createTextureAtlas();
+
     // Window
     mWindow: ^sdl.Window;
 
