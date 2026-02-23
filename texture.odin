@@ -39,7 +39,7 @@ loadTexturePNG::proc(path:cstring, desiredChannels:int) -> ^sdl.Surface {
 
 }
 
-TEXTURE_ATLAS_SIZE :: 20000;
+TEXTURE_ATLAS_SIZE :: 10000; // 4096
 TEXTURE_ATLAS_CHANNELS :: 4;
 
 
@@ -65,7 +65,6 @@ createTextureAtlas::proc(){
             mem.copy(&atlas_teture[destOffset], &imgData[sourceOffset], int(w) * TEXTURE_ATLAS_CHANNELS);
         }
 
-        // 3. Calcolo UV scalate
         u_min := f32(cursorX) / f32(TEXTURE_ATLAS_SIZE)
         v_min := f32(cursorY) / f32(TEXTURE_ATLAS_SIZE)
         u_max := f32(cursorX + int(w)) / f32(TEXTURE_ATLAS_SIZE)
@@ -77,6 +76,6 @@ createTextureAtlas::proc(){
 
     }
 
-    image.write_png("atlas_20k.png", TEXTURE_ATLAS_SIZE, TEXTURE_ATLAS_SIZE, TEXTURE_ATLAS_CHANNELS, raw_data(atlas_teture), TEXTURE_ATLAS_SIZE * TEXTURE_ATLAS_CHANNELS);
+    image.write_png("atlas_10k.png", TEXTURE_ATLAS_SIZE, TEXTURE_ATLAS_SIZE, TEXTURE_ATLAS_CHANNELS, raw_data(atlas_teture), TEXTURE_ATLAS_SIZE * TEXTURE_ATLAS_CHANNELS);
 
 }
