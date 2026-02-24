@@ -46,7 +46,7 @@ Renderer::struct{
     device : ^sdl.GPUDevice,
     window : ^sdl.Window,
     graphicsPipeline : [dynamic]^sdl.GPUGraphicsPipeline,
-    renderable : [dynamic]Renderable,
+    renderable : [dynamic]^Renderable,
     light : [dynamic]Renderable,
     lightNumberOfIndexInBuffer: int,
     allVertices : [dynamic]Vertex,
@@ -189,7 +189,7 @@ createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fr
 }
 
 
-addRenderable::proc(mRenderer:^Renderer, renderable:Renderable){
+addRenderable::proc(mRenderer:^Renderer, renderable:^Renderable){
     append(&mRenderer.renderable, renderable)
     //log.info("Length of mRenderer.renderable: ", len(mRenderer.renderable));
 }
@@ -450,6 +450,13 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     viewMat := linalg.matrix4_look_at_f32(mRenderer.rCamera.position, mRenderer.rCamera.position + mRenderer.rCamera.front, mRenderer.rCamera.up);
 
     // Update Light position
+    for i := 0; i < len(mRenderer.light); i = i + 1 {
+        mRenderer.allModelMatrix[i] = mRenderer.light[i].modelMatrix;
+    }
+    // Update model position
+    for i := 0; i < len(mRenderer.renderable); i = i + 1 {
+        mRenderer.allModelMatrix[i + len(mRenderer.light)] = mRenderer.renderable[i].modelMatrix;
+    }
 
     // Get Windows size to calculate the projection Matrix
     win_size:[2]i32;

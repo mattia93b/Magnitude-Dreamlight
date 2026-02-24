@@ -30,7 +30,7 @@ DEFAULT_WINDOW_TITLE :: "Magnitude Dreamlight";
 main::proc(){
     context.logger = log.create_console_logger();
 
-    createTextureAtlas();
+    //createTextureAtlas();
 
     // Window
     mWindow: ^sdl.Window;
@@ -111,20 +111,20 @@ main::proc(){
     cube4.material = redPlastic()
     cube4.materialPBR = SR_Aluminum();
 
-    addRenderable(&mRenderer, box);
-    addRenderable(&mRenderer, base);
-    addRenderable(&mRenderer, cube1);
-    addRenderable(&mRenderer, cube2);
-    addRenderable(&mRenderer, cube3);
-    addRenderable(&mRenderer, cube4);
+    addRenderable(&mRenderer, &box);
+    addRenderable(&mRenderer, &base);
+    addRenderable(&mRenderer, &cube1);
+    addRenderable(&mRenderer, &cube2);
+    addRenderable(&mRenderer, &cube3);
+    addRenderable(&mRenderer, &cube4);
 
     sphere1 := createColoredSphere(-6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
 
-    addRenderable(&mRenderer, sphere1);
+    addRenderable(&mRenderer, &sphere1);
 
     sphere2 := createColoredSphere(6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
 
-    addRenderable(&mRenderer, sphere2);
+    addRenderable(&mRenderer, &sphere2);
 
     addLight(&mRenderer, {0.0, 15.0, 10.0});
 
@@ -138,16 +138,32 @@ main::proc(){
 
     lastTicks := sdl.GetTicks();
 
+    x :f32= -2.0; 
+	y :f32= 5.0;
+	z :f32= -2.0;
+	k :f32= 1;
+    velocity :f32= 5;
+
     // GameLoop
     for isRunning {
         
         newTicks:= sdl.GetTicks();
-        detaTime := f32(newTicks - lastTicks) / 1000;
+        deltaTime := f32(newTicks - lastTicks) / 1000;
         lastTicks = newTicks;
 
+        updatePosition(x, y, z, &sphere1);
+
+        if (x <= - 10) {
+			k = 1;
+		}
+		else if(x >= 10){
+			k = - 1;
+		}
+
+		x = x + (velocity * k * deltaTime);
 
         // Renderer update 
-        isRunning = update(&mRenderer, detaTime);
+        isRunning = update(&mRenderer, deltaTime);
         //isRunning = updateInstance(&mRenderer, detaTime);
     }
 

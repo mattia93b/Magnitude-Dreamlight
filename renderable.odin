@@ -18,6 +18,12 @@ Renderable::struct{
     texture:^sdl.Surface,
 }
 
+
+updatePosition::proc(x:f32, y:f32, z:f32, renderable:^Renderable){
+    // MODEL MATRIX
+    renderable.modelMatrix = linalg.matrix4_translate_f32({x, y, z});
+}
+
 createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, texturePath:cstring = "") -> Renderable{
     // RENDERABLE
     cube := Renderable{}
@@ -244,14 +250,14 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
     i, j:int;
     j = 0;
     count :int= len(verticesV);
-for i = 0; i < count; i = i + 1 {
-    
-    append(&sphere.vertex, verticesV[i])
+    for i = 0; i < count; i = i + 1 {
+        
+        append(&sphere.vertex, verticesV[i])
 
-    append(&sphere.normals, normalsV[i])
+        append(&sphere.normals, normalsV[i])
 
-    append(&sphere.UVs, uvsV[i])
-}
+        append(&sphere.UVs, uvsV[i])
+    }
 
     // TEXTURE
 
