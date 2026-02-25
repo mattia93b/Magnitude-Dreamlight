@@ -29,55 +29,32 @@ DEFAULT_WINDOW_TITLE :: "Magnitude Dreamlight";
 
 main::proc(){
     context.logger = log.create_console_logger();
-
+    // Texture Atlas Demo
     //createTextureAtlas();
 
-    // Window
-    mWindow: ^sdl.Window;
-
-    if !sdl.Init({.VIDEO}){
-        log.errorf("Unable to initialize SDL3. Error: %s", sdl.GetError());
-    }
-    log.infof("Initialize SDL3.");
-
-    mWindow = sdl.CreateWindow(DEFAULT_WINDOW_TITLE + " - " + DEFAULT_RENDER_API, DEFAULT_SCREEN_RES_WIDTH, DEFAULT_SCREEN_RES_HEIGHT, {});
-    if mWindow == nil {
-        log.errorf("Couldn't create window: %s", sdl.GetError());
-    }
-
-    // GPU Device
-    mDevice: ^sdl.GPUDevice
-    // Check Graphic API
-    log.info("Operating System:", ODIN_OS);
-    log.info("Default Rendering API:", DEFAULT_RENDER_API);
-    log.info("Shader Extension:", SHADER_EXT);
+    // Data Manager Creation
+    dataManager : DataManager;
+    // Create Renderer
+    createRenderer(&dataManager);
     
-    // Device cration with supported API
-    if sdl.GPUSupportsShaderFormats({.SPIRV, .MSL, .DXIL}, nil) {
-        mDevice = sdl.CreateGPUDevice({.SPIRV, .MSL, .DXIL}, true, DEFAULT_RENDER_API);
-    }
-    if mDevice == nil
-    {
-        log.errorf("Couldn't create Device: %s", sdl.GetError());
-    }
-
-    if sdl.ClaimWindowForGPUDevice(mDevice, mWindow){
-        log.info("correct bindings between device and window", true);
-    }
-
     // Renderer definition
-    mRenderer : Renderer = {device = mDevice, window = mWindow}
+    mRenderer : ^Renderer = &dataManager.renderer;
 
     // Load vertex shader
-    vertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 1, 0);
+    vertexShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 1, 0);
+    // New datamanger System
+    vertexShaderIndex := createShader(&dataManager, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 1, 0);
+    log.infof("Shader Index: ", vertexShaderIndex);
     // Load fragment shader
     //fragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragment.frag." + SHADER_EXT, .FRAGMENT, 2, 1);
-    fragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragmentMaterialPBR.frag." + SHADER_EXT, .FRAGMENT, 2, 1, 16);
-
+    fragmentShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragmentMaterialPBR.frag." + SHADER_EXT, .FRAGMENT, 2, 1, 16);
+    // New datamanger System
+    fragmentShaderIndex := createShader(&dataManager, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragmentMaterialPBR.frag." + SHADER_EXT, .FRAGMENT, 2, 1, 16);
+    log.infof("Shader Index: ", fragmentShaderIndex);
     // Load Light vertex shader
-    lightVertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.vert." + SHADER_EXT, .VERTEX, 3, 0);
+    lightVertexShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.vert." + SHADER_EXT, .VERTEX, 3, 0);
     // Load Light fragment shader
-    lightFragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.frag." + SHADER_EXT, .FRAGMENT, 0, 0);
+    lightFragmentShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.frag." + SHADER_EXT, .FRAGMENT, 0, 0);
 
     // Load Light vertex shader
     //instanceVertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/instanceVertex.vert." + SHADER_EXT, .VERTEX, 1, 0);
@@ -85,9 +62,11 @@ main::proc(){
     //instanceFragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/instanceFragment.frag." + SHADER_EXT, .FRAGMENT, 2, 1);
 
     // Create Graphic Pipeline
-    createGraphicPipeline(&mRenderer, vertexShader, fragmentShader);
+    //createGraphicPipeline(&mRenderer, vertexShader, fragmentShader);
+    // New datamanger System
+    createGraphicPipelineDataManager(&dataManager, vertexShaderIndex, fragmentShaderIndex);
     // Create Light Graphic Pipeline
-    createGraphicPipeline(&mRenderer, lightVertexShader, lightFragmentShader);
+    createGraphicPipeline(mRenderer, lightVertexShader, lightFragmentShader);
     // Create Instance Graphic Pipeline
     //createGraphicPipeline(&mRenderer, instanceVertexShader, instanceFragmentShader);
 
@@ -111,25 +90,25 @@ main::proc(){
     cube4.material = redPlastic()
     cube4.materialPBR = SR_Aluminum();
 
-    addRenderable(&mRenderer, &box);
-    addRenderable(&mRenderer, &base);
-    addRenderable(&mRenderer, &cube1);
-    addRenderable(&mRenderer, &cube2);
-    addRenderable(&mRenderer, &cube3);
-    addRenderable(&mRenderer, &cube4);
+    addRenderable(mRenderer, &box);
+    addRenderable(mRenderer, &base);
+    addRenderable(mRenderer, &cube1);
+    addRenderable(mRenderer, &cube2);
+    addRenderable(mRenderer, &cube3);
+    addRenderable(mRenderer, &cube4);
 
     sphere1 := createColoredSphere(-6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
 
-    addRenderable(&mRenderer, &sphere1);
+    addRenderable(mRenderer, &sphere1);
 
     sphere2 := createColoredSphere(6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
 
-    addRenderable(&mRenderer, &sphere2);
+    addRenderable(mRenderer, &sphere2);
 
-    addLight(&mRenderer, {0.0, 15.0, 10.0});
+    addLight(mRenderer, {0.0, 15.0, 10.0});
 
     // Upload renderable in buffer
-    pushRenderableInBuffer(&mRenderer);
+    pushRenderableInBuffer(mRenderer);
     //pushRenderableInBufferForInstance(&mRenderer);
 
 
@@ -163,9 +142,9 @@ main::proc(){
 		x = x + (velocity * k * deltaTime);
 
         // Renderer update 
-        isRunning = update(&mRenderer, deltaTime);
+        isRunning = update(mRenderer, deltaTime);
         //isRunning = updateInstance(&mRenderer, detaTime);
     }
 
-    cleanRenderer(&mRenderer);
+    cleanRenderer(mRenderer);
 }
