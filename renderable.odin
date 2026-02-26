@@ -161,6 +161,8 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, texturePath:
 
     cube.material = redPlastic();
 
+    cube.materialPBR = SR_Aluminum();
+
     return cube;
 }
 

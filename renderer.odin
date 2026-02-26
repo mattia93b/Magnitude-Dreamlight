@@ -46,7 +46,7 @@ Renderer::struct{
     device : ^sdl.GPUDevice,
     window : ^sdl.Window,
     graphicsPipeline : [dynamic]^sdl.GPUGraphicsPipeline,
-    renderable : [dynamic]^Renderable,
+    renderable : [dynamic]Renderable,
     light : [dynamic]Renderable,
     lightNumberOfIndexInBuffer: int,
     allVertices : [dynamic]Vertex,
@@ -189,7 +189,7 @@ createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fr
 }
 
 
-addRenderable::proc(mRenderer:^Renderer, renderable:^Renderable){
+addRenderable::proc(mRenderer:^Renderer, renderable:Renderable){
     append(&mRenderer.renderable, renderable)
     //log.info("Length of mRenderer.renderable: ", len(mRenderer.renderable));
 }

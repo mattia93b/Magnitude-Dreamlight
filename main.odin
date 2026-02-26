@@ -38,23 +38,25 @@ main::proc(){
     createRenderer(&dataManager);
     
     // Renderer definition
-    mRenderer : ^Renderer = &dataManager.renderer;
+    //mRenderer : ^Renderer = &dataManager.renderer;
 
     // Load vertex shader
-    vertexShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 1, 0);
+    //vertexShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 1, 0);
     // New datamanger System
     vertexShaderIndex := createShader(&dataManager, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 1, 0);
     log.infof("Shader Index: ", vertexShaderIndex);
     // Load fragment shader
     //fragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragment.frag." + SHADER_EXT, .FRAGMENT, 2, 1);
-    fragmentShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragmentMaterialPBR.frag." + SHADER_EXT, .FRAGMENT, 2, 1, 16);
+    //fragmentShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragmentMaterialPBR.frag." + SHADER_EXT, .FRAGMENT, 2, 1, 16);
     // New datamanger System
     fragmentShaderIndex := createShader(&dataManager, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragmentMaterialPBR.frag." + SHADER_EXT, .FRAGMENT, 2, 1, 16);
     log.infof("Shader Index: ", fragmentShaderIndex);
     // Load Light vertex shader
-    lightVertexShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.vert." + SHADER_EXT, .VERTEX, 3, 0);
+    //lightVertexShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.vert." + SHADER_EXT, .VERTEX, 3, 0);
+    lightVertexShaderIndex := createShader(&dataManager, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.vert." + SHADER_EXT, .VERTEX, 3, 0);
     // Load Light fragment shader
-    lightFragmentShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.frag." + SHADER_EXT, .FRAGMENT, 0, 0);
+    //lightFragmentShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.frag." + SHADER_EXT, .FRAGMENT, 0, 0);
+    lightFragmentShaderIndex := createShader(&dataManager, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.frag." + SHADER_EXT, .FRAGMENT, 0, 0);
 
     // Load Light vertex shader
     //instanceVertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/instanceVertex.vert." + SHADER_EXT, .VERTEX, 1, 0);
@@ -66,12 +68,25 @@ main::proc(){
     // New datamanger System
     createGraphicPipelineDataManager(&dataManager, vertexShaderIndex, fragmentShaderIndex);
     // Create Light Graphic Pipeline
-    createGraphicPipeline(mRenderer, lightVertexShader, lightFragmentShader);
+    //createGraphicPipeline(mRenderer, lightVertexShader, lightFragmentShader);
+    createGraphicPipelineDataManager(&dataManager, lightVertexShaderIndex, lightFragmentShaderIndex);
     // Create Instance Graphic Pipeline
     //createGraphicPipeline(&mRenderer, instanceVertexShader, instanceFragmentShader);
 
     // Scene
-    box   := createColoredCube(0.0, 10.0, -20.0, 5.0, 5.0);
+    boxId := createCube(&dataManager, 0.0, 10.0, -20.0, 5.0, 5.0);
+    baseId  := createCube(&dataManager, 0.0, 3.0, -10.0, 32.0, 0.5, "resources/textures/textureDefault.png");
+    cube1Id := createCube(&dataManager, 2.0, 5.0, -10.0, 3.0, 3.0);
+	cube2Id := createCube(&dataManager, 6.0, 5.0, -10.0, 3.0, 3.0);
+	cube3Id := createCube(&dataManager, -2.0, 5.0, -10.0, 3.0, 3.0);
+	cube4Id := createCube(&dataManager, -6.0, 5.0, -10.0, 3.0, 3.0);
+
+
+    sphere1Id := createSphere(&dataManager, -6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
+    sphere2Id := createSphere(&dataManager, 6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
+
+
+    /*box   := createColoredCube(0.0, 10.0, -20.0, 5.0, 5.0);
     box.material = jade();
     box.materialPBR = SR_Aluminum();
     base  := createColoredCube(0.0, 3.0, -10.0, 32.0, 0.5, "resources/textures/textureDefault.png");
@@ -95,21 +110,23 @@ main::proc(){
     addRenderable(mRenderer, &cube1);
     addRenderable(mRenderer, &cube2);
     addRenderable(mRenderer, &cube3);
-    addRenderable(mRenderer, &cube4);
+    addRenderable(mRenderer, &cube4);*/
 
-    sphere1 := createColoredSphere(-6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
+    //sphere1 := createColoredSphere(-6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
 
-    addRenderable(mRenderer, &sphere1);
+    //addRenderable(mRenderer, sphere1);
 
-    sphere2 := createColoredSphere(6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
+    //sphere2 := createColoredSphere(6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
 
-    addRenderable(mRenderer, &sphere2);
+    //addRenderable(mRenderer, sphere2);
 
-    addLight(mRenderer, {0.0, 15.0, 10.0});
+    //addLight(&dataManager.renderer, {0.0, 15.0, 10.0});
+    addLightToScene(&dataManager, {0.0, 15.0, 10.0});
 
     // Upload renderable in buffer
-    pushRenderableInBuffer(mRenderer);
+    //pushRenderableInBuffer(mRenderer);
     //pushRenderableInBufferForInstance(&mRenderer);
+    uploadAllDataToGPU(&dataManager);
 
 
     // Set isRunning true to start the loop
@@ -130,7 +147,7 @@ main::proc(){
         deltaTime := f32(newTicks - lastTicks) / 1000;
         lastTicks = newTicks;
 
-        updatePosition(x, y, z, &sphere1);
+        updatePosition(x, y, z, getRenderableObject(&dataManager, sphere1Id));
 
         if (x <= - 10) {
 			k = 1;
@@ -142,9 +159,9 @@ main::proc(){
 		x = x + (velocity * k * deltaTime);
 
         // Renderer update 
-        isRunning = update(mRenderer, deltaTime);
+        isRunning = update(&dataManager.renderer, deltaTime);
         //isRunning = updateInstance(&mRenderer, detaTime);
     }
 
-    cleanRenderer(mRenderer);
+    cleanRenderer(&dataManager.renderer);
 }

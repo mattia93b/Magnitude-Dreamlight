@@ -92,3 +92,45 @@ createShader::proc(dataManager:^DataManager, path:cstring, stage:sdl.GPUShaderSt
     return shaderID;
 }
 
+createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, height:f32, texturePath:cstring = "") -> u32 {
+
+    box := createColoredCube(x, y, z, width, height);
+
+    addRenderable(&dataManager.renderer, box);
+
+    cubeIndex := cast(u32)len(dataManager.renderer.renderable) - 1;
+
+    return cubeIndex;
+}
+
+
+createSphere::proc(dataManager:^DataManager, xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int)  -> u32 {
+
+    sphere := createColoredSphere(xPos, yPos, zPos, radius, stackCount, sectorCount);
+
+    addRenderable(&dataManager.renderer, sphere);
+
+    sphereIndex := cast(u32)len(dataManager.renderer.renderable) - 1;
+    
+    return sphereIndex;
+}
+
+getRenderableObject::proc(dataManager:^DataManager, renderableID:u32) -> ^Renderable{
+
+    return &dataManager.renderer.renderable[renderableID];
+
+}
+
+addLightToScene::proc(dataManager:^DataManager, lightPos: linalg.Vector3f32) -> u32 {
+
+    addLight(&dataManager.renderer, lightPos);
+
+    lightIndex := cast(u32)len(dataManager.renderer.light) - 1;
+
+    return lightIndex;
+}
+
+uploadAllDataToGPU::proc(dataManager:^DataManager) {
+
+    pushRenderableInBuffer(&dataManager.renderer);
+}
