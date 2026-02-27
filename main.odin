@@ -36,26 +36,14 @@ main::proc(){
     dataManager : DataManager;
     // Create Renderer
     createRenderer(&dataManager);
-    
-    // Renderer definition
-    //mRenderer : ^Renderer = &dataManager.renderer;
 
     // Load vertex shader
-    //vertexShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 1, 0);
-    // New datamanger System
     vertexShaderIndex := createShader(&dataManager, "shaders/compiled/"+ DEFAULT_RENDER_API +"/vertex.vert." + SHADER_EXT, .VERTEX, 1, 0);
-    log.infof("Shader Index: ", vertexShaderIndex);
     // Load fragment shader
-    //fragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragment.frag." + SHADER_EXT, .FRAGMENT, 2, 1);
-    //fragmentShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragmentMaterialPBR.frag." + SHADER_EXT, .FRAGMENT, 2, 1, 16);
-    // New datamanger System
     fragmentShaderIndex := createShader(&dataManager, "shaders/compiled/"+ DEFAULT_RENDER_API +"/fragmentMaterialPBR.frag." + SHADER_EXT, .FRAGMENT, 2, 1, 16);
-    log.infof("Shader Index: ", fragmentShaderIndex);
     // Load Light vertex shader
-    //lightVertexShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.vert." + SHADER_EXT, .VERTEX, 3, 0);
     lightVertexShaderIndex := createShader(&dataManager, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.vert." + SHADER_EXT, .VERTEX, 3, 0);
     // Load Light fragment shader
-    //lightFragmentShader := loadShader(dataManager.gpuDevice, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.frag." + SHADER_EXT, .FRAGMENT, 0, 0);
     lightFragmentShaderIndex := createShader(&dataManager, "shaders/compiled/"+ DEFAULT_RENDER_API +"/light.frag." + SHADER_EXT, .FRAGMENT, 0, 0);
 
     // Load Light vertex shader
@@ -68,7 +56,6 @@ main::proc(){
     // New datamanger System
     createGraphicPipelineDataManager(&dataManager, vertexShaderIndex, fragmentShaderIndex);
     // Create Light Graphic Pipeline
-    //createGraphicPipeline(mRenderer, lightVertexShader, lightFragmentShader);
     createGraphicPipelineDataManager(&dataManager, lightVertexShaderIndex, lightFragmentShaderIndex);
     // Create Instance Graphic Pipeline
     //createGraphicPipeline(&mRenderer, instanceVertexShader, instanceFragmentShader);
@@ -85,42 +72,6 @@ main::proc(){
     sphere1Id := createSphere(&dataManager, -6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
     sphere2Id := createSphere(&dataManager, 6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
 
-
-    /*box   := createColoredCube(0.0, 10.0, -20.0, 5.0, 5.0);
-    box.material = jade();
-    box.materialPBR = SR_Aluminum();
-    base  := createColoredCube(0.0, 3.0, -10.0, 32.0, 0.5, "resources/textures/textureDefault.png");
-    base.material = obsidian();
-    base.materialPBR = SR_Aluminum();
-	cube1 := createColoredCube(2.0, 5.0, -10.0, 3.0, 3.0);
-    cube1.material = bronze();
-    cube1.materialPBR = SR_Aluminum();
-	cube2 := createColoredCube(6.0, 5.0, -10.0, 3.0, 3.0);
-    cube2.material = silver();
-    cube2.materialPBR = SR_Aluminum();
-	cube3 := createColoredCube(-2.0, 5.0, -10.0, 3.0, 3.0);
-    cube3.material = emerald();
-    cube3.materialPBR = SR_Aluminum();
-	cube4 := createColoredCube(-6.0, 5.0, -10.0, 3.0, 3.0);
-    cube4.material = redPlastic()
-    cube4.materialPBR = SR_Aluminum();
-
-    addRenderable(mRenderer, &box);
-    addRenderable(mRenderer, &base);
-    addRenderable(mRenderer, &cube1);
-    addRenderable(mRenderer, &cube2);
-    addRenderable(mRenderer, &cube3);
-    addRenderable(mRenderer, &cube4);*/
-
-    //sphere1 := createColoredSphere(-6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
-
-    //addRenderable(mRenderer, sphere1);
-
-    //sphere2 := createColoredSphere(6.0, 10.0, -10.0, 2.0, 25.0, 25.0);
-
-    //addRenderable(mRenderer, sphere2);
-
-    //addLight(&dataManager.renderer, {0.0, 15.0, 10.0});
     addLightToScene(&dataManager, {0.0, 15.0, 10.0});
 
     // Upload renderable in buffer
@@ -158,7 +109,7 @@ main::proc(){
 
 		x = x + (velocity * k * deltaTime);
 
-        // Renderer update 
+        // Renderer update
         isRunning = update(&dataManager.renderer, deltaTime);
         //isRunning = updateInstance(&mRenderer, detaTime);
     }

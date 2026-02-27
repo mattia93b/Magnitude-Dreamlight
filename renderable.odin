@@ -13,7 +13,6 @@ Renderable::struct{
     normals: [dynamic]linalg.Vector3f32,
     UVs: [dynamic]linalg.Vector2f32,
     modelMatrix:matrix[4,4]f32,
-    material:Material,
     materialPBR: MaterialPBR,
     texture:^sdl.Surface,
 }
@@ -159,8 +158,6 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, texturePath:
     // MODEL MATRIX
     cube.modelMatrix = linalg.matrix4_translate_f32({x, y, z});
 
-    cube.material = redPlastic();
-
     cube.materialPBR = SR_Aluminum();
 
     return cube;
@@ -265,8 +262,6 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
 
     // MODEL MATRIX
     sphere.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos});
-
-    sphere.material = gold();
 
     sphere.materialPBR = SR_Gold();
 
