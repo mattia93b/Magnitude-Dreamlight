@@ -161,7 +161,10 @@ createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fr
     samplerInfo.address_mode_v = .REPEAT;
     samplerInfo.address_mode_w = .REPEAT;
 
-    mRenderer.sampler = sdl.CreateGPUSampler(mRenderer.device, samplerInfo);
+    if mRenderer.sampler == nil {
+        mRenderer.sampler = sdl.CreateGPUSampler(mRenderer.device, samplerInfo);
+    }
+    
     
     // createGraphicPipeline
     //append(&mRenderer.graphicsPipeline, sdl.CreateGPUGraphicsPipeline(mRenderer.device, pipelineInfo));
@@ -542,8 +545,18 @@ cleanRenderer::proc(mRenderer:^Renderer){
     sdl.ReleaseGPUBuffer(mRenderer.device, mRenderer.vertexBuffer);
     sdl.ReleaseGPUBuffer(mRenderer.device, mRenderer.indexBuffer);
     sdl.ReleaseGPUBuffer(mRenderer.device, mRenderer.materialBuffer);
+
     sdl.ReleaseGPUTransferBuffer(mRenderer.device, mRenderer.transferBuffer);
+
     sdl.ReleaseGPUTexture(mRenderer.device, mRenderer.depthTexture);
+
+    sdl.ReleaseGPUSampler(mRenderer.device, mRenderer.sampler);
+    sdl.ReleaseGPUTexture(mRenderer.device, mRenderer.defaultTexture);
+    for tex in mRenderer.textures {
+        if tex != nil {
+            sdl.ReleaseGPUTexture(mRenderer.device, tex);
+        }
+    }
     sdl.ReleaseGPUGraphicsPipeline(mRenderer.device, mRenderer.graphicsPipeline[0]);
     sdl.ReleaseGPUGraphicsPipeline(mRenderer.device, mRenderer.graphicsPipeline[1]);
     sdl.DestroyGPUDevice(mRenderer.device);
