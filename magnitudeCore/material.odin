@@ -1,4 +1,4 @@
-package main
+package magnitudeCore
 
 // logger
 import "core:log"
