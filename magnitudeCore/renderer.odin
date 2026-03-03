@@ -53,6 +53,7 @@ Renderer::struct{
     allVerticesForInstance : [dynamic]VertexInstance,
     allIndices : [dynamic]u16,
     allMaterials : [dynamic]MaterialPBR,
+    allTextures : [16]^sdl.GPUTexture,
     allVerticesInstance : [dynamic]VertexInstance,
     allInstance : [dynamic]InstanceData,
     buffer : ^sdl.GPUCommandBuffer,
@@ -66,7 +67,7 @@ Renderer::struct{
     inputHandler : mouseKeyboardInput,
     depthTexture : ^sdl.GPUTexture,
     lightInfo : LightInfo,
-    textures : [16]^sdl.GPUTexture,
+    textures : map[cstring]int,
     sampler  : ^sdl.GPUSampler,
     defaultTexture : ^sdl.GPUTexture,
 }
@@ -227,6 +228,8 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
 
     mRenderer.lightNumberOfIndexInBuffer = len(mRenderer.allIndices);
 
+    textureCount := 0;
+
     // Push renderable after light object
     for el in mRenderer.renderable{
         // calculate model matrix Index and append model matrix to allModelMatrixArray
@@ -245,6 +248,14 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
         for numberProcessedVertex:= 0; numberProcessedVertex < len(el.vertex); numberProcessedVertex = numberProcessedVertex + 1 {
             append(&mRenderer.allVertices, Vertex{position = el.vertex[numberProcessedVertex], uv =  el.UVs[numberProcessedVertex],  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= el.normals[numberProcessedVertex], materialIndex = cast(u32)materialIndex});
         }
+
+        if el.texture != ""{
+            if !(el.texture in mRenderer.textures){
+                mRenderer.textures[el.texture] = textureCount;
+                textureCount += 1;
+            }
+        }
+
     }
 
     //log.info("Model Matrix Index: ", mRenderer.allVertices[30]);
@@ -336,10 +347,7 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
     // Upload Materials
     sdl.UploadToGPUBuffer(copyPass, materialsLocation, materialsRegion, true);
 
-    sdl.EndGPUCopyPass(copyPass);
-    if sdl.SubmitGPUCommandBuffer(mRenderer.buffer){
-        log.info("Submit buffert to GPU succesfully", true);
-    }
+
 
     // Define depth texture
     win_size:[2]i32;
@@ -369,55 +377,54 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
     mRenderer.rCamera.firstMouse = true;
 
     // Light set up
-
     mRenderer.lightInfo.lightPosition = {0.0, 15.0, -10.0, 0.0};
     mRenderer.lightInfo.lightColor = {1.0, 1.0, 1.0, 1.0};
     mRenderer.lightInfo.lightIntensity = {1000000.0, 1000000.0, 1000000.0, 1000000.0};
 
     // Default Texture load
-    surface := loadTexturePNG("resources/textures/textureDefault.png", 4);
-    mRenderer.defaultTexture = sdl.CreateGPUTexture(mRenderer.device, sdl.GPUTextureCreateInfo{
-		type = .D2,
-		format = .R8G8B8A8_UNORM,
-		width = cast(u32)surface.w,
-		height = cast(u32)surface.h,
-		layer_count_or_depth = 1,
-		num_levels = 1,
-		usage = {.SAMPLER},
-    });
+    for path, i in mRenderer.textures {
+        if i >= 16 do break 
 
-    pixel_bytes := cast(u32)(surface.w * surface.h * 4)
-    
-    texTransferBuffer := sdl.CreateGPUTransferBuffer(mRenderer.device, sdl.GPUTransferBufferCreateInfo{
-        usage = .UPLOAD,
-        size = pixel_bytes,
-    })
-    
-    texData := sdl.MapGPUTransferBuffer(mRenderer.device, texTransferBuffer, false)
+        surface := loadTexturePNG(path, 4)
+        if surface == nil do continue
+        defer sdl.DestroySurface(surface)
 
-    sdl.memcpy(texData, surface.pixels, cast(uint)pixel_bytes) 
-    sdl.UnmapGPUTransferBuffer(mRenderer.device, texTransferBuffer)
+        mRenderer.allTextures[i] = sdl.CreateGPUTexture(mRenderer.device, sdl.GPUTextureCreateInfo{
+            type = .D2,
+            format = .R8G8B8A8_UNORM,
+            width = cast(u32)surface.w,
+            height = cast(u32)surface.h,
+            layer_count_or_depth = 1,
+            num_levels = 1,
+            usage = {.SAMPLER},
+        })
 
-    texCmdBuf := sdl.AcquireGPUCommandBuffer(mRenderer.device)
-    texCopyPass := sdl.BeginGPUCopyPass(texCmdBuf)
-    
-    texLoc := sdl.GPUTextureTransferInfo{
-        transfer_buffer = texTransferBuffer,
-        offset = 0,
+        pixel_bytes := cast(u32)(surface.w * surface.h * 4)
+
+        stagingBuffer := sdl.CreateGPUTransferBuffer(mRenderer.device, sdl.GPUTransferBufferCreateInfo{
+            usage = .UPLOAD,
+            size = pixel_bytes,
+        })
+
+        data := sdl.MapGPUTransferBuffer(mRenderer.device, stagingBuffer, false)
+        sdl.memcpy(data, surface.pixels, cast(uint)pixel_bytes)
+        sdl.UnmapGPUTransferBuffer(mRenderer.device, stagingBuffer)
+
+        sdl.UploadToGPUTexture(
+            copyPass, 
+            { transfer_buffer = stagingBuffer, offset = 0 }, 
+            { texture = mRenderer.allTextures[i], w = cast(u32)surface.w, h = cast(u32)surface.h, d = 1 }, 
+            false
+        )
+
+        sdl.ReleaseGPUTransferBuffer(mRenderer.device, stagingBuffer)
+        // mRenderer.texture_count += 1
     }
-    texReg := sdl.GPUTextureRegion{
-        texture = mRenderer.defaultTexture,
-        w = cast(u32)surface.w,
-        h = cast(u32)surface.h,
-        d = 1,
-    }
-    sdl.UploadToGPUTexture(texCopyPass, texLoc, texReg, false)
-    
-    sdl.EndGPUCopyPass(texCopyPass)
-    ret := sdl.SubmitGPUCommandBuffer(texCmdBuf)
 
-    sdl.ReleaseGPUTransferBuffer(mRenderer.device, texTransferBuffer)
-    
+    sdl.EndGPUCopyPass(copyPass);
+    if sdl.SubmitGPUCommandBuffer(mRenderer.buffer){
+        log.info("Submit buffert to GPU succesfully", true);
+    }
 
 }
 
@@ -497,9 +504,9 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     textureBindings: [16]sdl.GPUTextureSamplerBinding;
 
     for i in 0..<16 {
-        tex := mRenderer.textures[i]
+        tex := mRenderer.allTextures[i]
         if tex == nil {
-            tex = mRenderer.defaultTexture
+            tex = mRenderer.allTextures[0];
         }
         
         textureBindings[i].texture = tex
@@ -552,7 +559,7 @@ cleanRenderer::proc(mRenderer:^Renderer){
 
     sdl.ReleaseGPUSampler(mRenderer.device, mRenderer.sampler);
     sdl.ReleaseGPUTexture(mRenderer.device, mRenderer.defaultTexture);
-    for tex in mRenderer.textures {
+    for tex in mRenderer.allTextures {
         if tex != nil {
             sdl.ReleaseGPUTexture(mRenderer.device, tex);
         }

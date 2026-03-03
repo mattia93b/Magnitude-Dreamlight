@@ -19,7 +19,7 @@ SR_Aluminum::proc() -> MaterialPBR {
 }
 
 SR_Gold::proc() -> MaterialPBR {
-    return MaterialPBR{base_color = {1.059, 0.773, 0.307, 0.0}, specular_color = {1.001, 0.985, 0.523, 0.0}, specular_roughness = 0, metalness = 1, texture_idx = 0};
+    return MaterialPBR{base_color = {1.059, 0.773, 0.307, 0.0}, specular_color = {1.001, 0.985, 0.523, 0.0}, specular_roughness = 0, metalness = 1, texture_idx = 1};
 }
 
 SR_Banana::proc() -> MaterialPBR {

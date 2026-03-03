@@ -14,7 +14,7 @@ Renderable::struct{
     UVs: [dynamic]linalg.Vector2f32,
     modelMatrix:matrix[4,4]f32,
     materialPBR: MaterialPBR,
-    texture:^sdl.Surface,
+    texture:cstring,
 }
 
 
@@ -23,7 +23,7 @@ updatePosition::proc(x:f32, y:f32, z:f32, renderable:^Renderable){
     renderable.modelMatrix = linalg.matrix4_translate_f32({x, y, z});
 }
 
-createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, texturePath:cstring = "") -> Renderable{
+createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, texturePath:cstring = "resources/textures/container2.png") -> Renderable{
     // RENDERABLE
     cube := Renderable{}
 
@@ -151,7 +151,7 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, texturePath:
 
     // TEXTURE
     if texturePath != "" {
-        cube.texture = loadTexturePNG(texturePath, 4);
+        cube.texture = texturePath; //loadTexturePNG(texturePath, 4);
     }
     
 
@@ -164,7 +164,7 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, texturePath:
 }
 
 
-createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int)  -> Renderable {
+createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, texturePath:cstring = "resources/textures/textureDefault.png")  -> Renderable {
 
     sphere := Renderable{};
 
@@ -259,6 +259,9 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
     }
 
     // TEXTURE
+    if texturePath != "" {
+        sphere.texture = texturePath; //loadTexturePNG(texturePath, 4);
+    }
 
     // MODEL MATRIX
     sphere.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos});
