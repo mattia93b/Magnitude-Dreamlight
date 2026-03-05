@@ -391,7 +391,7 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
 
         mRenderer.allTextures[i] = sdl.CreateGPUTexture(mRenderer.device, sdl.GPUTextureCreateInfo{
             type = .D2,
-            format = .R8G8B8A8_UNORM,
+            format = .R8G8B8A8_UNORM_SRGB,
             width = cast(u32)surface.w,
             height = cast(u32)surface.h,
             layer_count_or_depth = 1,
