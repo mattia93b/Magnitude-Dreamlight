@@ -15,7 +15,7 @@ MaterialPBR::struct #align(16){
 }
 
 SR_Aluminum::proc() -> MaterialPBR {
-    return MaterialPBR{base_color = {0.916, 0.923, 0.924, 0.0}, specular_color = {0.989, 0.989, 0.972, 0.0}, specular_roughness = 0, metalness = 1, texture_idx = 0};
+    return MaterialPBR{base_color = {0.916, 0.923, 0.924, 0.0}, specular_color = {0.989, 0.989, 0.972, 0.0}, specular_roughness = 0, metalness = 1, texture_idx = 1};
 }
 
 SR_Gold::proc() -> MaterialPBR {

@@ -24,7 +24,7 @@ InstanceData :: struct #align(16) {
     //rgba : linalg.Vector4f32,
 }
 
-
+/*
 createGraphicPipelineForInstance::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fragmentShader:^sdl.GPUShader){
 
     pipelineInfo := sdl.GPUGraphicsPipelineCreateInfo{};
@@ -404,4 +404,4 @@ updateInstance::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
 
     return inputHandler(&mRenderer.inputHandler);
 
-}
+}*/

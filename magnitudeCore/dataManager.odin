@@ -65,11 +65,13 @@ createRenderer::proc(dataManager:^DataManager) {
     gpuDevice :=  createGPUDevice(window);
 
     // Renderer definition
-    mRenderer : Renderer = {device = gpuDevice, window = window}
+    mRenderer : Renderer //= {gpu.device = gpuDevice, window = window}
 
     dataManager.window = window;
     dataManager.gpuDevice = gpuDevice;   
     dataManager.renderer = mRenderer;
+
+    initRenderer(&dataManager.renderer, gpuDevice, window);
 
 }
 
@@ -98,7 +100,7 @@ createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, heigh
 
     addRenderable(&dataManager.renderer, box);
 
-    cubeIndex := cast(u32)len(dataManager.renderer.renderable) - 1;
+    cubeIndex := cast(u32)len(dataManager.renderer.scene.renderable) - 1;
 
     return cubeIndex;
 }
@@ -110,14 +112,14 @@ createSphere::proc(dataManager:^DataManager, xPos:f32, yPos:f32, zPos:f32, radiu
 
     addRenderable(&dataManager.renderer, sphere);
 
-    sphereIndex := cast(u32)len(dataManager.renderer.renderable) - 1;
+    sphereIndex := cast(u32)len(dataManager.renderer.scene.renderable) - 1;
     
     return sphereIndex;
 }
 
 getRenderableObject::proc(dataManager:^DataManager, renderableID:u32) -> ^Renderable{
 
-    return &dataManager.renderer.renderable[renderableID];
+    return &dataManager.renderer.scene.renderable[renderableID];
 
 }
 
@@ -125,7 +127,7 @@ addLightToScene::proc(dataManager:^DataManager, lightPos: linalg.Vector3f32) -> 
 
     addLight(&dataManager.renderer, lightPos);
 
-    lightIndex := cast(u32)len(dataManager.renderer.light) - 1;
+    lightIndex := cast(u32)len(dataManager.renderer.scene.light) - 1;
 
     return lightIndex;
 }

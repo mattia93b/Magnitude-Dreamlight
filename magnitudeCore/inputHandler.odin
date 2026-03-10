@@ -16,6 +16,13 @@ mouseKeyboardInput :: struct {
     mouseDown:bool,
 }
 
+initInputHandler::proc(renderer: ^Renderer){
+    // Input handler definition
+    renderer.input = mouseKeyboardInput{}
+    renderer.input.mouseDown = false;
+    renderer.input.first = true;
+}
+
 
 inputHandler :: proc(state: ^mouseKeyboardInput) -> bool {
 
@@ -45,7 +52,7 @@ inputHandler :: proc(state: ^mouseKeyboardInput) -> bool {
 
 updateCamera :: proc(mRenderer: ^Renderer, state: ^mouseKeyboardInput, dt: f32){
 
-    cam := &mRenderer.rCamera;
+    cam := &mRenderer.camera;
     speed : f32 = 10 * dt;
     sens : f32 = 0.1;
 
@@ -89,11 +96,11 @@ updateCamera :: proc(mRenderer: ^Renderer, state: ^mouseKeyboardInput, dt: f32){
     if state.keys[.E] do cam.position += cam.up * speed;
     if state.keys[.Q] do cam.position -= cam.up * speed;
     
-    if state.keys[.DOWN] do mRenderer.lightInfo.lightPosition.z += speed;
-    if state.keys[.UP] do mRenderer.lightInfo.lightPosition.z -= speed;
-    if state.keys[.RIGHT] do mRenderer.lightInfo.lightPosition.x += speed;
-    if state.keys[.LEFT] do mRenderer.lightInfo.lightPosition.x -= speed;
-    if state.keys[.PAGEUP] do mRenderer.lightInfo.lightPosition.y += speed;
-    if state.keys[.PAGEDOWN] do mRenderer.lightInfo.lightPosition.y -= speed;
+    if state.keys[.DOWN] do mRenderer.scene.lightInfo.lightPosition.z += speed;
+    if state.keys[.UP] do mRenderer.scene.lightInfo.lightPosition.z -= speed;
+    if state.keys[.RIGHT] do mRenderer.scene.lightInfo.lightPosition.x += speed;
+    if state.keys[.LEFT] do mRenderer.scene.lightInfo.lightPosition.x -= speed;
+    if state.keys[.PAGEUP] do mRenderer.scene.lightInfo.lightPosition.y += speed;
+    if state.keys[.PAGEDOWN] do mRenderer.scene.lightInfo.lightPosition.y -= speed;
 
 }

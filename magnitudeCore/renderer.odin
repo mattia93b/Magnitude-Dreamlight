@@ -8,70 +8,69 @@ import sdl "vendor:sdl3"
 import "core:math/linalg"
 
 
-// Uniform struct to send to GPU
-UBO::struct #align(16){
-    projMat : matrix[4,4]f32,
-    viewMat : matrix[4,4]f32,
-    modelMat : [100]matrix[4,4]f32,
-}
-
-LightInfo::struct #align(16){
-    lightPosition : linalg.Vector4f32,
-    lightColor : linalg.Vector4f32, 
-    lightIntensity : linalg.Vector4f32, 
-}
-
-Vertex::struct #align(16){
-    position : linalg.Vector3f32,
-    _pad0 : f32,     
-    normals : linalg.Vector3f32,
-    _pad1 : f32,   
-    uv : linalg.Vector2f32,
-    _pad2 : [2]f32,
-    modelMatrixIndex : u32,
-    materialIndex : u32,
-    _pad3 : [3]f32,
-}
-
-Camera::struct {
-    position : linalg.Vector3f32,
-    front : linalg.Vector3f32,
-    up : linalg.Vector3f32,
-    yaw : f32,
-    pitch : f32,
-    firstMouse : bool,
-}
-
-Renderer::struct{
-    device : ^sdl.GPUDevice,
-    window : ^sdl.Window,
+GPUResources :: struct {
+    device          : ^sdl.GPUDevice,
+    window          : ^sdl.Window,
+    sampler         : ^sdl.GPUSampler,
+    depthTexture    : ^sdl.GPUTexture,
     graphicsPipeline : [dynamic]^sdl.GPUGraphicsPipeline,
-    renderable : [dynamic]Renderable,
-    light : [dynamic]Renderable,
-    lightNumberOfIndexInBuffer: int,
-    allVertices : [dynamic]Vertex,
-    allVerticesForInstance : [dynamic]VertexInstance,
-    allIndices : [dynamic]u16,
-    allMaterials : [dynamic]MaterialPBR,
-    allTextures : [16]^sdl.GPUTexture,
-    allVerticesInstance : [dynamic]VertexInstance,
-    allInstance : [dynamic]InstanceData,
-    buffer : ^sdl.GPUCommandBuffer,
-    vertexBuffer : ^sdl.GPUBuffer,
-    indexBuffer : ^sdl.GPUBuffer,
-    instanceBuffer : ^sdl.GPUBuffer,
-    materialBuffer : ^sdl.GPUBuffer,
-    transferBuffer : ^sdl.GPUTransferBuffer,
-    allModelMatrix : [dynamic]matrix[4,4]f32,
-    rCamera : Camera,
-    inputHandler : mouseKeyboardInput,
-    depthTexture : ^sdl.GPUTexture,
-    lightInfo : LightInfo,
-    textures : map[cstring]int,
-    sampler  : ^sdl.GPUSampler,
-    defaultTexture : ^sdl.GPUTexture,
 }
 
+GeometryBuffers :: struct {
+    vertexBuffer    : ^sdl.GPUBuffer,
+    indexBuffer     : ^sdl.GPUBuffer,
+    materialBuffer  : ^sdl.GPUBuffer,
+    allVertices     : [dynamic]Vertex,
+    allIndices      : [dynamic]u16,
+    allMaterials    : [dynamic]MaterialPBR,
+    allModelMatrix  : [dynamic]matrix[4,4]f32,
+}
+
+SceneData :: struct {
+    renderable              : [dynamic]Renderable,
+    light                   : [dynamic]Renderable,
+    lightNumberOfIndexInBuffer : int,
+    lightInfo               : LightInfo,
+}
+
+
+Renderer :: struct {
+    gpu      : GPUResources,
+    geometry : GeometryBuffers,
+    scene    : SceneData,
+    camera   : Camera,
+    input    : mouseKeyboardInput,
+    allTextures : [16]^sdl.GPUTexture,
+    textures : map[cstring]int,
+}
+
+initRenderer::proc(renderer: ^Renderer, device: ^sdl.GPUDevice, window: ^sdl.Window){
+
+    renderer.gpu.device = device;
+    renderer.gpu.window = window;
+
+    initCamera(renderer);
+    initLight(renderer);
+    initDepthTexture(renderer);
+    initInputHandler(renderer);
+
+}
+
+
+initDepthTexture::proc(renderer: ^Renderer){
+    // Define depth texture
+    win_size:[2]i32;
+    sdl.GetWindowSize(renderer.gpu.window, &win_size.x, &win_size.y);
+    depthTextureInfo := sdl.GPUTextureCreateInfo{};
+    depthTextureInfo.format = .D32_FLOAT;
+    depthTextureInfo.usage = {.DEPTH_STENCIL_TARGET};
+    depthTextureInfo.width = u32(win_size.x);
+    depthTextureInfo.height = u32(win_size.y);
+    depthTextureInfo.layer_count_or_depth = 1;
+    depthTextureInfo.num_levels = 1;
+
+    renderer.gpu.depthTexture = sdl.CreateGPUTexture(renderer.gpu.device, depthTextureInfo);
+}
 
 createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fragmentShader:^sdl.GPUShader){
 
@@ -143,7 +142,7 @@ createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fr
     colorTargetDescriptions[0].blend_state.src_alpha_blendfactor = .SRC_ALPHA;
     colorTargetDescriptions[0].blend_state.dst_alpha_blendfactor = .ONE_MINUS_SRC_ALPHA;
     colorTargetDescriptions[0].blend_state.enable_blend = true;
-    colorTargetDescriptions[0].format = sdl.GetGPUSwapchainTextureFormat(mRenderer.device, mRenderer.window);
+    colorTargetDescriptions[0].format = sdl.GetGPUSwapchainTextureFormat(mRenderer.gpu.device, mRenderer.gpu.window);
 
     pipelineInfo.target_info.num_color_targets = 1;
     pipelineInfo.target_info.color_target_descriptions = &colorTargetDescriptions[0];
@@ -162,16 +161,14 @@ createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fr
     samplerInfo.address_mode_v = .REPEAT;
     samplerInfo.address_mode_w = .REPEAT;
 
-    if mRenderer.sampler == nil {
-        mRenderer.sampler = sdl.CreateGPUSampler(mRenderer.device, samplerInfo);
+    if mRenderer.gpu.sampler == nil {
+        mRenderer.gpu.sampler = sdl.CreateGPUSampler(mRenderer.gpu.device, samplerInfo);
     }
     
     
     // createGraphicPipeline
-    //append(&mRenderer.graphicsPipeline, sdl.CreateGPUGraphicsPipeline(mRenderer.device, pipelineInfo));
-    //mRenderer.graphicsPipeline = sdl.CreateGPUGraphicsPipeline(mRenderer.device, pipelineInfo);
 
-    newPipeline := sdl.CreateGPUGraphicsPipeline(mRenderer.device, pipelineInfo)
+    newPipeline := sdl.CreateGPUGraphicsPipeline(mRenderer.gpu.device, pipelineInfo)
 
     if newPipeline == nil {
         errorMsg := sdl.GetError()
@@ -182,260 +179,32 @@ createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fr
         return
     }
 
-    append(&mRenderer.graphicsPipeline, newPipeline)
+    append(&mRenderer.gpu.graphicsPipeline, newPipeline)
     log.info("Pipeline creation done") 
     
     // release vertex shader
-    sdl.ReleaseGPUShader(mRenderer.device, vertexShader);
+    sdl.ReleaseGPUShader(mRenderer.gpu.device, vertexShader);
     // release fragment shader
-    sdl.ReleaseGPUShader(mRenderer.device, fragmentShader);
+    sdl.ReleaseGPUShader(mRenderer.gpu.device, fragmentShader);
      
 }
 
 
-addRenderable::proc(mRenderer:^Renderer, renderable:Renderable){
-    append(&mRenderer.renderable, renderable)
-    //log.info("Length of mRenderer.renderable: ", len(mRenderer.renderable));
-}
-
-addLight::proc(mRenderer:^Renderer, lightPos:linalg.Vector3f32){
-    append(&mRenderer.light, createColoredSphere(mRenderer.lightInfo.lightPosition.x, mRenderer.lightInfo.lightPosition.y, mRenderer.lightInfo.lightPosition.z,0.25, 25.0, 25.0));
-    //log.info("Length of mRenderer.renderable: ", len(mRenderer.renderable));
-}
-
-
-alignUp :: proc(value: int, alignment: int) -> int {
-    return (value + alignment - 1) & ~(alignment - 1)
-}
-
 pushRenderableInBuffer::proc(mRenderer:^Renderer){
     
-    for el in mRenderer.light{
-
-        modelMatrixIndex := cast(f32)len(mRenderer.allModelMatrix)
-        append(&mRenderer.allModelMatrix, el.modelMatrix)
-        // Calculate the offset before pushing new data to the VertexBuffer
-        vertex_offset := u16(len(mRenderer.allVertices));
-        // Push all vertex indices information inside the IndexBuffer of the renderer
-        for idx in el.index {
-            append(&mRenderer.allIndices, u16(idx) + vertex_offset);
-        }
-        // Push all vertex information inside a Vertex Object and store it in the VertexBuffer of the renderer
-        for numberProcessedVertex:= 0; numberProcessedVertex < len(el.vertex); numberProcessedVertex = numberProcessedVertex + 1 {
-            append(&mRenderer.allVertices, Vertex{position = el.vertex[numberProcessedVertex], uv = el.UVs[numberProcessedVertex],  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= el.normals[numberProcessedVertex]})
-        }
-    }
-
-    mRenderer.lightNumberOfIndexInBuffer = len(mRenderer.allIndices);
-
-    textureCount := 0;
-
-    // Push renderable after light object
-    for el in mRenderer.renderable{
-        // calculate model matrix Index and append model matrix to allModelMatrixArray
-        modelMatrixIndex := cast(f32)len(mRenderer.allModelMatrix);
-        append(&mRenderer.allModelMatrix, el.modelMatrix);
-        // Calculate the materia Index and append material to allMaterialsArray
-        materialIndex := cast(f32)len(mRenderer.allMaterials);
-        append(&mRenderer.allMaterials, el.materialPBR);
-        // Calculate the offset before pushing new data to the VertexBuffer
-        vertex_offset := u16(len(mRenderer.allVertices));
-        // Push all vertex indices information inside the IndexBuffer of the renderer
-        for idx in el.index {
-            append(&mRenderer.allIndices, u16(idx) + vertex_offset);
-        }
-        // Push all vertex information inside a Vertex Object and store it in the VertexBuffer of the renderer
-        for numberProcessedVertex:= 0; numberProcessedVertex < len(el.vertex); numberProcessedVertex = numberProcessedVertex + 1 {
-            append(&mRenderer.allVertices, Vertex{position = el.vertex[numberProcessedVertex], uv =  el.UVs[numberProcessedVertex],  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= el.normals[numberProcessedVertex], materialIndex = cast(u32)materialIndex});
-        }
-
-        if el.texture != ""{
-            if !(el.texture in mRenderer.textures){
-                mRenderer.textures[el.texture] = textureCount;
-                textureCount += 1;
-            }
-        }
-
-    }
-
-    //log.info("Model Matrix Index: ", mRenderer.allVertices[30]);
-    //log.info("Model Matrix: ", mRenderer.allModelMatrix[:]);
-
-    vertex_bytes := len(mRenderer.allVertices) * size_of(Vertex);
-
-    bufferInfo := sdl.GPUBufferCreateInfo{};
-    bufferInfo.size = cast(u32)vertex_bytes;
-    bufferInfo.usage = {.VERTEX};
-    mRenderer.vertexBuffer= sdl.CreateGPUBuffer(mRenderer.device, bufferInfo);
-
-
-    index_bytes := len(mRenderer.allIndices) * size_of(u16);
-
-    indexBufferInfo := sdl.GPUBufferCreateInfo{};
-    indexBufferInfo.size = cast(u32)index_bytes;
-    indexBufferInfo.usage = {.INDEX};
-    mRenderer.indexBuffer= sdl.CreateGPUBuffer(mRenderer.device, indexBufferInfo);
-
-
-    materials_bytes := len(mRenderer.allMaterials) * size_of(MaterialPBR);
-
-    materialsBufferInfo := sdl.GPUBufferCreateInfo{};
-    materialsBufferInfo.size = cast(u32)materials_bytes;
-    materialsBufferInfo.usage = {.GRAPHICS_STORAGE_READ};
-    mRenderer.materialBuffer= sdl.CreateGPUBuffer(mRenderer.device, materialsBufferInfo);
-
-    vertex_offset_in_transfer := 0
-    index_offset_in_transfer  := alignUp(vertex_bytes, 256)
-    materials_offset_in_transfer := alignUp(index_offset_in_transfer + index_bytes, 256)
-    total_transfer_size := materials_offset_in_transfer + materials_bytes
-
-    // Transfer Buffer 
-    transferInfo := sdl.GPUTransferBufferCreateInfo{};
-    transferInfo.size = cast(u32)total_transfer_size;//cast(u32)(vertex_bytes + index_bytes + materials_bytes);
-    transferInfo.usage = .UPLOAD;
-    mRenderer.transferBuffer = sdl.CreateGPUTransferBuffer(mRenderer.device, transferInfo);
-
-    data:= transmute([^]byte)sdl.MapGPUTransferBuffer(mRenderer.device, mRenderer.transferBuffer, false);
-    // Vertex copy
-    sdl.memcpy(data, raw_data(mRenderer.allVertices), cast(uint)vertex_bytes);
-    // Index copy
-    sdl.memcpy(data[index_offset_in_transfer:], raw_data(mRenderer.allIndices), cast(uint)index_bytes);
-    // Materials copy
-    sdl.memcpy(data[materials_offset_in_transfer:], raw_data(mRenderer.allMaterials), cast(uint)materials_bytes);
-
-    sdl.UnmapGPUTransferBuffer(mRenderer.device, mRenderer.transferBuffer);
-
-    // acquire the command buffer
-    mRenderer.buffer = sdl.AcquireGPUCommandBuffer(mRenderer.device);
-    copyPass := sdl.BeginGPUCopyPass(mRenderer.buffer);
+    buildGeometry(mRenderer);
+    uploadGeometry(mRenderer);
     
-    // VERTEX BUFFER UPLOAD
-    vertexLocation:= sdl.GPUTransferBufferLocation{};
-    vertexLocation.transfer_buffer = mRenderer.transferBuffer;
-    vertexLocation.offset = 0;
-
-    vertexRegion := sdl.GPUBufferRegion{};
-    vertexRegion.buffer = mRenderer.vertexBuffer;
-    vertexRegion.size = cast(u32)vertex_bytes;
-    vertexRegion.offset = 0;
-    // Upload Vertex
-    sdl.UploadToGPUBuffer(copyPass, vertexLocation, vertexRegion, true);
-
-
-    // INDEX BUFFER UPLOAD
-    indexLocation:= sdl.GPUTransferBufferLocation{};
-    indexLocation.transfer_buffer = mRenderer.transferBuffer;
-    indexLocation.offset = cast(u32)index_offset_in_transfer;//cast(u32)vertex_bytes;
-    
-    indexRegion := sdl.GPUBufferRegion{};
-    indexRegion.buffer = mRenderer.indexBuffer;
-    indexRegion.size = cast(u32)index_bytes;
-    indexRegion.offset = 0;
-    // Upload Index
-    sdl.UploadToGPUBuffer(copyPass, indexLocation, indexRegion, true);
-
-
-    // MATERIALS BUFFER UPLOAD
-    materialsLocation:= sdl.GPUTransferBufferLocation{};   
-    materialsLocation.transfer_buffer = mRenderer.transferBuffer;
-    materialsLocation.offset = cast(u32)materials_offset_in_transfer;//cast(u32)vertex_bytes + cast(u32)index_bytes;
-
-    materialsRegion := sdl.GPUBufferRegion{};
-    materialsRegion.buffer = mRenderer.materialBuffer;
-    materialsRegion.size = cast(u32)materials_bytes;
-    materialsRegion.offset = 0;
-    // Upload Materials
-    sdl.UploadToGPUBuffer(copyPass, materialsLocation, materialsRegion, true);
-
-
-
-    // Define depth texture
-    win_size:[2]i32;
-    sdl.GetWindowSize(mRenderer.window, &win_size.x, &win_size.y);
-    depthTextureInfo := sdl.GPUTextureCreateInfo{};
-    depthTextureInfo.format = .D32_FLOAT;
-    depthTextureInfo.usage = {.DEPTH_STENCIL_TARGET};
-    depthTextureInfo.width = u32(win_size.x);
-    depthTextureInfo.height = u32(win_size.y);
-    depthTextureInfo.layer_count_or_depth = 1;
-    depthTextureInfo.num_levels = 1;
-
-    mRenderer.depthTexture = sdl.CreateGPUTexture(mRenderer.device, depthTextureInfo);
-
-
-    // Input handler definition
-    mRenderer.inputHandler = mouseKeyboardInput{}
-    mRenderer.inputHandler.mouseDown = false;
-    mRenderer.inputHandler.first = true;
-
-    // Camera set up
-    mRenderer.rCamera.position = linalg.Vector3f32{0, 10, 20};
-    mRenderer.rCamera.front = linalg.Vector3f32{0, 0, -10};
-    mRenderer.rCamera.up = linalg.Vector3f32{0, 1, 0};
-    mRenderer.rCamera.yaw = -90.0;
-    mRenderer.rCamera.pitch = 0.0;
-    mRenderer.rCamera.firstMouse = true;
-
-    // Light set up
-    mRenderer.lightInfo.lightPosition = {0.0, 15.0, -10.0, 0.0};
-    mRenderer.lightInfo.lightColor = {1.0, 1.0, 1.0, 1.0};
-    mRenderer.lightInfo.lightIntensity = {1000000.0, 1000000.0, 1000000.0, 1000000.0};
-
-    // Default Texture load
-    for path, i in mRenderer.textures {
-        if i >= 16 do break 
-
-        surface := loadTexturePNG(path, 4)
-        if surface == nil do continue
-        defer sdl.DestroySurface(surface)
-
-        mRenderer.allTextures[i] = sdl.CreateGPUTexture(mRenderer.device, sdl.GPUTextureCreateInfo{
-            type = .D2,
-            format = .R8G8B8A8_UNORM_SRGB,
-            width = cast(u32)surface.w,
-            height = cast(u32)surface.h,
-            layer_count_or_depth = 1,
-            num_levels = 1,
-            usage = {.SAMPLER},
-        })
-
-        pixel_bytes := cast(u32)(surface.w * surface.h * 4)
-
-        stagingBuffer := sdl.CreateGPUTransferBuffer(mRenderer.device, sdl.GPUTransferBufferCreateInfo{
-            usage = .UPLOAD,
-            size = pixel_bytes,
-        })
-
-        data := sdl.MapGPUTransferBuffer(mRenderer.device, stagingBuffer, false)
-        sdl.memcpy(data, surface.pixels, cast(uint)pixel_bytes)
-        sdl.UnmapGPUTransferBuffer(mRenderer.device, stagingBuffer)
-
-        sdl.UploadToGPUTexture(
-            copyPass, 
-            { transfer_buffer = stagingBuffer, offset = 0 }, 
-            { texture = mRenderer.allTextures[i], w = cast(u32)surface.w, h = cast(u32)surface.h, d = 1 }, 
-            false
-        )
-
-        sdl.ReleaseGPUTransferBuffer(mRenderer.device, stagingBuffer)
-        // mRenderer.texture_count += 1
-    }
-
-    sdl.EndGPUCopyPass(copyPass);
-    if sdl.SubmitGPUCommandBuffer(mRenderer.buffer){
-        log.info("Submit buffert to GPU succesfully", true);
-    }
-
 }
 
 
 update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
 
-    mRenderer.buffer = sdl.AcquireGPUCommandBuffer(mRenderer.device);
+    buffer := sdl.AcquireGPUCommandBuffer(mRenderer.gpu.device);
 
     // get the swapchain texture
     swapChainTexture : ^sdl.GPUTexture;
-    if sdl.WaitAndAcquireGPUSwapchainTexture(mRenderer.buffer, mRenderer.window, &swapChainTexture, nil, nil){
+    if sdl.WaitAndAcquireGPUSwapchainTexture(buffer, mRenderer.gpu.window, &swapChainTexture, nil, nil){
         //log.info("correct bindings between device and window", true);
     }
     // create color target
@@ -447,59 +216,59 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     color.texture = swapChainTexture;
     // Depth
     depthTargetInfo := sdl.GPUDepthStencilTargetInfo{};
-    depthTargetInfo.texture = mRenderer.depthTexture;
+    depthTargetInfo.texture = mRenderer.gpu.depthTexture;
     depthTargetInfo.load_op = .CLEAR;
     depthTargetInfo.clear_depth = 1;
     depthTargetInfo.store_op = .DONT_CARE;
 
     // begin render pass
-    renderPass := sdl.BeginGPURenderPass(mRenderer.buffer, &color, 1, &depthTargetInfo);
+    renderPass := sdl.BeginGPURenderPass(buffer, &color, 1, &depthTargetInfo);
 
     // Update camera
-    updateCamera(mRenderer, &mRenderer.inputHandler, deltatime);
-    viewMat := linalg.matrix4_look_at_f32(mRenderer.rCamera.position, mRenderer.rCamera.position + mRenderer.rCamera.front, mRenderer.rCamera.up);
+    updateCamera(mRenderer, &mRenderer.input, deltatime);
+    viewMat := linalg.matrix4_look_at_f32(mRenderer.camera.position, mRenderer.camera.position + mRenderer.camera.front, mRenderer.camera.up);
 
     // Update Light position
-    for i := 0; i < len(mRenderer.light); i = i + 1 {
-        mRenderer.allModelMatrix[i] = mRenderer.light[i].modelMatrix;
+    for i := 0; i < len(mRenderer.scene.light); i = i + 1 {
+        mRenderer.geometry.allModelMatrix[i] = mRenderer.scene.light[i].modelMatrix;
     }
     // Update model position
-    for i := 0; i < len(mRenderer.renderable); i = i + 1 {
-        mRenderer.allModelMatrix[i + len(mRenderer.light)] = mRenderer.renderable[i].modelMatrix;
+    for i := 0; i < len(mRenderer.scene.renderable); i = i + 1 {
+        mRenderer.geometry.allModelMatrix[i + len(mRenderer.scene.light)] = mRenderer.scene.renderable[i].modelMatrix;
     }
 
     // Get Windows size to calculate the projection Matrix
     win_size:[2]i32;
-    sdl.GetWindowSize(mRenderer.window, &win_size.x, &win_size.y);
+    sdl.GetWindowSize(mRenderer.gpu.window, &win_size.x, &win_size.y);
     uniformBuffer := UBO{
         projMat = linalg.matrix4_perspective_f32(70, f32(win_size.x) / f32(win_size.y), 0.1, 1000),
         viewMat = viewMat,
     }
 
-    n_to_copy := min(len(mRenderer.allModelMatrix), 100);
+    n_to_copy := min(len(mRenderer.geometry.allModelMatrix), 100);
     
     if n_to_copy > 0 {
-        copy(uniformBuffer.modelMat[:n_to_copy], mRenderer.allModelMatrix[:n_to_copy]);
+        copy(uniformBuffer.modelMat[:n_to_copy], mRenderer.geometry.allModelMatrix[:n_to_copy]);
     }
 
     //log.info("UNIFORM Model Matrix: ", uniformBuffer.modelMat[:]);
 
     // Bind pipeline
-    sdl.BindGPUGraphicsPipeline(renderPass, mRenderer.graphicsPipeline[0]);
+    sdl.BindGPUGraphicsPipeline(renderPass, mRenderer.gpu.graphicsPipeline[0]);
 
     // Uniform 
-    sdl.PushGPUVertexUniformData(mRenderer.buffer, 0, &uniformBuffer, size_of(uniformBuffer));
+    sdl.PushGPUVertexUniformData(buffer, 0, &uniformBuffer, size_of(uniformBuffer));
     
     // Light Uniform 
-    sdl.PushGPUFragmentUniformData(mRenderer.buffer, 0, &mRenderer.lightInfo, size_of(LightInfo));
+    sdl.PushGPUFragmentUniformData(buffer, 0, &mRenderer.scene.lightInfo, size_of(LightInfo));
 
     // Camera Uniform
-    camera:= linalg.Vector4f32{mRenderer.rCamera.position.x, mRenderer.rCamera.position.y, mRenderer.rCamera.position.z, 0.0};
+    camera:= linalg.Vector4f32{mRenderer.camera.position.x, mRenderer.camera.position.y, mRenderer.camera.position.z, 0.0};
 
-    sdl.PushGPUFragmentUniformData(mRenderer.buffer, 1, &camera, size_of(camera));
+    sdl.PushGPUFragmentUniformData(buffer, 1, &camera, size_of(camera));
 
 
-    sdl.BindGPUFragmentStorageBuffers(renderPass, 0, &mRenderer.materialBuffer, 1);
+    sdl.BindGPUFragmentStorageBuffers(renderPass, 0, &mRenderer.geometry.materialBuffer, 1);
 
     textureBindings: [16]sdl.GPUTextureSamplerBinding;
 
@@ -510,62 +279,60 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
         }
         
         textureBindings[i].texture = tex
-        textureBindings[i].sampler = mRenderer.sampler
+        textureBindings[i].sampler = mRenderer.gpu.sampler
     }
 
     sdl.BindGPUFragmentSamplers(renderPass, 0, &textureBindings[0], 16)
 
     // bind vertexBuffer
     bufferBindings :[1]sdl.GPUBufferBinding;
-    bufferBindings[0].buffer = mRenderer.vertexBuffer;
+    bufferBindings[0].buffer = mRenderer.geometry.vertexBuffer;
     bufferBindings[0].offset = 0;
 
     sdl.BindGPUVertexBuffers(renderPass, 0, &bufferBindings[0], 1);
     //sdl.DrawGPUPrimitives(renderPass, cast(u32)len(vertices), 1, 0, 0);
-    sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.indexBuffer}, ._16BIT);
-    sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)len(mRenderer.allIndices[mRenderer.lightNumberOfIndexInBuffer:]), 1, cast(u32)mRenderer.lightNumberOfIndexInBuffer, 0, 0);
+    sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.geometry.indexBuffer}, ._16BIT);
+    sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)len(mRenderer.geometry.allIndices[mRenderer.scene.lightNumberOfIndexInBuffer:]), 1, cast(u32)mRenderer.scene.lightNumberOfIndexInBuffer, 0, 0);
 
     // Light 
     // Bind pipeline
-    sdl.BindGPUGraphicsPipeline(renderPass, mRenderer.graphicsPipeline[1]);
-    uniformBuffer.modelMat[0] = linalg.matrix4_translate_f32(mRenderer.lightInfo.lightPosition.xyz);
+    sdl.BindGPUGraphicsPipeline(renderPass, mRenderer.gpu.graphicsPipeline[1]);
+    uniformBuffer.modelMat[0] = linalg.matrix4_translate_f32(mRenderer.scene.lightInfo.lightPosition.xyz);
     // Uniform 
-    sdl.PushGPUVertexUniformData(mRenderer.buffer, 0, &uniformBuffer, size_of(uniformBuffer));
+    sdl.PushGPUVertexUniformData(buffer, 0, &uniformBuffer, size_of(uniformBuffer));
     sdl.BindGPUVertexBuffers(renderPass, 0, &bufferBindings[0], 1);
-    sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.indexBuffer}, ._16BIT);
-    sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)mRenderer.lightNumberOfIndexInBuffer, 1, 0, 0, 0);
+    sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.geometry.indexBuffer}, ._16BIT);
+    sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)mRenderer.scene.lightNumberOfIndexInBuffer, 1, 0, 0, 0);
 
     // end render pass
     sdl.EndGPURenderPass(renderPass);
 
     // submit command buffer
-    if sdl.SubmitGPUCommandBuffer(mRenderer.buffer){
+    if sdl.SubmitGPUCommandBuffer(buffer){
         //log.info("Send buffer to GPU done correctly", true);
     }
 
-    return inputHandler(&mRenderer.inputHandler);
+    return inputHandler(&mRenderer.input);
 
 }
 
 
 cleanRenderer::proc(mRenderer:^Renderer){
-    sdl.ReleaseGPUBuffer(mRenderer.device, mRenderer.vertexBuffer);
-    sdl.ReleaseGPUBuffer(mRenderer.device, mRenderer.indexBuffer);
-    sdl.ReleaseGPUBuffer(mRenderer.device, mRenderer.materialBuffer);
+    sdl.ReleaseGPUBuffer(mRenderer.gpu.device, mRenderer.geometry.vertexBuffer);
+    sdl.ReleaseGPUBuffer(mRenderer.gpu.device, mRenderer.geometry.indexBuffer);
+    sdl.ReleaseGPUBuffer(mRenderer.gpu.device, mRenderer.geometry.materialBuffer);
 
-    sdl.ReleaseGPUTransferBuffer(mRenderer.device, mRenderer.transferBuffer);
+    sdl.ReleaseGPUTexture(mRenderer.gpu.device, mRenderer.gpu.depthTexture);
 
-    sdl.ReleaseGPUTexture(mRenderer.device, mRenderer.depthTexture);
-
-    sdl.ReleaseGPUSampler(mRenderer.device, mRenderer.sampler);
-    sdl.ReleaseGPUTexture(mRenderer.device, mRenderer.defaultTexture);
+    sdl.ReleaseGPUSampler(mRenderer.gpu.device, mRenderer.gpu.sampler);
+    //sdl.ReleaseGPUTexture(mRenderer.gpu.device, mRenderer.defaultTexture);
     for tex in mRenderer.allTextures {
         if tex != nil {
-            sdl.ReleaseGPUTexture(mRenderer.device, tex);
+            sdl.ReleaseGPUTexture(mRenderer.gpu.device, tex);
         }
     }
-    sdl.ReleaseGPUGraphicsPipeline(mRenderer.device, mRenderer.graphicsPipeline[0]);
-    sdl.ReleaseGPUGraphicsPipeline(mRenderer.device, mRenderer.graphicsPipeline[1]);
-    sdl.DestroyGPUDevice(mRenderer.device);
-    sdl.DestroyWindow(mRenderer.window);
+    sdl.ReleaseGPUGraphicsPipeline(mRenderer.gpu.device, mRenderer.gpu.graphicsPipeline[0]);
+    sdl.ReleaseGPUGraphicsPipeline(mRenderer.gpu.device, mRenderer.gpu.graphicsPipeline[1]);
+    sdl.DestroyGPUDevice(mRenderer.gpu.device);
+    sdl.DestroyWindow(mRenderer.gpu.window);
 }
