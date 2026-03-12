@@ -2,11 +2,10 @@ static const float PI = 3.14159265359;
 
 struct Material 
 {
-    float4 base_color;
-    float4 specular_color;
-    float roughness;
-    float metallic;
-    uint texture_idx;
+    uint texture_idx_albedo;
+    uint texture_idx_metallic;
+    uint texture_idx_roughness;
+    uint texture_idx_normal;
 };
 
 // TEXTURE
@@ -78,13 +77,17 @@ float3 FresnelSchlick(float cosTheta, float3 F0) {
 SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
 {
     uint index = stage_input.materialIndex;
-    uint texIdx = materials[index].texture_idx;
+
+    uint texIdx = materials[index].texture_idx_albedo;
+    uint texIdx_metallic = materials[index].texture_idx_metallic;
+    uint texIdx_roughness = materials[index].texture_idx_roughness;
+    uint texIdx_normal = materials[index].texture_idx_normal;
 
     float4 texColor = u_Textures[texIdx].Sample(u_Sampler, stage_input.v_uv);
 
-    float3 albedo = materials[index].base_color.rgb * texColor.rgb;
-    float metallic = materials[index].metallic;
-    float roughness = materials[index].roughness;
+    float3 albedo = texColor.rgb;
+    float metallic = u_Textures[texIdx_metallic].Sample(u_Sampler, stage_input.v_uv).r;
+    float roughness = u_Textures[texIdx_roughness].Sample(u_Sampler, stage_input.v_uv).r;
     roughness = max(roughness, 0.03);
     float ao = 1.0;
 

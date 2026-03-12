@@ -1,11 +1,14 @@
 package magnitudeCore
 
+import "base:intrinsics"
 // logger
 import "core:log"
 // SDL3 bindings
 import sdl "vendor:sdl3"
 // math
 import "core:math/linalg"
+// string
+import "core:strings"
 
 
 
@@ -24,17 +27,26 @@ uploadTexture::proc(renderer: ^Renderer){
         delete(stagingBuffers)
     }
 
-    slot := 0
-    for path in renderer.textures {
+    for path, slot in renderer.textures {
         if slot >= 16 do break
 
         surface := loadTexturePNG(path, 4)
         if surface == nil do continue
         defer sdl.DestroySurface(surface)
 
+        format : sdl.GPUTextureFormat
+        if      strings.contains(cast(string)path, "albedo")    { format = .R8G8B8A8_UNORM_SRGB; log.info("albedo") }
+        else if strings.contains(cast(string)path, "metallic")  { format = .R8G8B8A8_UNORM; log.info("metallic") }
+        else if strings.contains(cast(string)path, "roughness") { format = .R8G8B8A8_UNORM; log.info("roughness") }
+        else if strings.contains(cast(string)path, "normal")    { format = .R8G8B8A8_UNORM; log.info("normal") }
+        else {
+            log.warnf("Texture '%s' not identify", path)
+            format = .R8G8B8A8_UNORM
+        }
+
         renderer.allTextures[slot] = sdl.CreateGPUTexture(renderer.gpu.device, sdl.GPUTextureCreateInfo{
             type                 = .D2,
-            format               = .R8G8B8A8_UNORM_SRGB,
+            format               = format,
             width                = cast(u32)surface.w,
             height               = cast(u32)surface.h,
             layer_count_or_depth = 1,
@@ -59,8 +71,7 @@ uploadTexture::proc(renderer: ^Renderer){
             false,
         )
 
-        append(&stagingBuffers, stagingBuffer) // ← accumula, non rilasciare ora
-        slot += 1
+        append(&stagingBuffers, stagingBuffer)
     }
 
     sdl.EndGPUCopyPass(copyPass);

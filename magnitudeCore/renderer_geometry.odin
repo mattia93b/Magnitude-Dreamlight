@@ -72,9 +72,27 @@ buildGeometry::proc(renderer: ^Renderer){
             append(&renderer.geometry.allVertices, Vertex{position = el.vertex[numberProcessedVertex], uv =  el.UVs[numberProcessedVertex],  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= el.normals[numberProcessedVertex], materialIndex = cast(u32)materialIndex});
         }
 
-        if el.texture != ""{
-            if !(el.texture in renderer.textures){
-                renderer.textures[el.texture] = textureCount;
+        if el.albedo != ""{
+            if !(el.albedo in renderer.textures){
+                renderer.textures[el.albedo] = textureCount;
+                textureCount += 1;
+            }
+        }
+        if el.metallic != ""{
+            if !(el.metallic in renderer.textures){
+                renderer.textures[el.metallic] = textureCount;
+                textureCount += 1;
+            }
+        }
+        if el.roughness != ""{
+            if !(el.roughness in renderer.textures){
+                renderer.textures[el.roughness] = textureCount;
+                textureCount += 1;
+            }
+        }
+        if el.normal != ""{
+            if !(el.normal in renderer.textures){
+                renderer.textures[el.normal] = textureCount;
                 textureCount += 1;
             }
         }
@@ -187,7 +205,7 @@ initLight::proc(renderer: ^Renderer){
     // Light set up
     renderer.scene.lightInfo.lightPosition = {0.0, 15.0, -10.0, 0.0};
     renderer.scene.lightInfo.lightColor = {1.0, 1.0, 1.0, 1.0};
-    renderer.scene.lightInfo.lightIntensity = {1000000.0, 1000000.0, 1000000.0, 1000000.0};
+    renderer.scene.lightInfo.lightIntensity = {1000.0, 1000.0, 1000.0, 1000.0};
 }
 
 addLight::proc(mRenderer:^Renderer, lightPos:linalg.Vector3f32){

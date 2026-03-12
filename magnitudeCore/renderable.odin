@@ -14,7 +14,10 @@ Renderable::struct{
     UVs: [dynamic]linalg.Vector2f32,
     modelMatrix:matrix[4,4]f32,
     materialPBR: MaterialPBR,
-    texture:cstring,
+    albedo:cstring,
+    metallic:cstring,
+    roughness:cstring,
+    normal:cstring,
 }
 
 
@@ -23,7 +26,10 @@ updatePosition::proc(x:f32, y:f32, z:f32, renderable:^Renderable){
     renderable.modelMatrix = linalg.matrix4_translate_f32({x, y, z});
 }
 
-createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, texturePath:cstring = "resources/textures/container2.png") -> Renderable{
+createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, 
+    albedo:cstring = "resources/materials/light-gold-bl/lightgold_albedo.png", metallic:cstring = "resources/materials/light-gold-bl/lightgold_metallic.png",
+    normal:cstring = "resources/materials/light-gold-bl/lightgold_normal-ogl.png",roughness:cstring = "resources/materials/light-gold-bl/lightgold_roughness.png") -> Renderable{
+
     // RENDERABLE
     cube := Renderable{}
 
@@ -150,8 +156,11 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, texturePath:
 
 
     // TEXTURE
-    if texturePath != "" {
-        cube.texture = texturePath; //loadTexturePNG(texturePath, 4);
+    if albedo != "" {
+        cube.albedo = albedo; //loadTexturePNG(texturePath, 4);
+        cube.metallic = metallic;
+        cube.roughness = roughness;
+        cube.normal = normal;
     }
     
 
@@ -164,7 +173,9 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, texturePath:
 }
 
 
-createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, texturePath:cstring = "resources/textures/textureDefault.png")  -> Renderable {
+createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, 
+    albedo:cstring = "resources/materials/light-gold-bl/lightgold_albedo.png", metallic:cstring = "resources/materials/light-gold-bl/lightgold_metallic.png",
+    normal:cstring = "resources/materials/light-gold-bl/lightgold_normal-ogl.png",roughness:cstring = "resources/materials/light-gold-bl/lightgold_roughness.png")  -> Renderable {
 
     sphere := Renderable{};
 
@@ -259,8 +270,11 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
     }
 
     // TEXTURE
-    if texturePath != "" {
-        sphere.texture = texturePath; //loadTexturePNG(texturePath, 4);
+    if albedo != "" {
+        sphere.albedo = albedo; //loadTexturePNG(texturePath, 4);
+        sphere.metallic = metallic;
+        sphere.roughness = roughness;
+        sphere.normal = normal;
     }
 
     // MODEL MATRIX
