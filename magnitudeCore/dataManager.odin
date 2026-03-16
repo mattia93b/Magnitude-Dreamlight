@@ -108,7 +108,8 @@ createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, heigh
 
 createSphere::proc(dataManager:^DataManager, xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int)  -> u32 {
 
-    sphere := createColoredSphere(xPos, yPos, zPos, radius, stackCount, sectorCount);
+    sphere := createColoredSphere(xPos, yPos, zPos, radius, stackCount, sectorCount, albedo = "resources/materials/dark-wood-stain-bl/dark-wood-stain_albedo.png", metallic = "resources/materials/dark-wood-stain-bl/dark-wood-stain_metallic.png",
+    normal = "resources/materials/dark-wood-stain-bl/dark-wood-stain_normal-ogl.png",roughness = "resources/materials/dark-wood-stain-bl/dark-wood-stain_roughness.png");
 
     addRenderable(&dataManager.renderer, sphere);
 

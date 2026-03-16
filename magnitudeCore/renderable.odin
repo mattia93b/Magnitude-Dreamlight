@@ -280,7 +280,7 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
     // MODEL MATRIX
     sphere.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos});
 
-    sphere.materialPBR = SR_Gold();
+    sphere.materialPBR = SR_Dark_Wood();
 
     return sphere;
 
