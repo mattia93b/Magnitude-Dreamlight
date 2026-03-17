@@ -6,6 +6,8 @@ import "core:log"
 import sdl "vendor:sdl3"
 // math
 import "core:math/linalg"
+// slcie
+import "core:slice"
 
 
 Vertex::struct #align(16){
@@ -29,10 +31,18 @@ alignUp :: proc(value: int, alignment: int) -> int {
 //// RENDERABLE
 
 addRenderable::proc(mRenderer:^Renderer, renderable:Renderable){
-    append(&mRenderer.scene.renderable, renderable)
+    append(&mRenderer.scene.renderable, renderable);
+}
+
+renderable_order :: proc(lhs, rhs: Renderable) -> bool {
+    return lhs.materialID < rhs.materialID;
 }
 
 buildGeometry::proc(renderer: ^Renderer){
+
+    //slice.sort_by(renderer.scene.renderable[:], renderable_order);
+
+    //log.infof("ordered: ", renderer.scene.renderable[0].materialID);
 
     for el in renderer.scene.light{
 

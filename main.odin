@@ -47,9 +47,6 @@ main::proc(){
     stone := magnitudeCore.createMaterialInScene(&dataManager, "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_albedo.png", "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_metallic.png", "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_normal-ogl.png", "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_roughness.png"); 
     wood2 := magnitudeCore.createMaterialInScene(&dataManager, "resources/materials/WoodFloor043_2K-PNG/WoodFloor043_2K-PNG_Color.png", "resources/materials/WoodFloor043_2K-PNG/WoodFloor043_2K-PNG_Metalness.png", "resources/materials/WoodFloor043_2K-PNG/WoodFloor043_2K-PNG_NormalDX.png", "resources/materials/WoodFloor043_2K-PNG/WoodFloor043_2K-PNG_Roughness.png"); 
 
-
-    log.info(gold);
-
     // Scene
     boxId := magnitudeCore.createCube(&dataManager, 0.0, 10.0, -20.0, 5.0, 5.0, stone);
     baseId  := magnitudeCore.createCube(&dataManager, 0.0, 3.0, -10.0, 32.0, 0.5, stone);

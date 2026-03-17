@@ -7,8 +7,6 @@ import "core:log"
 import sdl "vendor:sdl3"
 // math
 import "core:math/linalg"
-// string
-import "core:strings"
 
 
 uploadMaterialTexture::proc(renderer: ^Renderer){
@@ -30,26 +28,23 @@ uploadMaterialTexture::proc(renderer: ^Renderer){
 
         // ALBEDO
         stagingBuffer := loadSingleTexture(renderer, mat.texture_albedo, .R8G8B8A8_UNORM_SRGB, copyPass);
-        slot := cast(u32)len(renderer.allTextures) - 1;
         append(&stagingBuffers, stagingBuffer)
 
         // METALLIC
         stagingBuffer = loadSingleTexture(renderer, mat.texture_metallic, .R8G8B8A8_UNORM, copyPass);
-        slot = cast(u32)len(renderer.allTextures) - 1;
         append(&stagingBuffers, stagingBuffer)
 
         // ROUGHNESS
         stagingBuffer = loadSingleTexture(renderer, mat.texture_roughness, .R8G8B8A8_UNORM, copyPass);
-        slot = cast(u32)len(renderer.allTextures) - 1;
         append(&stagingBuffers, stagingBuffer)
 
         // NORMAL
         stagingBuffer = loadSingleTexture(renderer, mat.texture_normal, .R8G8B8A8_UNORM, copyPass);
-        slot = cast(u32)len(renderer.allTextures) - 1;
         append(&stagingBuffers, stagingBuffer)
 
         // TODO: Handle the index outside 16
         // Push material to buffet to upload to GPU
+        slot := cast(u32)len(renderer.allTextures) - 1;
         append(&renderer.geometry.allMaterials, MaterialPBR{slot - 3, slot - 2, slot - 1, slot});
 
     }
