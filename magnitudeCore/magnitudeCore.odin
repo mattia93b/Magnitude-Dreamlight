@@ -8,7 +8,7 @@ DEFAULT_SCREEN_RES_WIDTH :: 1280;
 DEFAULT_SCREEN_RES_HEIGHT :: 720;
 // direct3d12 vulkan metal
 //DEFAULT_RENDER_API :: "direct3d12"
-DEFAULT_RENDER_API :: "vulkan" when ODIN_OS == .Windows else 
+DEFAULT_RENDER_API :: "direct3d12" when ODIN_OS == .Windows else 
                       "metal"      when ODIN_OS == .Darwin  else 
                       "vulkan"
 SHADER_EXT :: "spv"  when DEFAULT_RENDER_API == "vulkan" else 

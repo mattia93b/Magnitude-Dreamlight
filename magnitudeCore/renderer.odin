@@ -42,7 +42,6 @@ Renderer :: struct {
     camera          : Camera,
     input           : mouseKeyboardInput,
     allTextures     : [dynamic]^sdl.GPUTexture,
-    textures        : map[cstring]int,
 }
 
 initRenderer::proc(renderer: ^Renderer, device: ^sdl.GPUDevice, window: ^sdl.Window){
@@ -193,9 +192,9 @@ createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fr
 
 pushRenderableInBuffer::proc(mRenderer:^Renderer){
     
+    uploadMaterialTexture(mRenderer);
     buildGeometry(mRenderer);
     uploadGeometry(mRenderer);
-    uploadTexture(mRenderer);
     
 }
 

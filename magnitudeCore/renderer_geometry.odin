@@ -34,10 +34,6 @@ addRenderable::proc(mRenderer:^Renderer, renderable:Renderable){
 
 buildGeometry::proc(renderer: ^Renderer){
 
-
-    uploadMaterialTexture(renderer);
-
-
     for el in renderer.scene.light{
 
         modelMatrixIndex := cast(f32)len(renderer.geometry.allModelMatrix)
@@ -56,16 +52,11 @@ buildGeometry::proc(renderer: ^Renderer){
 
     renderer.scene.lightNumberOfIndexInBuffer = len(renderer.geometry.allIndices);
 
-    textureCount := 0;
-
     // Push renderable after light object
     for el in renderer.scene.renderable{
         // calculate model matrix Index and append model matrix to allModelMatrixArray
         modelMatrixIndex := cast(f32)len(renderer.geometry.allModelMatrix);
         append(&renderer.geometry.allModelMatrix, el.modelMatrix);
-        // Calculate the materia Index and append material to allMaterialsArray
-        //materialIndex := cast(f32)len(renderer.geometry.allMaterials);
-        //append(&renderer.geometry.allMaterials, el.materialPBR);
         // Calculate the offset before pushing new data to the VertexBuffer
         vertex_offset := u16(len(renderer.geometry.allVertices));
         // Push all vertex indices information inside the IndexBuffer of the renderer
@@ -76,31 +67,6 @@ buildGeometry::proc(renderer: ^Renderer){
         for numberProcessedVertex:= 0; numberProcessedVertex < len(el.vertex); numberProcessedVertex = numberProcessedVertex + 1 {
             append(&renderer.geometry.allVertices, Vertex{position = el.vertex[numberProcessedVertex], uv =  el.UVs[numberProcessedVertex],  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= el.normals[numberProcessedVertex], materialIndex = el.materialID});
         }
-
-        /*if el.albedo != ""{
-            if !(el.albedo in renderer.textures){
-                renderer.textures[el.albedo] = textureCount;
-                textureCount += 1;
-            }
-        }
-        if el.metallic != ""{
-            if !(el.metallic in renderer.textures){
-                renderer.textures[el.metallic] = textureCount;
-                textureCount += 1;
-            }
-        }
-        if el.roughness != ""{
-            if !(el.roughness in renderer.textures){
-                renderer.textures[el.roughness] = textureCount;
-                textureCount += 1;
-            }
-        }
-        if el.normal != ""{
-            if !(el.normal in renderer.textures){
-                renderer.textures[el.normal] = textureCount;
-                textureCount += 1;
-            }
-        }*/
     }
 }
 

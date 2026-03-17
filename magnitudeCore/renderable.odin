@@ -13,11 +13,6 @@ Renderable::struct{
     normals: [dynamic]linalg.Vector3f32,
     UVs: [dynamic]linalg.Vector2f32,
     modelMatrix:matrix[4,4]f32,
-    materialPBR: MaterialPBR,
-    albedo:cstring,
-    metallic:cstring,
-    roughness:cstring,
-    normal:cstring,
     materialID:u32,
 }
 
@@ -28,11 +23,6 @@ updatePosition::proc(x:f32, y:f32, z:f32, renderable:^Renderable){
 }
 
 createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, materialID:u32) -> Renderable {
-
-    albedo :cstring= "resources/materials/light-gold-bl/lightgold_albedo.png";
-    metallic :cstring= "resources/materials/light-gold-bl/lightgold_metallic.png";
-    normal :cstring= "resources/materials/light-gold-bl/lightgold_normal-ogl.png";
-    roughness :cstring= "resources/materials/light-gold-bl/lightgold_roughness.png";
 
     // RENDERABLE
     cube := Renderable{}
@@ -158,30 +148,17 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, materialID:u
     append(&cube.UVs, linalg.Vector2f32{1, 0});
 
 
-    // TEXTURE
-
-    cube.albedo = albedo; //loadTexturePNG(texturePath, 4);
-    cube.metallic = metallic;
-    cube.roughness = roughness;
-    cube.normal = normal;
-
+    // MATERIAL
     cube.materialID = materialID;
 
     // MODEL MATRIX
     cube.modelMatrix = linalg.matrix4_translate_f32({x, y, z});
-
-    cube.materialPBR = SR_Aluminum();
 
     return cube;
 }
 
 
 createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, materialID:u32)  -> Renderable {
-
-    albedo :cstring= "resources/materials/light-gold-bl/lightgold_albedo.png"
-    metallic :cstring= "resources/materials/light-gold-bl/lightgold_metallic.png"
-    normal :cstring= "resources/materials/light-gold-bl/lightgold_normal-ogl.png"
-    roughness :cstring= "resources/materials/light-gold-bl/lightgold_roughness.png"
     
     sphere := Renderable{};
 
@@ -274,18 +251,11 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
         append(&sphere.UVs, uvsV[i])
     }
 
-    // TEXTURE
-    sphere.albedo = albedo;
-    sphere.metallic = metallic;
-    sphere.roughness = roughness;
-    sphere.normal = normal;
-
+    // MATERIAL
     sphere.materialID = materialID;
 
     // MODEL MATRIX
     sphere.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos});
-
-    sphere.materialPBR = SR_Dark_Wood();
 
     return sphere;
 
