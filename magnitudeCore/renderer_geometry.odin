@@ -33,6 +33,11 @@ addRenderable::proc(mRenderer:^Renderer, renderable:Renderable){
 }
 
 buildGeometry::proc(renderer: ^Renderer){
+
+
+    uploadMaterialTexture(renderer);
+
+
     for el in renderer.scene.light{
 
         modelMatrixIndex := cast(f32)len(renderer.geometry.allModelMatrix)
@@ -59,8 +64,8 @@ buildGeometry::proc(renderer: ^Renderer){
         modelMatrixIndex := cast(f32)len(renderer.geometry.allModelMatrix);
         append(&renderer.geometry.allModelMatrix, el.modelMatrix);
         // Calculate the materia Index and append material to allMaterialsArray
-        materialIndex := cast(f32)len(renderer.geometry.allMaterials);
-        append(&renderer.geometry.allMaterials, el.materialPBR);
+        //materialIndex := cast(f32)len(renderer.geometry.allMaterials);
+        //append(&renderer.geometry.allMaterials, el.materialPBR);
         // Calculate the offset before pushing new data to the VertexBuffer
         vertex_offset := u16(len(renderer.geometry.allVertices));
         // Push all vertex indices information inside the IndexBuffer of the renderer
@@ -69,10 +74,10 @@ buildGeometry::proc(renderer: ^Renderer){
         }
         // Push all vertex information inside a Vertex Object and store it in the VertexBuffer of the renderer
         for numberProcessedVertex:= 0; numberProcessedVertex < len(el.vertex); numberProcessedVertex = numberProcessedVertex + 1 {
-            append(&renderer.geometry.allVertices, Vertex{position = el.vertex[numberProcessedVertex], uv =  el.UVs[numberProcessedVertex],  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= el.normals[numberProcessedVertex], materialIndex = cast(u32)materialIndex});
+            append(&renderer.geometry.allVertices, Vertex{position = el.vertex[numberProcessedVertex], uv =  el.UVs[numberProcessedVertex],  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= el.normals[numberProcessedVertex], materialIndex = el.materialID});
         }
 
-        if el.albedo != ""{
+        /*if el.albedo != ""{
             if !(el.albedo in renderer.textures){
                 renderer.textures[el.albedo] = textureCount;
                 textureCount += 1;
@@ -95,8 +100,7 @@ buildGeometry::proc(renderer: ^Renderer){
                 renderer.textures[el.normal] = textureCount;
                 textureCount += 1;
             }
-        }
-
+        }*/
     }
 }
 
@@ -209,5 +213,5 @@ initLight::proc(renderer: ^Renderer){
 }
 
 addLight::proc(mRenderer:^Renderer, lightPos:linalg.Vector3f32){
-    append(&mRenderer.scene.light, createColoredSphere(mRenderer.scene.lightInfo.lightPosition.x, mRenderer.scene.lightInfo.lightPosition.y, mRenderer.scene.lightInfo.lightPosition.z,0.25, 25.0, 25.0));
+    append(&mRenderer.scene.light, createColoredSphere(mRenderer.scene.lightInfo.lightPosition.x, mRenderer.scene.lightInfo.lightPosition.y, mRenderer.scene.lightInfo.lightPosition.z,0.25, 25.0, 25.0, 0));
 }

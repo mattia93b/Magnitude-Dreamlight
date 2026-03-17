@@ -30,7 +30,6 @@ createWindow::proc() -> ^sdl.Window {
     }
 
     return mWindow;
-
 }
 
 // Private Create GPU Device
@@ -72,68 +71,50 @@ createRenderer::proc(dataManager:^DataManager) {
     dataManager.renderer = mRenderer;
 
     initRenderer(&dataManager.renderer, gpuDevice, window);
-
 }
 
-
 createGraphicPipelineDataManager::proc(dataManager:^DataManager, vertexShaderID:u32, fragmentShaderID:u32){
-
     createGraphicPipeline(&dataManager.renderer, dataManager.shader[vertexShaderID], dataManager.shader[fragmentShaderID]);
 }
 
-
 // Create a shader and return Index
 createShader::proc(dataManager:^DataManager, path:cstring, stage:sdl.GPUShaderStage, num_uniform_buffers:u32, num_storage_buffers:u32, num_samplers:u32 = 0, num_storage_textures:u32 = 0) -> u32 {
-
     shader := loadShader(dataManager.gpuDevice, path, stage, num_uniform_buffers, num_storage_buffers, num_samplers, num_storage_textures);
-    
     append(&dataManager.shader, shader);
-
     shaderID := cast(u32)len(dataManager.shader) - 1;
-
     return shaderID;
 }
 
-createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, height:f32, texturePath:cstring = "") -> u32 {
-
-    box := createColoredCube(x, y, z, width, height);
-
+createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, height:f32, materialID:u32 = 0) -> u32 {
+    box := createColoredCube(x, y, z, width, height, materialID);
     addRenderable(&dataManager.renderer, box);
-
     cubeIndex := cast(u32)len(dataManager.renderer.scene.renderable) - 1;
-
     return cubeIndex;
 }
 
-
-createSphere::proc(dataManager:^DataManager, xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int)  -> u32 {
-
-    sphere := createColoredSphere(xPos, yPos, zPos, radius, stackCount, sectorCount, albedo = "resources/materials/dark-wood-stain-bl/dark-wood-stain_albedo.png", metallic = "resources/materials/dark-wood-stain-bl/dark-wood-stain_metallic.png",
-    normal = "resources/materials/dark-wood-stain-bl/dark-wood-stain_normal-ogl.png",roughness = "resources/materials/dark-wood-stain-bl/dark-wood-stain_roughness.png");
-
+createSphere::proc(dataManager:^DataManager, xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, materialID:u32 = 0)  -> u32 {
+    sphere := createColoredSphere(xPos, yPos, zPos, radius, stackCount, sectorCount, materialID);
     addRenderable(&dataManager.renderer, sphere);
-
     sphereIndex := cast(u32)len(dataManager.renderer.scene.renderable) - 1;
-    
     return sphereIndex;
 }
 
 getRenderableObject::proc(dataManager:^DataManager, renderableID:u32) -> ^Renderable{
-
     return &dataManager.renderer.scene.renderable[renderableID];
-
 }
 
 addLightToScene::proc(dataManager:^DataManager, lightPos: linalg.Vector3f32) -> u32 {
-
     addLight(&dataManager.renderer, lightPos);
-
     lightIndex := cast(u32)len(dataManager.renderer.scene.light) - 1;
-
     return lightIndex;
 }
 
 uploadAllDataToGPU::proc(dataManager:^DataManager) {
-
     pushRenderableInBuffer(&dataManager.renderer);
+}
+
+createMaterialInScene::proc(dataManager:^DataManager, albedo:cstring, metallic:cstring, normal:cstring, roughness:cstring) -> u32 {
+    append(&dataManager.renderer.scene.material, createMaterialPBR(albedo, metallic, roughness, normal));
+    materialID := cast(u32)len(dataManager.renderer.scene.material) - 1;
+    return materialID;
 }

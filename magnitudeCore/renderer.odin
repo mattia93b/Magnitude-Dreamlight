@@ -9,11 +9,11 @@ import "core:math/linalg"
 
 
 GPUResources :: struct {
-    device          : ^sdl.GPUDevice,
-    window          : ^sdl.Window,
-    sampler         : ^sdl.GPUSampler,
-    depthTexture    : ^sdl.GPUTexture,
-    graphicsPipeline : [dynamic]^sdl.GPUGraphicsPipeline,
+    device              : ^sdl.GPUDevice,
+    window              : ^sdl.Window,
+    sampler             : ^sdl.GPUSampler,
+    depthTexture        : ^sdl.GPUTexture,
+    graphicsPipeline    : [dynamic]^sdl.GPUGraphicsPipeline,
 }
 
 GeometryBuffers :: struct {
@@ -27,21 +27,22 @@ GeometryBuffers :: struct {
 }
 
 SceneData :: struct {
-    renderable              : [dynamic]Renderable,
-    light                   : [dynamic]Renderable,
-    lightNumberOfIndexInBuffer : int,
-    lightInfo               : LightInfo,
+    renderable                  : [dynamic]Renderable,
+    light                       : [dynamic]Renderable,
+    material                    : [dynamic]TextureMaterialPBR,
+    lightNumberOfIndexInBuffer  : int,
+    lightInfo                   : LightInfo,
 }
 
 
 Renderer :: struct {
-    gpu      : GPUResources,
-    geometry : GeometryBuffers,
-    scene    : SceneData,
-    camera   : Camera,
-    input    : mouseKeyboardInput,
-    allTextures : [16]^sdl.GPUTexture,
-    textures : map[cstring]int,
+    gpu             : GPUResources,
+    geometry        : GeometryBuffers,
+    scene           : SceneData,
+    camera          : Camera,
+    input           : mouseKeyboardInput,
+    allTextures     : [dynamic]^sdl.GPUTexture,
+    textures        : map[cstring]int,
 }
 
 initRenderer::proc(renderer: ^Renderer, device: ^sdl.GPUDevice, window: ^sdl.Window){

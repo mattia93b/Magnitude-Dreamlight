@@ -18,6 +18,7 @@ Renderable::struct{
     metallic:cstring,
     roughness:cstring,
     normal:cstring,
+    materialID:u32,
 }
 
 
@@ -26,9 +27,12 @@ updatePosition::proc(x:f32, y:f32, z:f32, renderable:^Renderable){
     renderable.modelMatrix = linalg.matrix4_translate_f32({x, y, z});
 }
 
-createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, 
-    albedo:cstring = "resources/materials/light-gold-bl/lightgold_albedo.png", metallic:cstring = "resources/materials/light-gold-bl/lightgold_metallic.png",
-    normal:cstring = "resources/materials/light-gold-bl/lightgold_normal-ogl.png",roughness:cstring = "resources/materials/light-gold-bl/lightgold_roughness.png") -> Renderable{
+createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, materialID:u32) -> Renderable {
+
+    albedo :cstring= "resources/materials/light-gold-bl/lightgold_albedo.png";
+    metallic :cstring= "resources/materials/light-gold-bl/lightgold_metallic.png";
+    normal :cstring= "resources/materials/light-gold-bl/lightgold_normal-ogl.png";
+    roughness :cstring= "resources/materials/light-gold-bl/lightgold_roughness.png";
 
     // RENDERABLE
     cube := Renderable{}
@@ -87,7 +91,6 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32,
         append(&cube.index, cast(u16)(offset + 0));
 
         offset += 4;
-
     }
 
 
@@ -156,13 +159,13 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32,
 
 
     // TEXTURE
-    if albedo != "" {
-        cube.albedo = albedo; //loadTexturePNG(texturePath, 4);
-        cube.metallic = metallic;
-        cube.roughness = roughness;
-        cube.normal = normal;
-    }
-    
+
+    cube.albedo = albedo; //loadTexturePNG(texturePath, 4);
+    cube.metallic = metallic;
+    cube.roughness = roughness;
+    cube.normal = normal;
+
+    cube.materialID = materialID;
 
     // MODEL MATRIX
     cube.modelMatrix = linalg.matrix4_translate_f32({x, y, z});
@@ -173,10 +176,13 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32,
 }
 
 
-createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, 
-    albedo:cstring = "resources/materials/light-gold-bl/lightgold_albedo.png", metallic:cstring = "resources/materials/light-gold-bl/lightgold_metallic.png",
-    normal:cstring = "resources/materials/light-gold-bl/lightgold_normal-ogl.png",roughness:cstring = "resources/materials/light-gold-bl/lightgold_roughness.png")  -> Renderable {
+createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, materialID:u32)  -> Renderable {
 
+    albedo :cstring= "resources/materials/light-gold-bl/lightgold_albedo.png"
+    metallic :cstring= "resources/materials/light-gold-bl/lightgold_metallic.png"
+    normal :cstring= "resources/materials/light-gold-bl/lightgold_normal-ogl.png"
+    roughness :cstring= "resources/materials/light-gold-bl/lightgold_roughness.png"
+    
     sphere := Renderable{};
 
     PI :f64 = linalg.acos(-1.0);
@@ -220,7 +226,6 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
             t = cast(f32)i / cast(f32)stackCount;
             append(&uvsV, linalg.Vector2f32{s, t});
         }
-
     }
 
 
@@ -270,12 +275,12 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
     }
 
     // TEXTURE
-    if albedo != "" {
-        sphere.albedo = albedo; //loadTexturePNG(texturePath, 4);
-        sphere.metallic = metallic;
-        sphere.roughness = roughness;
-        sphere.normal = normal;
-    }
+    sphere.albedo = albedo;
+    sphere.metallic = metallic;
+    sphere.roughness = roughness;
+    sphere.normal = normal;
+
+    sphere.materialID = materialID;
 
     // MODEL MATRIX
     sphere.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos});
