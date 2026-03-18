@@ -40,13 +40,17 @@ renderable_order :: proc(lhs, rhs: Renderable) -> bool {
 
 buildGeometry::proc(renderer: ^Renderer){
 
-    for key :u32= 0; key < cast(u32)len(renderer.scene.renderableMap); key = key + 1 {
-        append(&renderer.scene.renderable, renderer.scene.renderableMap[key]);
+    indexCounter :u32= 0;
+    for mat in renderer.scene.material{
+        for key, val in renderer.scene.renderableMap {
+            if val.materialID == indexCounter{
+                append(&renderer.scene.renderableMapIndex, key);
+            }
+        }
+        indexCounter = indexCounter + 1;
     }
 
     //slice.sort_by(renderer.scene.renderable[:], renderable_order);
-
-    //log.infof("ordered: ", renderer.scene.renderable[0].materialID);
 
     for el in renderer.scene.light{
 
@@ -67,21 +71,21 @@ buildGeometry::proc(renderer: ^Renderer){
     renderer.scene.lightNumberOfIndexInBuffer = len(renderer.geometry.allIndices);
 
     // Push renderable after light object
-    for el in renderer.scene.renderable{
+    for i in renderer.scene.renderableMapIndex{
         // calculate model matrix Index and append model matrix to allModelMatrixArray
         modelMatrixIndex := cast(f32)len(renderer.geometry.allModelMatrix);
-        append(&renderer.geometry.allModelMatrix, el.modelMatrix);
+        append(&renderer.geometry.allModelMatrix, renderer.scene.renderableMap[i].modelMatrix);
         // Calculate the offset before pushing new data to the VertexBuffer
         vertex_offset := u16(len(renderer.geometry.allVertices));
         // Push all vertex indices information inside the IndexBuffer of the renderer
-        for idx in el.index {
+        for idx in renderer.scene.renderableMap[i].index {
             append(&renderer.geometry.allIndices, u16(idx) + vertex_offset);
         }
         // Push all vertex information inside a Vertex Object and store it in the VertexBuffer of the renderer
-        for numberProcessedVertex:= 0; numberProcessedVertex < len(el.vertex); numberProcessedVertex = numberProcessedVertex + 1 {
-            append(&renderer.geometry.allVertices, Vertex{position = el.vertex[numberProcessedVertex], uv =  el.UVs[numberProcessedVertex],  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= el.normals[numberProcessedVertex], materialIndex = el.materialID});
+        for numberProcessedVertex:= 0; numberProcessedVertex < len(renderer.scene.renderableMap[i].vertex); numberProcessedVertex = numberProcessedVertex + 1 {
+            append(&renderer.geometry.allVertices, Vertex{position = renderer.scene.renderableMap[i].vertex[numberProcessedVertex], uv =  renderer.scene.renderableMap[i].UVs[numberProcessedVertex],  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= renderer.scene.renderableMap[i].normals[numberProcessedVertex], materialIndex = renderer.scene.renderableMap[i].materialID});
         }
-    }
+    } 
 }
 
 

@@ -59,7 +59,7 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     }
     // Update model position
     for i :u32= 0; i < cast(u32)len(mRenderer.scene.renderableMap); i = i + 1 {
-        mRenderer.geometry.allModelMatrix[i + cast(u32)len(mRenderer.scene.light)] = mRenderer.scene.renderableMap[i].modelMatrix;
+        mRenderer.geometry.allModelMatrix[i + cast(u32)len(mRenderer.scene.light)] = mRenderer.scene.renderableMap[mRenderer.scene.renderableMapIndex[i]].modelMatrix;
     }
 
     // Get Windows size to calculate the projection Matrix
