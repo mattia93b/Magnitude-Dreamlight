@@ -69,9 +69,16 @@ buildGeometry::proc(renderer: ^Renderer){
     }
 
     renderer.scene.lightNumberOfIndexInBuffer = len(renderer.geometry.allIndices);
+    // append end of light index
+    append(&renderer.scene.materialIndexForTexturebind, cast(u32)len(renderer.geometry.allIndices));
 
     // Push renderable after light object
     for i in renderer.scene.renderableMapIndex{
+        if renderer.scene.renderableMap[i].materialID % 4 == 0 && renderer.scene.renderableMap[i].materialID != 0{
+            log.infof("Materia ID: ", renderer.scene.renderableMap[i].materialID);
+            append(&renderer.scene.materialIndexForTexturebind, cast(u32)len(renderer.geometry.allIndices));
+        }
+
         // calculate model matrix Index and append model matrix to allModelMatrixArray
         modelMatrixIndex := cast(f32)len(renderer.geometry.allModelMatrix);
         append(&renderer.geometry.allModelMatrix, renderer.scene.renderableMap[i].modelMatrix);
@@ -86,6 +93,7 @@ buildGeometry::proc(renderer: ^Renderer){
             append(&renderer.geometry.allVertices, Vertex{position = renderer.scene.renderableMap[i].vertex[numberProcessedVertex], uv =  renderer.scene.renderableMap[i].UVs[numberProcessedVertex],  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= renderer.scene.renderableMap[i].normals[numberProcessedVertex], materialIndex = renderer.scene.renderableMap[i].materialID});
         }
     } 
+    log.infof("change Texture array: ", renderer.scene.materialIndexForTexturebind);
 }
 
 

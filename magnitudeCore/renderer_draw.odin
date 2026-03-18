@@ -95,6 +95,7 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
 
     sdl.BindGPUFragmentStorageBuffers(renderPass, 0, &mRenderer.geometry.materialBuffer, 1);
 
+    // Texture Bindings
     textureBindings: [16]sdl.GPUTextureSamplerBinding;
 
     for i in 0..<16 {
