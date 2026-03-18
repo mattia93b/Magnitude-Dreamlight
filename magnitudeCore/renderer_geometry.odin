@@ -31,7 +31,7 @@ alignUp :: proc(value: int, alignment: int) -> int {
 //// RENDERABLE
 
 addRenderable::proc(mRenderer:^Renderer, renderable:Renderable){
-    append(&mRenderer.scene.renderable, renderable);
+    //append(&mRenderer.scene.renderable, renderable);
 }
 
 renderable_order :: proc(lhs, rhs: Renderable) -> bool {
@@ -39,6 +39,10 @@ renderable_order :: proc(lhs, rhs: Renderable) -> bool {
 }
 
 buildGeometry::proc(renderer: ^Renderer){
+
+    for key :u32= 0; key < cast(u32)len(renderer.scene.renderableMap); key = key + 1 {
+        append(&renderer.scene.renderable, renderer.scene.renderableMap[key]);
+    }
 
     //slice.sort_by(renderer.scene.renderable[:], renderable_order);
 

@@ -28,6 +28,7 @@ GeometryBuffers :: struct {
 
 SceneData :: struct {
     renderable                  : [dynamic]Renderable,
+    renderableMap               : map[u32]Renderable,
     light                       : [dynamic]Renderable,
     material                    : [dynamic]TextureMaterialPBR,
     lightNumberOfIndexInBuffer  : int,

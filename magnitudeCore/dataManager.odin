@@ -87,20 +87,28 @@ createShader::proc(dataManager:^DataManager, path:cstring, stage:sdl.GPUShaderSt
 
 createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, height:f32, materialID:u32 = 0) -> u32 {
     box := createColoredCube(x, y, z, width, height, materialID);
-    addRenderable(&dataManager.renderer, box);
-    cubeIndex := cast(u32)len(dataManager.renderer.scene.renderable) - 1;
-    return cubeIndex;
+    //addRenderable(&dataManager.renderer, box);
+    //cubeIndex := cast(u32)len(dataManager.renderer.scene.renderable) - 1;
+    //return cubeIndex;
+    mapIndex := cast(u32)len(dataManager.renderer.scene.renderableMap);
+    dataManager.renderer.scene.renderableMap[mapIndex] = box;
+    return mapIndex;
 }
 
 createSphere::proc(dataManager:^DataManager, xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, materialID:u32 = 0)  -> u32 {
     sphere := createColoredSphere(xPos, yPos, zPos, radius, stackCount, sectorCount, materialID);
-    addRenderable(&dataManager.renderer, sphere);
-    sphereIndex := cast(u32)len(dataManager.renderer.scene.renderable) - 1;
-    return sphereIndex;
+    //addRenderable(&dataManager.renderer, sphere);
+    //sphereIndex := cast(u32)len(dataManager.renderer.scene.renderable) - 1;
+    //return sphereIndex;
+
+    mapIndex := cast(u32)len(dataManager.renderer.scene.renderableMap);
+    dataManager.renderer.scene.renderableMap[mapIndex] = sphere;
+    return mapIndex;
 }
 
 getRenderableObject::proc(dataManager:^DataManager, renderableID:u32) -> ^Renderable{
-    return &dataManager.renderer.scene.renderable[renderableID];
+    //return &dataManager.renderer.scene.renderable[renderableID];
+    return &dataManager.renderer.scene.renderableMap[renderableID];
 }
 
 addLightToScene::proc(dataManager:^DataManager, lightPos: linalg.Vector3f32) -> u32 {
