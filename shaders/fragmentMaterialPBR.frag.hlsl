@@ -85,6 +85,20 @@ SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
     uint texIdx_roughness = materials[index].texture_idx_roughness - k;
     uint texIdx_normal = materials[index].texture_idx_normal - k;
 
+    float3 normalSample = u_Textures[texIdx_normal].Sample(u_Sampler, stage_input.v_uv).rgb;
+    float3 N_tangent = normalSample * 2.0 - 1.0;
+
+    float3 N_geo = normalize(stage_input.v_normals);
+    float3 dp1   = ddx(stage_input.v_position);
+    float3 dp2   = ddy(stage_input.v_position);
+    float2 duv1  = ddx(stage_input.v_uv);
+    float2 duv2  = ddy(stage_input.v_uv);
+
+    float3 T = normalize(dp1 * duv2.y - dp2 * duv1.y);
+    float3 B = normalize(cross(N_geo, T));
+    float3x3 TBN = float3x3(T, B, N_geo);
+
+
     float4 texColor = u_Textures[texIdx].Sample(u_Sampler, stage_input.v_uv);
 
     float3 albedo = texColor.rgb;
@@ -93,7 +107,7 @@ SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
     roughness = max(roughness, 0.03);
     float ao = 1.0;
 
-    float3 N = normalize(stage_input.v_normals);
+    float3 N = normalize(mul(N_tangent, TBN));
     float3 V = normalize(u_cameraPosition.xyz - stage_input.v_position);
 
     float3 F0 = float3(0.04, 0.04, 0.04); 
