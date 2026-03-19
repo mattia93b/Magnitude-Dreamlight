@@ -6,6 +6,7 @@ struct Material
     uint texture_idx_metallic;
     uint texture_idx_roughness;
     uint texture_idx_normal;
+    uint texture_idx_ao;
 };
 
 // TEXTURE
@@ -84,6 +85,7 @@ SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
     uint texIdx_metallic = materials[index].texture_idx_metallic - k;
     uint texIdx_roughness = materials[index].texture_idx_roughness - k;
     uint texIdx_normal = materials[index].texture_idx_normal - k;
+    uint texIdx_ao = materials[index].texture_idx_ao - k;
 
     float3 normalSample = u_Textures[texIdx_normal].Sample(u_Sampler, stage_input.v_uv).rgb;
     float3 N_tangent = normalSample * 2.0 - 1.0;
@@ -105,7 +107,7 @@ SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
     float metallic = u_Textures[texIdx_metallic].Sample(u_Sampler, stage_input.v_uv).r;
     float roughness = u_Textures[texIdx_roughness].Sample(u_Sampler, stage_input.v_uv).r;
     roughness = max(roughness, 0.03);
-    float ao = 1.0;
+    float ao = u_Textures[texIdx_ao].Sample(u_Sampler, stage_input.v_uv).r;
 
     float3 N = normalize(mul(N_tangent, TBN));
     float3 V = normalize(u_cameraPosition.xyz - stage_input.v_position);

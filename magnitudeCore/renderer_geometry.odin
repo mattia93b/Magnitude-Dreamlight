@@ -74,7 +74,7 @@ buildGeometry::proc(renderer: ^Renderer){
 
     // Push renderable after light object
     for i in renderer.scene.renderableMapIndex{
-        if renderer.scene.renderableMap[i].materialID % 4 == 0 && renderer.scene.renderableMap[i].materialID != 0{
+        if renderer.scene.renderableMap[i].materialID % 3 == 0 && renderer.scene.renderableMap[i].materialID != 0{
             log.infof("Materia ID: ", renderer.scene.renderableMap[i].materialID);
             append(&renderer.scene.materialIndexForTexturebind, cast(u32)len(renderer.geometry.allIndices));
         }

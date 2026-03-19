@@ -24,7 +24,11 @@ uploadMaterialTexture::proc(renderer: ^Renderer){
         delete(stagingBuffers)
     }
 
+    materiaCounter := 0;
+
     for mat in renderer.scene.material {
+
+        slot := cast(u32)len(renderer.allTextures);
 
         // ALBEDO
         stagingBuffer := loadSingleTexture(renderer, mat.texture_albedo, .R8G8B8A8_UNORM_SRGB, copyPass);
@@ -42,23 +46,26 @@ uploadMaterialTexture::proc(renderer: ^Renderer){
         stagingBuffer = loadSingleTexture(renderer, mat.texture_normal, .R8G8B8A8_UNORM, copyPass);
         append(&stagingBuffers, stagingBuffer)
 
+        // AO
+        stagingBuffer = loadSingleTexture(renderer, mat.texture_ao, .R8G8B8A8_UNORM, copyPass);
+        append(&stagingBuffers, stagingBuffer)
+
         // TODO: Handle the index outside 16
         // Push material to buffet to upload to GPU
-        slot := cast(u32)len(renderer.allTextures) - 1;
-        append(&renderer.geometry.allMaterials, MaterialPBR{slot - 3, slot - 2, slot - 1, slot});
+        
+        append(&renderer.geometry.allMaterials, MaterialPBR{slot, slot + 1, slot + 2 , slot +3 , slot + 4});
+        //append(&renderer.geometry.allMaterials, MaterialPBR{15, 15, 15, 15, 15});
+        log.infof("Slot: ", renderer.geometry.allMaterials[len(renderer.geometry.allMaterials)-1])
 
-    }
+        materiaCounter = materiaCounter + 1;
 
-    for i:= len(renderer.allTextures); i<16; i=i+1{
-        append(&renderer.allTextures, sdl.CreateGPUTexture(renderer.gpu.device, sdl.GPUTextureCreateInfo{
-            type                 = .D2,
-            format               = .R8G8B8A8_UNORM,
-            width                = cast(u32)2,
-            height               = cast(u32)2,
-            layer_count_or_depth = 1,
-            num_levels           = 1,
-            usage                = {.SAMPLER},
-        }));
+        if materiaCounter == 3{
+            materiaCounter = 0
+            // empty texture
+            stagingBuffer = loadSingleTexture(renderer, "resources/textures/textureDefault.png", .R8G8B8A8_UNORM, copyPass);
+            append(&stagingBuffers, stagingBuffer)
+        }
+
     }
 
     sdl.EndGPUCopyPass(copyPass);

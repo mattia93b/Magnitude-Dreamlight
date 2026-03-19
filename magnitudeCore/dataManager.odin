@@ -121,8 +121,8 @@ uploadAllDataToGPU::proc(dataManager:^DataManager) {
     pushRenderableInBuffer(&dataManager.renderer);
 }
 
-createMaterialInScene::proc(dataManager:^DataManager, albedo:cstring, metallic:cstring, normal:cstring, roughness:cstring) -> u32 {
-    append(&dataManager.renderer.scene.material, createMaterialPBR(albedo, metallic, roughness, normal));
+createMaterialInScene::proc(dataManager:^DataManager, albedo:cstring, metallic:cstring, roughness:cstring, normal:cstring, ao:cstring) -> u32 {
+    append(&dataManager.renderer.scene.material, createMaterialPBR(albedo, metallic, roughness, normal, ao));
     materialID := cast(u32)len(dataManager.renderer.scene.material) - 1;
     return materialID;
 }
