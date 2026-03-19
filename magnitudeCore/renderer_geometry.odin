@@ -49,6 +49,7 @@ buildGeometry::proc(renderer: ^Renderer){
         }
         indexCounter = indexCounter + 1;
     }
+    log.infof("orderer renderable for material: ", renderer.scene.renderableMapIndex);
 
     //slice.sort_by(renderer.scene.renderable[:], renderable_order);
 
@@ -73,24 +74,28 @@ buildGeometry::proc(renderer: ^Renderer){
     append(&renderer.scene.materialIndexForTexturebind, cast(u32)len(renderer.geometry.allIndices));
 
     // Push renderable after light object
-    for i in renderer.scene.renderableMapIndex{
-        if renderer.scene.renderableMap[i].materialID % 3 == 0 && renderer.scene.renderableMap[i].materialID != 0{
-            log.infof("Materia ID: ", renderer.scene.renderableMap[i].materialID);
-            append(&renderer.scene.materialIndexForTexturebind, cast(u32)len(renderer.geometry.allIndices));
+    //for i in renderer.scene.renderableMapIndex{
+    for i:u32=0 ; i < cast(u32)len(renderer.scene.renderableMapIndex); i = i + 1{
+        if renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].materialID % 3 == 0 && renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].materialID != 0 {
+            if renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i - 1]].materialID != renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].materialID {
+                log.infof("Pre Material ID: ", renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i - 1]].materialID);
+                log.infof("Material ID: ", renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].materialID);
+                append(&renderer.scene.materialIndexForTexturebind, cast(u32)len(renderer.geometry.allIndices));
+            }
         }
 
         // calculate model matrix Index and append model matrix to allModelMatrixArray
         modelMatrixIndex := cast(f32)len(renderer.geometry.allModelMatrix);
-        append(&renderer.geometry.allModelMatrix, renderer.scene.renderableMap[i].modelMatrix);
+        append(&renderer.geometry.allModelMatrix, renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].modelMatrix);
         // Calculate the offset before pushing new data to the VertexBuffer
         vertex_offset := u16(len(renderer.geometry.allVertices));
         // Push all vertex indices information inside the IndexBuffer of the renderer
-        for idx in renderer.scene.renderableMap[i].index {
+        for idx in renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].index {
             append(&renderer.geometry.allIndices, u16(idx) + vertex_offset);
         }
         // Push all vertex information inside a Vertex Object and store it in the VertexBuffer of the renderer
-        for numberProcessedVertex:= 0; numberProcessedVertex < len(renderer.scene.renderableMap[i].vertex); numberProcessedVertex = numberProcessedVertex + 1 {
-            append(&renderer.geometry.allVertices, Vertex{position = renderer.scene.renderableMap[i].vertex[numberProcessedVertex], uv =  renderer.scene.renderableMap[i].UVs[numberProcessedVertex],  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= renderer.scene.renderableMap[i].normals[numberProcessedVertex], materialIndex = renderer.scene.renderableMap[i].materialID});
+        for numberProcessedVertex:= 0; numberProcessedVertex < len(renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].vertex); numberProcessedVertex = numberProcessedVertex + 1 {
+            append(&renderer.geometry.allVertices, Vertex{position = renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].vertex[numberProcessedVertex], uv =  renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].UVs[numberProcessedVertex],  modelMatrixIndex = cast(u32)modelMatrixIndex, normals= renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].normals[numberProcessedVertex], materialIndex = renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].materialID});
         }
     } 
     log.infof("change Texture array: ", renderer.scene.materialIndexForTexturebind);

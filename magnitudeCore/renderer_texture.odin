@@ -50,12 +50,9 @@ uploadMaterialTexture::proc(renderer: ^Renderer){
         stagingBuffer = loadSingleTexture(renderer, mat.texture_ao, .R8G8B8A8_UNORM, copyPass);
         append(&stagingBuffers, stagingBuffer)
 
-        // TODO: Handle the index outside 16
         // Push material to buffet to upload to GPU
-        
-        append(&renderer.geometry.allMaterials, MaterialPBR{slot, slot + 1, slot + 2 , slot +3 , slot + 4});
-        //append(&renderer.geometry.allMaterials, MaterialPBR{15, 15, 15, 15, 15});
-        log.infof("Slot: ", renderer.geometry.allMaterials[len(renderer.geometry.allMaterials)-1])
+        append(&renderer.geometry.allMaterials, MaterialPBR{slot, slot + 1, slot + 2 , slot + 3 , slot + 4});
+        log.infof("Material ID: ", len(renderer.geometry.allMaterials),"Slot: ", renderer.geometry.allMaterials[len(renderer.geometry.allMaterials)-1])
 
         materiaCounter = materiaCounter + 1;
 
