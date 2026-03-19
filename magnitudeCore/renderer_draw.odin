@@ -95,30 +95,53 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
 
     sdl.BindGPUFragmentStorageBuffers(renderPass, 0, &mRenderer.geometry.materialBuffer, 1);
 
-    // Texture Bindings
-    textureBindings: [16]sdl.GPUTextureSamplerBinding;
-
-    for i in 0..<16 {
-        tex := mRenderer.allTextures[i]
-        if tex == nil {
-            tex = mRenderer.allTextures[0];
-        }
-        
-        textureBindings[i].texture = tex
-        textureBindings[i].sampler = mRenderer.gpu.sampler
-    }
-
-    sdl.BindGPUFragmentSamplers(renderPass, 0, &textureBindings[0], 16)
-
     // bind vertexBuffer
     bufferBindings :[1]sdl.GPUBufferBinding;
     bufferBindings[0].buffer = mRenderer.geometry.vertexBuffer;
     bufferBindings[0].offset = 0;
 
-    sdl.BindGPUVertexBuffers(renderPass, 0, &bufferBindings[0], 1);
-    //sdl.DrawGPUPrimitives(renderPass, cast(u32)len(vertices), 1, 0, 0);
-    sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.geometry.indexBuffer}, ._16BIT);
-    sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)len(mRenderer.geometry.allIndices[mRenderer.scene.lightNumberOfIndexInBuffer:]), 1, cast(u32)mRenderer.scene.lightNumberOfIndexInBuffer, 0, 0);
+    // Texture Bindings
+    textureBindings: [dynamic]sdl.GPUTextureSamplerBinding;
+
+    for i in 0..<len(mRenderer.scene.materialIndexForTexturebind) * 16 {
+
+        tex :^sdl.GPUTexture= nil;
+
+        if i < len(mRenderer.allTextures){
+            tex = mRenderer.allTextures[i]
+        }
+        
+        
+        if tex == nil {
+            tex = mRenderer.allTextures[0];
+        }
+        
+        textureBind: sdl.GPUTextureSamplerBinding;
+
+        textureBind.texture = tex
+        textureBind.sampler = mRenderer.gpu.sampler
+
+        append(&textureBindings, textureBind);
+    }
+
+
+    for numOfTexturebinds := 0 ; numOfTexturebinds < len(mRenderer.scene.materialIndexForTexturebind); numOfTexturebinds = numOfTexturebinds + 1{
+
+        begin := mRenderer.scene.materialIndexForTexturebind[numOfTexturebinds];
+        end := len(mRenderer.geometry.allIndices);
+        if numOfTexturebinds + 1 < len(mRenderer.scene.materialIndexForTexturebind) {
+            end = cast(int)mRenderer.scene.materialIndexForTexturebind[numOfTexturebinds + 1];
+        }   
+
+        sdl.BindGPUFragmentSamplers(renderPass, 0, &textureBindings[16 * numOfTexturebinds], 16)
+
+        sdl.BindGPUVertexBuffers(renderPass, 0, &bufferBindings[0], 1);
+        sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.geometry.indexBuffer}, ._16BIT);
+        sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)len(mRenderer.geometry.allIndices[begin:end]), 1, cast(u32)begin, 0, 0);
+        
+    }
+
+    
 
     // Light 
     // Bind pipeline

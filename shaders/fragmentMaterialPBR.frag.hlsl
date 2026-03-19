@@ -78,10 +78,12 @@ SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
 {
     uint index = stage_input.materialIndex;
 
-    uint texIdx = materials[index].texture_idx_albedo;
-    uint texIdx_metallic = materials[index].texture_idx_metallic;
-    uint texIdx_roughness = materials[index].texture_idx_roughness;
-    uint texIdx_normal = materials[index].texture_idx_normal;
+    uint k = 16 * uint(materials[index].texture_idx_albedo / 16);
+
+    uint texIdx = materials[index].texture_idx_albedo - k;
+    uint texIdx_metallic = materials[index].texture_idx_metallic - k;
+    uint texIdx_roughness = materials[index].texture_idx_roughness - k;
+    uint texIdx_normal = materials[index].texture_idx_normal - k;
 
     float4 texColor = u_Textures[texIdx].Sample(u_Sampler, stage_input.v_uv);
 

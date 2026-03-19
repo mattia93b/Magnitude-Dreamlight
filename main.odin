@@ -47,9 +47,11 @@ main::proc(){
     stone := magnitudeCore.createMaterialInScene(&dataManager, "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_albedo.png", "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_metallic.png", "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_normal-ogl.png", "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_roughness.png"); 
     wood2 := magnitudeCore.createMaterialInScene(&dataManager, "resources/materials/WoodFloor043_2K-PNG/WoodFloor043_2K-PNG_Color.png", "resources/materials/WoodFloor043_2K-PNG/WoodFloor043_2K-PNG_Metalness.png", "resources/materials/WoodFloor043_2K-PNG/WoodFloor043_2K-PNG_NormalDX.png", "resources/materials/WoodFloor043_2K-PNG/WoodFloor043_2K-PNG_Roughness.png"); 
     brick := magnitudeCore.createMaterialInScene(&dataManager, "resources/materials/old-subway-brick-bl/old-subway-brick_albedo.png", "resources/materials/old-subway-brick-bl/old-subway-brick_metallic.png", "resources/materials/old-subway-brick-bl/old-subway-brick_normal-ogl.png", "resources/materials/old-subway-brick-bl/old-subway-brick_roughness.png"); 
+    copper := magnitudeCore.createMaterialInScene(&dataManager, "resources/materials/oxidized-copper-bl/oxidized-copper-albedo.png", "resources/materials/oxidized-copper-bl/oxidized-copper-metal.png", "resources/materials/oxidized-copper-bl/oxidized-copper-normal-ogl.png", "resources/materials/oxidized-copper-bl/oxidized-coppper-roughness.png"); 
+
 
     // Scene
-    boxId := magnitudeCore.createCube(&dataManager, 0.0, 10.0, -20.0, 5.0, 5.0, stone);
+    boxId := magnitudeCore.createCube(&dataManager, 0.0, 10.0, -20.0, 5.0, 5.0, copper);
     baseId  := magnitudeCore.createCube(&dataManager, 0.0, 3.0, -10.0, 32.0, 0.5, stone);
     cube1Id := magnitudeCore.createCube(&dataManager, 2.0, 5.0, -10.0, 3.0, 3.0, wood);
 	cube2Id := magnitudeCore.createCube(&dataManager, 6.0, 5.0, -10.0, 3.0, 3.0, gold);
