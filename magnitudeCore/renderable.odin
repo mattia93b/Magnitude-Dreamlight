@@ -17,15 +17,25 @@ Renderable::struct{
     materialID:u32,
     aabb_min    : linalg.Vector3f32,
     aabb_max    : linalg.Vector3f32,
+    position    : linalg.Vector3f32,
+    velocity    : linalg.Vector3f32,
+    is_static   : bool,
 }
 
 
 updatePosition::proc(x:f32, y:f32, z:f32, renderable:^Renderable){
+    // POSITION
+    renderable.position = {x, y, z};
     // MODEL MATRIX
     renderable.modelMatrix = linalg.matrix4_translate_f32({x, y, z});
 }
 
-createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, materialID:u32) -> Renderable {
+updateVelocity::proc(Vx:f32, Vy:f32, Vz:f32, renderable:^Renderable){
+    // VELOCITY
+    renderable.velocity = {Vx, Vy, Vz};
+}
+
+createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, materialID:u32) -> Renderable {
 
     // RENDERABLE
     cube := Renderable{}
@@ -155,7 +165,16 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, materialID:u
     cube.materialID = materialID;
 
     // MODEL MATRIX
-    cube.modelMatrix = linalg.matrix4_translate_f32({x, y, z});
+    cube.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos});
+
+    // POSITION
+    cube.position = {xPos, yPos, zPos};
+
+    // VELOCITY
+    cube.velocity = {0, 0, 0};
+
+    // IS STATIC
+    cube.is_static = true;
 
     // COLLISION
     cube.aabb_min, cube.aabb_max = compute_local_aabb(&cube);
@@ -263,6 +282,15 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
     // MODEL MATRIX
     sphere.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos});
 
+    // POSITION
+    sphere.position = {xPos, yPos, zPos};
+
+    // VELOCITY
+    sphere.velocity = {0, 0, 0};
+
+    // IS STATIC
+    sphere.is_static = true;
+
     // COLLISION
     sphere.aabb_min, sphere.aabb_max = compute_local_aabb(&sphere);
 
@@ -341,4 +369,11 @@ resolveCollision :: proc(r1: ^Renderable, r2: ^Renderable) -> bool {
     }
 
     return true
+}
+
+updatePhysics :: proc(r:^Renderable, dt:f32){
+    if r.is_static do return
+
+    r.position += r.velocity * dt
+    r.modelMatrix = linalg.matrix4_translate_f32(r.position)
 }
