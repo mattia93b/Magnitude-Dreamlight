@@ -7,6 +7,8 @@ import sdl "vendor:sdl3"
 // Magnitude Core
 import "magnitudeCore"
 
+MATERIA_SCENE :: false;
+
 main::proc(){
     context.logger = log.create_console_logger();
     // Texture Atlas Demo
@@ -42,6 +44,12 @@ main::proc(){
 
     // Material
 
+    defaultMaterial := magnitudeCore.createMaterialInScene(&dataManager, 
+        "resources/textures/textureDefault.png", 
+        "resources/textures/textureDefault_specular.png",
+        "resources/textures/textureDefault_specular.png", 
+        "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_normal-ogl.png",
+        "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_ao.png");
     wood := magnitudeCore.createMaterialInScene(&dataManager, 
         "resources/materials/dark-wood-stain-bl/dark-wood-stain_albedo.png", 
         "resources/materials/dark-wood-stain-bl/dark-wood-stain_metallic.png",
@@ -117,42 +125,45 @@ main::proc(){
 
 
 
-    log.infof("wood Materia ID: ", wood);
-
     // Scene
-    boxId := magnitudeCore.createCube(&dataManager, 0.0, 10.0, -20.0, 5.0, 5.0, Rock063);
-    baseId  := magnitudeCore.createCube(&dataManager, 0.0, 3.0, -10.0, 32.0, 0.5, stone);
-    //
-    cube1Id := magnitudeCore.createCube(&dataManager, -10.0, 5.0, -15.0, 3.0, 3.0, wood);
-	cube2Id := magnitudeCore.createCube(&dataManager, -6.0, 5.0, -15.0, 3.0, 3.0, wood2);
-	cube3Id := magnitudeCore.createCube(&dataManager, -2.0, 5.0, -15.0, 3.0, 3.0, stone);
-	cube4Id := magnitudeCore.createCube(&dataManager, 2.0, 5.0, -15.0, 3.0, 3.0, brick);
-    cube5Id := magnitudeCore.createCube(&dataManager, 6.0, 5.0, -15.0, 3.0, 3.0, copper);
-    cube6Id := magnitudeCore.createCube(&dataManager, 10.0, 5.0, -15.0, 3.0, 3.0, gold);
-    //
-    cube7Id := magnitudeCore.createCube(&dataManager, -10.0, 5.0, -5.0, 3.0, 3.0, Rock063);
-	cube8Id := magnitudeCore.createCube(&dataManager, -6.0, 5.0, -5.0, 3.0, 3.0, river);
-	cube9Id := magnitudeCore.createCube(&dataManager, -2.0, 5.0, -5.0, 3.0, 3.0, oxidized_metal);
-	cube10Id := magnitudeCore.createCube(&dataManager, 2.0, 5.0, -5.0, 3.0, 3.0, fancy_carved_wood);
-    cube11Id := magnitudeCore.createCube(&dataManager, 6.0, 5.0, -5.0, 3.0, 3.0, worn_factory);
-    cube12Id := magnitudeCore.createCube(&dataManager, 10.0, 5.0, -5.0, 3.0, 3.0, cloudy_veined_quartz);
+    //boxId := magnitudeCore.createCube(&dataManager, 0.0, 10.0, -20.0, 5.0, 5.0, Rock063);
+    baseId  := magnitudeCore.createCube(&dataManager, 0.0, 3.0, -10.0, 32.0, 0.5, defaultMaterial);
 
+    if MATERIA_SCENE {
+        //
+        cube1Id := magnitudeCore.createCube(&dataManager, -10.0, 5.0, -15.0, 3.0, 3.0, wood);
+        cube2Id := magnitudeCore.createCube(&dataManager, -6.0, 5.0, -15.0, 3.0, 3.0, wood2);
+        cube3Id := magnitudeCore.createCube(&dataManager, -2.0, 5.0, -15.0, 3.0, 3.0, stone);
+        cube4Id := magnitudeCore.createCube(&dataManager, 2.0, 5.0, -15.0, 3.0, 3.0, brick);
+        cube5Id := magnitudeCore.createCube(&dataManager, 6.0, 5.0, -15.0, 3.0, 3.0, copper);
+        cube6Id := magnitudeCore.createCube(&dataManager, 10.0, 5.0, -15.0, 3.0, 3.0, gold);
+        //
+        cube7Id := magnitudeCore.createCube(&dataManager, -10.0, 5.0, -5.0, 3.0, 3.0, Rock063);
+        cube8Id := magnitudeCore.createCube(&dataManager, -6.0, 5.0, -5.0, 3.0, 3.0, river);
+        cube9Id := magnitudeCore.createCube(&dataManager, -2.0, 5.0, -5.0, 3.0, 3.0, oxidized_metal);
+        cube10Id := magnitudeCore.createCube(&dataManager, 2.0, 5.0, -5.0, 3.0, 3.0, fancy_carved_wood);
+        cube11Id := magnitudeCore.createCube(&dataManager, 6.0, 5.0, -5.0, 3.0, 3.0, worn_factory);
+        cube12Id := magnitudeCore.createCube(&dataManager, 10.0, 5.0, -5.0, 3.0, 3.0, cloudy_veined_quartz);
 
-    //sphereId := magnitudeCore.createSphere(&dataManager, -6.0, 10.0, -10.0, 1.5, 25.0, 25.0, gold);
-    //
-    sphere1Id := magnitudeCore.createSphere(&dataManager, -10.0, 10.0, -15.0, 1.5, 25.0, 25.0, wood);
-    sphere2Id := magnitudeCore.createSphere(&dataManager, -6.0, 10.0, -15.0, 1.5, 25.0, 25.0, wood2);
-    sphere3Id := magnitudeCore.createSphere(&dataManager, -2.0, 10.0, -15.0, 1.5, 25.0, 25.0, stone);
-    sphere4Id := magnitudeCore.createSphere(&dataManager, 2.0, 10.0, -15.0, 1.5, 25.0, 25.0, brick);
-    sphere5Id := magnitudeCore.createSphere(&dataManager, 6.0, 10.0, -15.0, 1.5, 25.0, 25.0, copper);
-    sphere6Id := magnitudeCore.createSphere(&dataManager, 10.0, 10.0, -15.0, 1.5, 25.0, 25.0, gold);
-    //
-    sphere7Id := magnitudeCore.createSphere(&dataManager, -10.0, 5.0, 0.0, 1.5, 25.0, 25.0, Rock063);
-    sphere8Id := magnitudeCore.createSphere(&dataManager, -6.0, 5.0, 0.0, 1.5, 25.0, 25.0, river);
-    sphere9Id := magnitudeCore.createSphere(&dataManager, -2.0, 5.0, 0.0, 1.5, 25.0, 25.0, oxidized_metal);
-    sphere10Id := magnitudeCore.createSphere(&dataManager, 2.0, 5.0, 0.0, 1.5, 25.0, 25.0, fancy_carved_wood);
-    sphere11Id := magnitudeCore.createSphere(&dataManager, 6.0, 5.0, 0.0, 1.5, 25.0, 25.0, worn_factory);
-    sphere12Id := magnitudeCore.createSphere(&dataManager, 10.0, 5.0, 0.0, 1.5, 25.0, 25.0, cloudy_veined_quartz);
+        //sphereId := magnitudeCore.createSphere(&dataManager, -6.0, 10.0, -10.0, 1.5, 25.0, 25.0, gold);
+        //
+        sphere1Id := magnitudeCore.createSphere(&dataManager, -10.0, 10.0, -15.0, 1.5, 25.0, 25.0, wood);
+        sphere2Id := magnitudeCore.createSphere(&dataManager, -6.0, 10.0, -15.0, 1.5, 25.0, 25.0, wood2);
+        sphere3Id := magnitudeCore.createSphere(&dataManager, -2.0, 10.0, -15.0, 1.5, 25.0, 25.0, stone);
+        sphere4Id := magnitudeCore.createSphere(&dataManager, 2.0, 10.0, -15.0, 1.5, 25.0, 25.0, brick);
+        sphere5Id := magnitudeCore.createSphere(&dataManager, 6.0, 10.0, -15.0, 1.5, 25.0, 25.0, copper);
+        sphere6Id := magnitudeCore.createSphere(&dataManager, 10.0, 10.0, -15.0, 1.5, 25.0, 25.0, gold);
+        //
+        sphere7Id := magnitudeCore.createSphere(&dataManager, -10.0, 5.0, 0.0, 1.5, 25.0, 25.0, Rock063);
+        sphere8Id := magnitudeCore.createSphere(&dataManager, -6.0, 5.0, 0.0, 1.5, 25.0, 25.0, river);
+        sphere9Id := magnitudeCore.createSphere(&dataManager, -2.0, 5.0, 0.0, 1.5, 25.0, 25.0, oxidized_metal);
+        sphere10Id := magnitudeCore.createSphere(&dataManager, 2.0, 5.0, 0.0, 1.5, 25.0, 25.0, fancy_carved_wood);
+        sphere11Id := magnitudeCore.createSphere(&dataManager, 6.0, 5.0, 0.0, 1.5, 25.0, 25.0, worn_factory);
+        sphere12Id := magnitudeCore.createSphere(&dataManager, 10.0, 5.0, 0.0, 1.5, 25.0, 25.0, cloudy_veined_quartz);
+    }
+
+    cubeCollision1 := magnitudeCore.createCube(&dataManager, -10.0, 5.0, -15.0, 3.0, 3.0, wood);
+    cubeCollision2 := magnitudeCore.createCube(&dataManager, 10.0, 5.0, -15.0, 3.0, 3.0, gold);
 
     magnitudeCore.addLightToScene(&dataManager, {0.0, 15.0, 10.0});
 
@@ -167,11 +178,13 @@ main::proc(){
 
     lastTicks := sdl.GetTicks();
 
-    x :f32= -2.0; 
+    x :f32= -10.0; 
 	y :f32= 6.0;
 	z :f32= -1.0;
 	k :f32= 1;
-    velocity :f32= 5;
+    velocity :f32= 30;
+
+    updatePosition := true;
 
     // GameLoop
     for isRunning {
@@ -182,10 +195,18 @@ main::proc(){
 
         //magnitudeCore.updatePosition(x, y, z, magnitudeCore.getRenderableObject(&dataManager, sphereId));
 
-        if (x <= - 10) {
+        magnitudeCore.updatePosition(x, y, z, magnitudeCore.getRenderableObject(&dataManager, cubeCollision1));
+
+        magnitudeCore.updatePosition(-x, y, z, magnitudeCore.getRenderableObject(&dataManager, cubeCollision2));
+
+        if (magnitudeCore.checkCollisionRenderable(&dataManager, cubeCollision1, cubeCollision2)){
+            k = -k; 
+        }
+
+        if (x <= - 15) {
 			k = 1;
 		}
-		else if(x >= 10){
+		else if(x >= 15){
 			k = - 1;
 		}
 

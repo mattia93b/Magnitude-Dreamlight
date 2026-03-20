@@ -106,7 +106,7 @@ createSphere::proc(dataManager:^DataManager, xPos:f32, yPos:f32, zPos:f32, radiu
     return mapIndex;
 }
 
-getRenderableObject::proc(dataManager:^DataManager, renderableID:u32) -> ^Renderable{
+getRenderableObject::proc(dataManager:^DataManager, renderableID:u32) -> ^Renderable {
     //return &dataManager.renderer.scene.renderable[renderableID];
     return &dataManager.renderer.scene.renderableMap[renderableID];
 }
@@ -125,4 +125,9 @@ createMaterialInScene::proc(dataManager:^DataManager, albedo:cstring, metallic:c
     append(&dataManager.renderer.scene.material, createMaterialPBR(albedo, metallic, roughness, normal, ao));
     materialID := cast(u32)len(dataManager.renderer.scene.material) - 1;
     return materialID;
+}
+
+checkCollisionRenderable::proc(dataManager:^DataManager, r1:u32, r2:u32) -> bool {
+    return resolveCollision(&dataManager.renderer.scene.renderableMap[r1], &dataManager.renderer.scene.renderableMap[r2]);
+    
 }

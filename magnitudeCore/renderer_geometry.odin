@@ -76,7 +76,7 @@ buildGeometry::proc(renderer: ^Renderer){
     // Push renderable after light object
     //for i in renderer.scene.renderableMapIndex{
     for i:u32=0 ; i < cast(u32)len(renderer.scene.renderableMapIndex); i = i + 1{
-        if renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].materialID % 3 == 0 && renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].materialID != 0 {
+        if renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].materialID % 3 == 0 && renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].materialID != 0 && i > 0 {
             if renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i - 1]].materialID != renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].materialID {
                 log.infof("Pre Material ID: ", renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i - 1]].materialID);
                 log.infof("Material ID: ", renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].materialID);

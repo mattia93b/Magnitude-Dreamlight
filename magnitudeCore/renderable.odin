@@ -6,6 +6,7 @@ import "core:log"
 import sdl "vendor:sdl3"
 // math
 import "core:math/linalg"
+import "core:math"
 
 Renderable::struct{
     vertex: [dynamic]linalg.Vector3f32,
@@ -14,6 +15,8 @@ Renderable::struct{
     UVs: [dynamic]linalg.Vector2f32,
     modelMatrix:matrix[4,4]f32,
     materialID:u32,
+    aabb_min    : linalg.Vector3f32,
+    aabb_max    : linalg.Vector3f32,
 }
 
 
@@ -154,6 +157,9 @@ createColoredCube::proc(x:f32, y:f32, z:f32, width:f32, height:f32, materialID:u
     // MODEL MATRIX
     cube.modelMatrix = linalg.matrix4_translate_f32({x, y, z});
 
+    // COLLISION
+    cube.aabb_min, cube.aabb_max = compute_local_aabb(&cube);
+
     return cube;
 }
 
@@ -257,8 +263,82 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
     // MODEL MATRIX
     sphere.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos});
 
+    // COLLISION
+    sphere.aabb_min, sphere.aabb_max = compute_local_aabb(&sphere);
+
     return sphere;
 
 }
 
 
+compute_local_aabb :: proc(r: ^Renderable) -> (min_pt, max_pt: linalg.Vector3f32) {
+    min_pt = linalg.Vector3f32{max(f32), max(f32), max(f32)}
+    max_pt = linalg.Vector3f32{-max(f32), -max(f32), -max(f32)}
+
+    for v in r.vertex {
+        p := linalg.Vector3f32{v.x, v.y, v.z}
+        min_pt = linalg.min(min_pt, p)
+        max_pt = linalg.max(max_pt, p)
+    }
+    return
+}
+
+get_world_aabb :: proc(r: ^Renderable) -> (min_pt, max_pt: linalg.Vector3f32) {
+    lo := r.aabb_min
+    hi := r.aabb_max
+
+    corners := [8]linalg.Vector4f32{
+        {lo.x, lo.y, lo.z, 1},
+        {hi.x, lo.y, lo.z, 1},
+        {lo.x, hi.y, lo.z, 1},
+        {hi.x, hi.y, lo.z, 1},
+        {lo.x, lo.y, hi.z, 1},
+        {hi.x, lo.y, hi.z, 1},
+        {lo.x, hi.y, hi.z, 1},
+        {hi.x, hi.y, hi.z, 1},
+    }
+
+    min_pt = linalg.Vector3f32{max(f32), max(f32), max(f32)}
+    max_pt = linalg.Vector3f32{-max(f32), -max(f32), -max(f32)}
+
+    for c in corners {
+        world := (r.modelMatrix * c).xyz
+        min_pt = linalg.min(min_pt, world)
+        max_pt = linalg.max(max_pt, world)
+    }
+    return
+}
+
+
+resolveCollision :: proc(r1: ^Renderable, r2: ^Renderable) -> bool {
+    min1, max1 := get_world_aabb(r1)
+    min2, max2 := get_world_aabb(r2)
+
+    overlapX := min(max1.x, max2.x) - max(min1.x, min2.x)
+    overlapY := min(max1.y, max2.y) - max(min1.y, min2.y)
+    overlapZ := min(max1.z, max2.z) - max(min1.z, min2.z)
+
+    if overlapX <= 0 || overlapY <= 0 || overlapZ <= 0 {
+        return false
+    }
+
+    tx := r1.modelMatrix[3][0]
+    ty := r1.modelMatrix[3][1]
+    tz := r1.modelMatrix[3][2]
+
+    if overlapX <= overlapY && overlapX <= overlapZ {
+        dir := f32(1) if tx < r2.modelMatrix[3][0] else f32(-1)
+        r1.modelMatrix[3][0] -= dir * overlapX * 0.5
+        r2.modelMatrix[3][0] += dir * overlapX * 0.5
+    } else if overlapY <= overlapX && overlapY <= overlapZ {
+        dir := f32(1) if ty < r2.modelMatrix[3][1] else f32(-1)
+        r1.modelMatrix[3][1] -= dir * overlapY * 0.5
+        r2.modelMatrix[3][1] += dir * overlapY * 0.5
+    } else {
+        dir := f32(1) if tz < r2.modelMatrix[3][2] else f32(-1)
+        r1.modelMatrix[3][2] -= dir * overlapZ * 0.5
+        r2.modelMatrix[3][2] += dir * overlapZ * 0.5
+    }
+
+    return true
+}
