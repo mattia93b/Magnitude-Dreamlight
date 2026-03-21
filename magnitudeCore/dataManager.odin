@@ -85,8 +85,8 @@ createShader::proc(dataManager:^DataManager, path:cstring, stage:sdl.GPUShaderSt
     return shaderID;
 }
 
-createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, height:f32, materialID:u32 = 0) -> u32 {
-    box := createColoredCube(x, y, z, width, height, materialID);
+createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, height:f32, materialID:u32 = 0, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true) -> u32 {
+    box := createColoredCube(x, y, z, width, height, materialID, velocity, is_Static);
     //addRenderable(&dataManager.renderer, box);
     //cubeIndex := cast(u32)len(dataManager.renderer.scene.renderable) - 1;
     //return cubeIndex;
@@ -95,8 +95,8 @@ createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, heigh
     return mapIndex;
 }
 
-createSphere::proc(dataManager:^DataManager, xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, materialID:u32 = 0)  -> u32 {
-    sphere := createColoredSphere(xPos, yPos, zPos, radius, stackCount, sectorCount, materialID);
+createSphere::proc(dataManager:^DataManager, xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, materialID:u32 = 0, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true)  -> u32 {
+    sphere := createColoredSphere(xPos, yPos, zPos, radius, stackCount, sectorCount, materialID, velocity, is_Static);
     //addRenderable(&dataManager.renderer, sphere);
     //sphereIndex := cast(u32)len(dataManager.renderer.scene.renderable) - 1;
     //return sphereIndex;
@@ -127,7 +127,9 @@ createMaterialInScene::proc(dataManager:^DataManager, albedo:cstring, metallic:c
     return materialID;
 }
 
-checkCollisionRenderable::proc(dataManager:^DataManager, r1:u32, r2:u32) -> bool {
-    return resolveCollision(&dataManager.renderer.scene.renderableMap[r1], &dataManager.renderer.scene.renderableMap[r2]);
-    
+
+updateAllPhysics :: proc(dataManager: ^DataManager, deltaTime: f32) {
+    for _, &r in dataManager.renderer.scene.renderableMap {
+        updatePhysics(&r, deltaTime);
+    }
 }

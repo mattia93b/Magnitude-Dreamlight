@@ -50,7 +50,7 @@ main::proc(){
         "resources/textures/textureDefault_specular.png", 
         "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_normal-ogl.png",
         "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_ao.png");
-    wood := magnitudeCore.createMaterialInScene(&dataManager, 
+    /*wood := magnitudeCore.createMaterialInScene(&dataManager, 
         "resources/materials/dark-wood-stain-bl/dark-wood-stain_albedo.png", 
         "resources/materials/dark-wood-stain-bl/dark-wood-stain_metallic.png",
         "resources/materials/dark-wood-stain-bl/dark-wood-stain_roughness.png", 
@@ -122,14 +122,14 @@ main::proc(){
         "resources/materials/cloudy-veined-quartz-bl/cloudy-veined-quartz_roughness.png",
         "resources/materials/cloudy-veined-quartz-bl/cloudy-veined-quartz_normal-ogl.png",
         "resources/materials/cloudy-veined-quartz-bl/cloudy-veined-quartz_ao.png"); 
-
+    */
 
 
     // Scene
     //boxId := magnitudeCore.createCube(&dataManager, 0.0, 10.0, -20.0, 5.0, 5.0, Rock063);
     baseId  := magnitudeCore.createCube(&dataManager, 0.0, 3.0, -10.0, 32.0, 0.5, defaultMaterial);
 
-    if MATERIA_SCENE {
+    /*if MATERIA_SCENE {
         //
         cube1Id := magnitudeCore.createCube(&dataManager, -10.0, 5.0, -15.0, 3.0, 3.0, wood);
         cube2Id := magnitudeCore.createCube(&dataManager, -6.0, 5.0, -15.0, 3.0, 3.0, wood2);
@@ -160,10 +160,16 @@ main::proc(){
         sphere10Id := magnitudeCore.createSphere(&dataManager, 2.0, 5.0, 0.0, 1.5, 25.0, 25.0, fancy_carved_wood);
         sphere11Id := magnitudeCore.createSphere(&dataManager, 6.0, 5.0, 0.0, 1.5, 25.0, 25.0, worn_factory);
         sphere12Id := magnitudeCore.createSphere(&dataManager, 10.0, 5.0, 0.0, 1.5, 25.0, 25.0, cloudy_veined_quartz);
-    }
+    }*/
 
-    cubeCollision1 := magnitudeCore.createCube(&dataManager, -10.0, 5.0, -15.0, 3.0, 3.0, wood);
-    cubeCollision2 := magnitudeCore.createCube(&dataManager, 10.0, 5.0, -15.0, 3.0, 3.0, gold);
+    cubeCollision1 := magnitudeCore.createCube(&dataManager, -10.0, 5.0, -15.0, 3.0, 3.0, defaultMaterial, {5,0,0}, false);
+    cubeCollision2 := magnitudeCore.createCube(&dataManager, 10.0, 5.0, -15.0, 3.0, 3.0, defaultMaterial, {-5,0,0}, false);
+
+    cubeCollision3 := magnitudeCore.createCube(&dataManager, 0.0, 15.0, -5.0, 3.0, 3.0, defaultMaterial, {0,-5,0}, false);
+    cubeCollision4 := magnitudeCore.createCube(&dataManager, 0.0, -5.0, -5.0, 3.0, 3.0, defaultMaterial, {0,5,0}, false);
+
+    cubeCollision5 := magnitudeCore.createCube(&dataManager, 5.0, 5.0, -10.0, 3.0, 3.0, defaultMaterial, {0,0,5}, false);
+    cubeCollision6 := magnitudeCore.createCube(&dataManager, 5.0, 5.0, 10.0, 3.0, 3.0, defaultMaterial, {0,0,-5}, false);
 
     magnitudeCore.addLightToScene(&dataManager, {0.0, 15.0, 10.0});
 
@@ -193,24 +199,43 @@ main::proc(){
         deltaTime := f32(newTicks - lastTicks) / 1000;
         lastTicks = newTicks;
 
-        //magnitudeCore.updatePosition(x, y, z, magnitudeCore.getRenderableObject(&dataManager, sphereId));
+        r1 := magnitudeCore.getRenderableObject(&dataManager, cubeCollision1);
+        r2 := magnitudeCore.getRenderableObject(&dataManager, cubeCollision2);
+        r3 := magnitudeCore.getRenderableObject(&dataManager, cubeCollision3);
+        r4 := magnitudeCore.getRenderableObject(&dataManager, cubeCollision4);
+        r5 := magnitudeCore.getRenderableObject(&dataManager, cubeCollision5);
+        r6 := magnitudeCore.getRenderableObject(&dataManager, cubeCollision6);
 
-        magnitudeCore.updatePosition(x, y, z, magnitudeCore.getRenderableObject(&dataManager, cubeCollision1));
 
-        magnitudeCore.updatePosition(-x, y, z, magnitudeCore.getRenderableObject(&dataManager, cubeCollision2));
-
-        if (magnitudeCore.checkCollisionRenderable(&dataManager, cubeCollision1, cubeCollision2)){
-            k = -k; 
+        if(r1.position.x <= -10){
+            magnitudeCore.setVelocity((r1.velocity.x *-1), 0.0, 0.0, r1);
+        }
+        if(r2.position.x >= 10){
+            magnitudeCore.setVelocity((r2.velocity.x *-1), 0.0, 0.0, r2);
         }
 
-        if (x <= - 15) {
-			k = 1;
-		}
-		else if(x >= 15){
-			k = - 1;
-		}
+        magnitudeCore.resolve_swept(r1, r2, deltaTime);
 
-		x = x + (velocity * k * deltaTime);
+        if(r3.position.y >= 15){
+            magnitudeCore.setVelocity(0.0,(r3.velocity.y *-1), 0.0, r3);
+        }
+        if(r4.position.y <= -5){
+            magnitudeCore.setVelocity(0.0,(r4.velocity.y *-1), 0.0, r4);
+        }
+
+        magnitudeCore.resolve_swept(r3, r4, deltaTime);
+
+        if(r5.position.z <= -11){
+            magnitudeCore.setVelocity(0.0, 0.0, (r5.velocity.z *-1), r5);
+        }
+        if(r6.position.z >= 11){
+            magnitudeCore.setVelocity(0.0, 0.0,(r6.velocity.z *-1), r6);
+        }
+
+       magnitudeCore.resolve_swept(r5, r6, deltaTime);
+
+        
+        magnitudeCore.updateAllPhysics(&dataManager, deltaTime);
 
         // Renderer update
         isRunning = magnitudeCore.update(&dataManager.renderer, deltaTime);

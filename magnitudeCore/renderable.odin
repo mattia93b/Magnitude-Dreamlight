@@ -20,22 +20,23 @@ Renderable::struct{
     position    : linalg.Vector3f32,
     velocity    : linalg.Vector3f32,
     is_static   : bool,
+    physics_resolved : bool,
 }
 
 
-updatePosition::proc(x:f32, y:f32, z:f32, renderable:^Renderable){
+setPosition::proc(x:f32, y:f32, z:f32, renderable:^Renderable){
     // POSITION
     renderable.position = {x, y, z};
     // MODEL MATRIX
     renderable.modelMatrix = linalg.matrix4_translate_f32({x, y, z});
 }
 
-updateVelocity::proc(Vx:f32, Vy:f32, Vz:f32, renderable:^Renderable){
+setVelocity::proc(Vx:f32, Vy:f32, Vz:f32, renderable:^Renderable){
     // VELOCITY
     renderable.velocity = {Vx, Vy, Vz};
 }
 
-createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, materialID:u32) -> Renderable {
+createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, materialID:u32, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true) -> Renderable {
 
     // RENDERABLE
     cube := Renderable{}
@@ -171,10 +172,10 @@ createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, mat
     cube.position = {xPos, yPos, zPos};
 
     // VELOCITY
-    cube.velocity = {0, 0, 0};
+    cube.velocity = velocity;
 
     // IS STATIC
-    cube.is_static = true;
+    cube.is_static = is_Static;
 
     // COLLISION
     cube.aabb_min, cube.aabb_max = compute_local_aabb(&cube);
@@ -183,7 +184,7 @@ createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, mat
 }
 
 
-createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, materialID:u32)  -> Renderable {
+createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, materialID:u32, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true)  -> Renderable {
     
     sphere := Renderable{};
 
@@ -286,10 +287,10 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
     sphere.position = {xPos, yPos, zPos};
 
     // VELOCITY
-    sphere.velocity = {0, 0, 0};
+    sphere.velocity = velocity;
 
     // IS STATIC
-    sphere.is_static = true;
+    sphere.is_static = is_Static;
 
     // COLLISION
     sphere.aabb_min, sphere.aabb_max = compute_local_aabb(&sphere);
@@ -338,42 +339,86 @@ get_world_aabb :: proc(r: ^Renderable) -> (min_pt, max_pt: linalg.Vector3f32) {
 }
 
 
-resolveCollision :: proc(r1: ^Renderable, r2: ^Renderable) -> bool {
+swept_aabb :: proc(r1: ^Renderable, vel1: linalg.Vector3f32, r2: ^Renderable, vel2: linalg.Vector3f32) -> (toi: f32, normal: linalg.Vector3f32) {
+
     min1, max1 := get_world_aabb(r1)
     min2, max2 := get_world_aabb(r2)
 
-    overlapX := min(max1.x, max2.x) - max(min1.x, min2.x)
-    overlapY := min(max1.y, max2.y) - max(min1.y, min2.y)
-    overlapZ := min(max1.z, max2.z) - max(min1.z, min2.z)
+    rel_vel := vel1 - vel2
 
-    if overlapX <= 0 || overlapY <= 0 || overlapZ <= 0 {
-        return false
+    entry, exit: linalg.Vector3f32
+
+    for i in 0..<3 {
+        if rel_vel[i] > 0 {
+            entry[i] = (min2[i] - max1[i]) / rel_vel[i]
+            exit[i]  = (max2[i] - min1[i]) / rel_vel[i]
+        } else if rel_vel[i] < 0 {
+            entry[i] = (max2[i] - min1[i]) / rel_vel[i]
+            exit[i]  = (min2[i] - max1[i]) / rel_vel[i]
+        } else {
+            entry[i] = -max(f32)
+            exit[i]  =  max(f32)
+        }
     }
 
-    tx := r1.modelMatrix[3][0]
-    ty := r1.modelMatrix[3][1]
-    tz := r1.modelMatrix[3][2]
+    t_entry := max(entry.x, max(entry.y, entry.z))
+    t_exit  := min(exit.x,  min(exit.y,  exit.z))
 
-    if overlapX <= overlapY && overlapX <= overlapZ {
-        dir := f32(1) if tx < r2.modelMatrix[3][0] else f32(-1)
-        r1.modelMatrix[3][0] -= dir * overlapX * 0.5
-        r2.modelMatrix[3][0] += dir * overlapX * 0.5
-    } else if overlapY <= overlapX && overlapY <= overlapZ {
-        dir := f32(1) if ty < r2.modelMatrix[3][1] else f32(-1)
-        r1.modelMatrix[3][1] -= dir * overlapY * 0.5
-        r2.modelMatrix[3][1] += dir * overlapY * 0.5
+    if t_entry > t_exit || t_entry > 1.0 || t_exit < 0 {
+        return max(f32), {}
+    }
+
+    if entry.x > entry.y && entry.x > entry.z {
+        normal = {-1 if rel_vel.x > 0 else 1, 0, 0}
+    } else if entry.y > entry.z {
+        normal = {0, -1 if rel_vel.y > 0 else 1, 0}
     } else {
-        dir := f32(1) if tz < r2.modelMatrix[3][2] else f32(-1)
-        r1.modelMatrix[3][2] -= dir * overlapZ * 0.5
-        r2.modelMatrix[3][2] += dir * overlapZ * 0.5
+        normal = {0, 0, -1 if rel_vel.z > 0 else 1}
+    }
+
+    return t_entry, normal
+}
+
+resolve_swept :: proc(r1: ^Renderable, r2: ^Renderable, deltaTime: f32) -> bool {
+    if r1.is_static && r2.is_static do return false
+
+    vel1 := r1.velocity * deltaTime;
+    vel2 := r2.velocity * deltaTime;
+
+    toi, normal := swept_aabb(r1, vel1, r2, vel2);
+
+    if toi > 1.0 do return false; 
+
+    remaining := 1.0 - toi;
+
+    if !r1.is_static {
+        r1.position += vel1 * toi;
+        r1.velocity  = reflect(r1.velocity, normal);
+        r1.position += r1.velocity * deltaTime * remaining;
+        r1.modelMatrix = linalg.matrix4_translate_f32(r1.position);
+        r1.physics_resolved = true;
+    }
+    if !r2.is_static {
+        r2.position += vel2 * toi;
+        r2.velocity  = reflect(r2.velocity, -normal);
+        r2.position += r2.velocity * deltaTime * remaining;
+        r2.modelMatrix = linalg.matrix4_translate_f32(r2.position);
+        r2.physics_resolved = true;
     }
 
     return true
 }
 
+reflect :: proc(vel: linalg.Vector3f32, normal: linalg.Vector3f32) -> linalg.Vector3f32 {
+    return vel - 2 * linalg.dot(vel, normal) * normal;
+}
+
 updatePhysics :: proc(r:^Renderable, dt:f32){
     if r.is_static do return
-
+    if r.physics_resolved {
+        r.physics_resolved = false
+        return
+    }
     r.position += r.velocity * dt
     r.modelMatrix = linalg.matrix4_translate_f32(r.position)
 }
