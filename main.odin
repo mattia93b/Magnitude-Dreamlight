@@ -27,6 +27,10 @@ main::proc(){
     lightVertexShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/light.vert." + magnitudeCore.SHADER_EXT, .VERTEX, 3, 0);
     // Load Light fragment shader
     lightFragmentShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/light.frag." + magnitudeCore.SHADER_EXT, .FRAGMENT, 0, 0);
+    // Load Collision vertex shader
+    CollisionVertexShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/vertexBoundigBox.vert." + magnitudeCore.SHADER_EXT, .VERTEX, 3, 0);
+    // Load Collision fragment shader
+    CollisionFragmentShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/fragmentBoundingBox.frag." + magnitudeCore.SHADER_EXT, .FRAGMENT, 0, 0);
 
     // Load Light vertex shader
     //instanceVertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/instanceVertex.vert." + SHADER_EXT, .VERTEX, 1, 0);
@@ -39,6 +43,8 @@ main::proc(){
     magnitudeCore.createGraphicPipelineDataManager(&dataManager, vertexShaderIndex, fragmentShaderIndex);
     // Create Light Graphic Pipeline
     magnitudeCore.createGraphicPipelineDataManager(&dataManager, lightVertexShaderIndex, lightFragmentShaderIndex);
+    // Create Collision Graphic Pipeline
+    magnitudeCore.createDebugGraphicPipelineDataManager(&dataManager, CollisionVertexShaderIndex, CollisionFragmentShaderIndex);
     // Create Instance Graphic Pipeline
     //createGraphicPipeline(&mRenderer, instanceVertexShader, instanceFragmentShader);
 
@@ -170,6 +176,8 @@ main::proc(){
 
     cubeCollision5 := magnitudeCore.createCube(&dataManager, 5.0, 5.0, -10.0, 3.0, 3.0, defaultMaterial, {0,0,5}, false);
     cubeCollision6 := magnitudeCore.createCube(&dataManager, 5.0, 5.0, 10.0, 3.0, 3.0, defaultMaterial, {0,0,-5}, false);
+
+    sphere1Id := magnitudeCore.createSphere(&dataManager, -10.0, 10.0, -15.0, 1.5, 25.0, 25.0, defaultMaterial, {0,0,-5}, true);
 
     magnitudeCore.addLightToScene(&dataManager, {0.0, 15.0, 10.0});
 

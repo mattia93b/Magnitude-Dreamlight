@@ -17,13 +17,17 @@ GPUResources :: struct {
 }
 
 GeometryBuffers :: struct {
-    vertexBuffer    : ^sdl.GPUBuffer,
-    indexBuffer     : ^sdl.GPUBuffer,
-    materialBuffer  : ^sdl.GPUBuffer,
-    allVertices     : [dynamic]Vertex,
-    allIndices      : [dynamic]u16,
-    allMaterials    : [dynamic]MaterialPBR,
-    allModelMatrix  : [dynamic]matrix[4,4]f32,
+    vertexBuffer            : ^sdl.GPUBuffer,
+    indexBuffer             : ^sdl.GPUBuffer,
+    materialBuffer          : ^sdl.GPUBuffer,
+    collisionBuffer         : ^sdl.GPUBuffer,
+    collisionIndexBuffer    : ^sdl.GPUBuffer,
+    allVertices             : [dynamic]Vertex,
+    allIndices              : [dynamic]u16,
+    allMaterials            : [dynamic]MaterialPBR,
+    allModelMatrix          : [dynamic]matrix[4,4]f32,
+    allCollisionVertices    : [dynamic]CollisionVertex,
+    allCollisionIndices     : [dynamic]u16,
 }
 
 SceneData :: struct {
@@ -44,6 +48,7 @@ Renderer :: struct {
     camera          : Camera,
     input           : mouseKeyboardInput,
     allTextures     : [dynamic]^sdl.GPUTexture,
+    debugCollisionIsActive :bool,
 }
 
 initRenderer::proc(renderer: ^Renderer, device: ^sdl.GPUDevice, window: ^sdl.Window){
@@ -73,6 +78,107 @@ initDepthTexture::proc(renderer: ^Renderer){
 
     renderer.gpu.depthTexture = sdl.CreateGPUTexture(renderer.gpu.device, depthTextureInfo);
 }
+
+
+createDebugGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fragmentShader:^sdl.GPUShader){
+    pipelineInfo := sdl.GPUGraphicsPipelineCreateInfo{};
+    // bind shaders
+    pipelineInfo.vertex_shader = vertexShader;
+    pipelineInfo.fragment_shader = fragmentShader;
+
+    pipelineInfo.primitive_type = .LINELIST;
+
+    vertexBufferDescriptions :[1]sdl.GPUVertexBufferDescription;
+    vertexBufferDescriptions[0].slot = 0;
+    vertexBufferDescriptions[0].input_rate = .VERTEX;
+    vertexBufferDescriptions[0].instance_step_rate = 0;
+    vertexBufferDescriptions[0].pitch = size_of(CollisionVertex);
+
+    pipelineInfo.vertex_input_state.num_vertex_buffers = 1;
+    pipelineInfo.vertex_input_state.vertex_buffer_descriptions = &vertexBufferDescriptions[0];
+
+    vertexAttributes :[2]sdl.GPUVertexAttribute;
+    // Position
+    vertexAttributes[0].buffer_slot = 0;
+    vertexAttributes[0].location = 0; // layout (location = 0) in shader
+    vertexAttributes[0].format = .FLOAT3;
+    vertexAttributes[0].offset = 0;
+
+    // ModelMatrixIndex
+    vertexAttributes[1].buffer_slot = 0;
+    vertexAttributes[1].location = 1; // layout (location = 2) in shader
+    vertexAttributes[1].format = .UINT;
+    vertexAttributes[1].offset = cast(u32)offset_of(CollisionVertex, modelMatrixIndex); // 8th float from current buffer position OLD: size_of(f32) * 7
+
+    pipelineInfo.vertex_input_state.num_vertex_attributes = 2;
+    pipelineInfo.vertex_input_state.vertex_attributes = &vertexAttributes[0];
+    
+    // Depth
+    depthStencilState := sdl.GPUDepthStencilState{}
+    depthStencilState.enable_depth_test = true;
+    depthStencilState.enable_depth_write = true;
+    depthStencilState.compare_op = .LESS;
+
+    pipelineInfo.depth_stencil_state = depthStencilState;
+
+
+    colorTargetDescriptions :[1]sdl.GPUColorTargetDescription;
+    colorTargetDescriptions[0] = {};
+    colorTargetDescriptions[0].blend_state.color_blend_op = .ADD;
+    colorTargetDescriptions[0].blend_state.alpha_blend_op = .ADD;
+    colorTargetDescriptions[0].blend_state.src_color_blendfactor = .SRC_ALPHA;
+    colorTargetDescriptions[0].blend_state.dst_color_blendfactor = .ONE_MINUS_SRC_ALPHA;
+    colorTargetDescriptions[0].blend_state.src_alpha_blendfactor = .SRC_ALPHA;
+    colorTargetDescriptions[0].blend_state.dst_alpha_blendfactor = .ONE_MINUS_SRC_ALPHA;
+    colorTargetDescriptions[0].blend_state.enable_blend = true;
+    colorTargetDescriptions[0].format = sdl.GetGPUSwapchainTextureFormat(mRenderer.gpu.device, mRenderer.gpu.window);
+
+    pipelineInfo.target_info.num_color_targets = 1;
+    pipelineInfo.target_info.color_target_descriptions = &colorTargetDescriptions[0];
+    pipelineInfo.target_info.has_depth_stencil_target = true;
+    pipelineInfo.target_info.depth_stencil_format = .D32_FLOAT;
+    
+    pipelineInfo.rasterizer_state.cull_mode = .NONE
+    pipelineInfo.rasterizer_state.fill_mode = .LINE
+
+    // Sampler
+    samplerInfo := sdl.GPUSamplerCreateInfo{};
+    samplerInfo.min_filter = .LINEAR;
+    samplerInfo.mag_filter = .LINEAR;
+    samplerInfo.mipmap_mode = .LINEAR;
+    samplerInfo.address_mode_u = .REPEAT;
+    samplerInfo.address_mode_v = .REPEAT;
+    samplerInfo.address_mode_w = .REPEAT;
+
+    if mRenderer.gpu.sampler == nil {
+        mRenderer.gpu.sampler = sdl.CreateGPUSampler(mRenderer.gpu.device, samplerInfo);
+    }
+    
+    
+    // createGraphicPipeline
+
+    newPipeline := sdl.CreateGPUGraphicsPipeline(mRenderer.gpu.device, pipelineInfo)
+
+    if newPipeline == nil {
+        errorMsg := sdl.GetError()
+        log.error("---------------------------------------------------")
+        log.error("FATAL ERROR: Pipeline Creation failed!")
+        log.error("ERROR:", errorMsg)
+        log.error("---------------------------------------------------")
+        return
+    }
+
+    append(&mRenderer.gpu.graphicsPipeline, newPipeline)
+    log.info("Pipeline creation done") 
+    
+    // release vertex shader
+    sdl.ReleaseGPUShader(mRenderer.gpu.device, vertexShader);
+    // release fragment shader
+    sdl.ReleaseGPUShader(mRenderer.gpu.device, fragmentShader);
+
+
+}
+
 
 createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fragmentShader:^sdl.GPUShader){
 
@@ -197,7 +303,7 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
     uploadMaterialTexture(mRenderer);
     buildGeometry(mRenderer);
     uploadGeometry(mRenderer);
-    
+    uploadCollisionGeometry(mRenderer);
 }
 
 
@@ -215,8 +321,9 @@ cleanRenderer::proc(mRenderer:^Renderer){
             sdl.ReleaseGPUTexture(mRenderer.gpu.device, tex);
         }
     }
-    sdl.ReleaseGPUGraphicsPipeline(mRenderer.gpu.device, mRenderer.gpu.graphicsPipeline[0]);
-    sdl.ReleaseGPUGraphicsPipeline(mRenderer.gpu.device, mRenderer.gpu.graphicsPipeline[1]);
+    for pipeline in mRenderer.gpu.graphicsPipeline {
+        sdl.ReleaseGPUGraphicsPipeline(mRenderer.gpu.device, pipeline)
+    }
     sdl.DestroyGPUDevice(mRenderer.gpu.device);
     sdl.DestroyWindow(mRenderer.gpu.window);
 }

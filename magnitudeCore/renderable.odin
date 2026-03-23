@@ -13,6 +13,8 @@ Renderable::struct{
     index: [dynamic]u16,
     normals: [dynamic]linalg.Vector3f32,
     UVs: [dynamic]linalg.Vector2f32,
+    collisionCorners: [8]linalg.Vector3f32,
+    collisionIndices: [24]u32,
     modelMatrix:matrix[4,4]f32,
     materialID:u32,
     aabb_min    : linalg.Vector3f32,
@@ -180,6 +182,26 @@ createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, mat
     // COLLISION
     cube.aabb_min, cube.aabb_max = compute_local_aabb(&cube);
 
+    lo := cube.aabb_min
+    hi := cube.aabb_max
+
+    cube.collisionCorners = [8]linalg.Vector3f32{
+        {lo.x, lo.y, lo.z},
+        {hi.x, lo.y, lo.z},
+        {lo.x, hi.y, lo.z},
+        {hi.x, hi.y, lo.z},
+        {lo.x, lo.y, hi.z},
+        {hi.x, lo.y, hi.z},
+        {lo.x, hi.y, hi.z},
+        {hi.x, hi.y, hi.z},
+    }
+
+    cube.collisionIndices = [24]u32{
+        0, 1,  1, 3,  3, 2,  2, 0,
+        4, 5,  5, 7,  7, 6,  6, 4,
+        0, 4,  1, 5,  2, 6,  3, 7,
+    }
+
     return cube;
 }
 
@@ -294,6 +316,26 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
 
     // COLLISION
     sphere.aabb_min, sphere.aabb_max = compute_local_aabb(&sphere);
+    
+    lo := sphere.aabb_min
+    hi := sphere.aabb_max
+
+    sphere.collisionCorners = [8]linalg.Vector3f32{
+        {lo.x, lo.y, lo.z},
+        {hi.x, lo.y, lo.z},
+        {lo.x, hi.y, lo.z},
+        {hi.x, hi.y, lo.z},
+        {lo.x, lo.y, hi.z},
+        {hi.x, lo.y, hi.z},
+        {lo.x, hi.y, hi.z},
+        {hi.x, hi.y, hi.z},
+    }
+
+    sphere.collisionIndices = [24]u32{
+        0, 1,  1, 3,  3, 2,  2, 0,
+        4, 5,  5, 7,  7, 6,  6, 4,
+        0, 4,  1, 5,  2, 6,  3, 7,
+    }
 
     return sphere;
 

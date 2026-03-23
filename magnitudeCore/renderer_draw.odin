@@ -141,8 +141,6 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
         
     }
 
-    
-
     // Light 
     // Bind pipeline
     sdl.BindGPUGraphicsPipeline(renderPass, mRenderer.gpu.graphicsPipeline[1]);
@@ -152,6 +150,24 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     sdl.BindGPUVertexBuffers(renderPass, 0, &bufferBindings[0], 1);
     sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.geometry.indexBuffer}, ._16BIT);
     sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)mRenderer.scene.lightNumberOfIndexInBuffer, 1, 0, 0, 0);
+
+
+    // Collision Boundig Box
+    //if mRenderer.debugCollisionIsActive {
+        // bind vertexBuffer
+        collisionBufferBindings :[1]sdl.GPUBufferBinding;
+        collisionBufferBindings[0].buffer = mRenderer.geometry.collisionBuffer;
+        collisionBufferBindings[0].offset = 0;
+        // Bind pipeline
+        sdl.BindGPUGraphicsPipeline(renderPass, mRenderer.gpu.graphicsPipeline[2]);
+        // Uniform 
+        sdl.PushGPUVertexUniformData(buffer, 0, &uniformBuffer, size_of(uniformBuffer));
+        sdl.BindGPUVertexBuffers(renderPass, 0, &collisionBufferBindings[0], 1);
+        sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.geometry.collisionIndexBuffer}, ._16BIT);
+        sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)len(mRenderer.geometry.allCollisionIndices[:]), 1, 0, 0, 0);
+    //}
+   
+
 
     // end render pass
     sdl.EndGPURenderPass(renderPass);
