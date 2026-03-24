@@ -22,6 +22,18 @@ LightInfo::struct #align(16){
 }
 
 
+_syncModelMatrices :: proc(renderer: ^Renderer) {
+    // Update Light position
+    for i in 0..<len(renderer.scene.light) {
+        renderer.geometry.allModelMatrix[i] = renderer.scene.light[i].modelMatrix
+    }
+    // Update model position
+    for i: u32 = 0; i < cast(u32)len(renderer.scene.renderableMap); i += 1 {
+        idx := renderer.scene.renderableMapIndex[i]
+        renderer.geometry.allModelMatrix[i + cast(u32)len(renderer.scene.light)] = renderer.scene.renderableMap[idx].modelMatrix
+    }
+}
+
 
 update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
 
@@ -53,14 +65,8 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     updateCamera(mRenderer, &mRenderer.input, deltatime);
     viewMat := linalg.matrix4_look_at_f32(mRenderer.camera.position, mRenderer.camera.position + mRenderer.camera.front, mRenderer.camera.up);
 
-    // Update Light position
-    for i := 0; i < len(mRenderer.scene.light); i = i + 1 {
-        mRenderer.geometry.allModelMatrix[i] = mRenderer.scene.light[i].modelMatrix;
-    }
-    // Update model position
-    for i :u32= 0; i < cast(u32)len(mRenderer.scene.renderableMap); i = i + 1 {
-        mRenderer.geometry.allModelMatrix[i + cast(u32)len(mRenderer.scene.light)] = mRenderer.scene.renderableMap[mRenderer.scene.renderableMapIndex[i]].modelMatrix;
-    }
+    // Update Renderable position
+    _syncModelMatrices(mRenderer);
 
     // Get Windows size to calculate the projection Matrix
     win_size:[2]i32;
@@ -101,29 +107,6 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     bufferBindings[0].offset = 0;
 
     // Texture Bindings
-    textureBindings: [dynamic]sdl.GPUTextureSamplerBinding;
-
-    for i in 0..<len(mRenderer.scene.materialIndexForTexturebind) * 16 {
-
-        tex :^sdl.GPUTexture= nil;
-
-        if i < len(mRenderer.allTextures){
-            tex = mRenderer.allTextures[i]
-        }
-        
-        
-        if tex == nil {
-            tex = mRenderer.allTextures[0];
-        }
-        
-        textureBind: sdl.GPUTextureSamplerBinding;
-
-        textureBind.texture = tex
-        textureBind.sampler = mRenderer.gpu.sampler
-
-        append(&textureBindings, textureBind);
-    }
-
 
     for numOfTexturebinds := 0 ; numOfTexturebinds < len(mRenderer.scene.materialIndexForTexturebind); numOfTexturebinds = numOfTexturebinds + 1{
 
@@ -133,7 +116,7 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
             end = cast(int)mRenderer.scene.materialIndexForTexturebind[numOfTexturebinds + 1];
         }   
 
-        sdl.BindGPUFragmentSamplers(renderPass, 0, &textureBindings[16 * numOfTexturebinds], 16)
+        sdl.BindGPUFragmentSamplers(renderPass, 0, &mRenderer.cachedTextureBindings[16 * numOfTexturebinds], 16)
 
         sdl.BindGPUVertexBuffers(renderPass, 0, &bufferBindings[0], 1);
         sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.geometry.indexBuffer}, ._16BIT);

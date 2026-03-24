@@ -48,6 +48,7 @@ Renderer :: struct {
     camera          : Camera,
     input           : mouseKeyboardInput,
     allTextures     : [dynamic]^sdl.GPUTexture,
+    cachedTextureBindings: [dynamic]sdl.GPUTextureSamplerBinding,
     debugCollisionIsActive :bool,
 }
 
@@ -298,11 +299,37 @@ createGraphicPipeline::proc(mRenderer:^Renderer, vertexShader:^sdl.GPUShader, fr
 }
 
 
+cacheTexture::proc(renderer:^Renderer){
+
+    for i in 0..<len(renderer.scene.materialIndexForTexturebind) * 16 {
+
+        tex :^sdl.GPUTexture= nil;
+
+        if i < len(renderer.allTextures){
+            tex = renderer.allTextures[i]
+        }
+        
+        
+        if tex == nil {
+            tex = renderer.allTextures[0];
+        }
+        
+        textureBind: sdl.GPUTextureSamplerBinding;
+
+        textureBind.texture = tex
+        textureBind.sampler = renderer.gpu.sampler
+
+        append(&renderer.cachedTextureBindings, textureBind);
+    }
+}
+
+
 pushRenderableInBuffer::proc(mRenderer:^Renderer){
     
     uploadMaterialTexture(mRenderer);
     buildGeometry(mRenderer);
     uploadGeometry(mRenderer);
+    cacheTexture(mRenderer);
     uploadCollisionGeometry(mRenderer);
 }
 
@@ -310,6 +337,8 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
 cleanRenderer::proc(mRenderer:^Renderer){
     sdl.ReleaseGPUBuffer(mRenderer.gpu.device, mRenderer.geometry.vertexBuffer);
     sdl.ReleaseGPUBuffer(mRenderer.gpu.device, mRenderer.geometry.indexBuffer);
+    sdl.ReleaseGPUBuffer(mRenderer.gpu.device, mRenderer.geometry.collisionBuffer);
+    sdl.ReleaseGPUBuffer(mRenderer.gpu.device, mRenderer.geometry.collisionIndexBuffer);
     sdl.ReleaseGPUBuffer(mRenderer.gpu.device, mRenderer.geometry.materialBuffer);
 
     sdl.ReleaseGPUTexture(mRenderer.gpu.device, mRenderer.gpu.depthTexture);

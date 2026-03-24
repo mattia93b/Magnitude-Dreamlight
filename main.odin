@@ -171,8 +171,8 @@ main::proc(){
     cubeCollision1 := magnitudeCore.createCube(&dataManager, -10.0, 5.0, -15.0, 3.0, 3.0, defaultMaterial, {5,0,0}, false);
     cubeCollision2 := magnitudeCore.createCube(&dataManager, 10.0, 5.0, -15.0, 3.0, 3.0, defaultMaterial, {-5,0,0}, false);
 
-    cubeCollision3 := magnitudeCore.createCube(&dataManager, 0.0, 15.0, -5.0, 3.0, 3.0, defaultMaterial, {0,-5,0}, false);
-    cubeCollision4 := magnitudeCore.createCube(&dataManager, 0.0, -5.0, -5.0, 3.0, 3.0, defaultMaterial, {0,5,0}, false);
+    cubeCollision3 := magnitudeCore.createCube(&dataManager, 0.0, 30.0, -5.0, 3.0, 3.0, defaultMaterial, {0,-5,0}, false);
+    cubeCollision4 := magnitudeCore.createCube(&dataManager, 0.0, 5.0, -5.0, 3.0, 3.0, defaultMaterial, {0,5,0}, false);
 
     cubeCollision5 := magnitudeCore.createCube(&dataManager, 5.0, 5.0, -10.0, 3.0, 3.0, defaultMaterial, {0,0,5}, false);
     cubeCollision6 := magnitudeCore.createCube(&dataManager, 5.0, 5.0, 10.0, 3.0, 3.0, defaultMaterial, {0,0,-5}, false);
@@ -186,19 +186,10 @@ main::proc(){
     //pushRenderableInBufferForInstance(&mRenderer);
     magnitudeCore.uploadAllDataToGPU(&dataManager);
 
-
     // Set isRunning true to start the loop
     isRunning := true;
 
     lastTicks := sdl.GetTicks();
-
-    x :f32= -10.0; 
-	y :f32= 6.0;
-	z :f32= -1.0;
-	k :f32= 1;
-    velocity :f32= 30;
-
-    updatePosition := true;
 
     // GameLoop
     for isRunning {
@@ -222,27 +213,25 @@ main::proc(){
             magnitudeCore.setVelocity((r2.velocity.x *-1), 0.0, 0.0, r2);
         }
 
-        magnitudeCore.resolve_swept(r1, r2, deltaTime);
 
-        if(r3.position.y >= 15){
+
+        if(r3.position.y >= 30){
             magnitudeCore.setVelocity(0.0,(r3.velocity.y *-1), 0.0, r3);
         }
-        if(r4.position.y <= -5){
+        if(r4.position.y <= 0){
             magnitudeCore.setVelocity(0.0,(r4.velocity.y *-1), 0.0, r4);
         }
 
-        magnitudeCore.resolve_swept(r3, r4, deltaTime);
 
-        if(r5.position.z <= -11){
+
+        if(r5.position.z <= -12){
             magnitudeCore.setVelocity(0.0, 0.0, (r5.velocity.z *-1), r5);
         }
-        if(r6.position.z >= 11){
+        if(r6.position.z >= 12){
             magnitudeCore.setVelocity(0.0, 0.0,(r6.velocity.z *-1), r6);
         }
 
-       magnitudeCore.resolve_swept(r5, r6, deltaTime);
-
-        
+        magnitudeCore.updateAllCollisions(&dataManager, deltaTime);
         magnitudeCore.updateAllPhysics(&dataManager, deltaTime);
 
         // Renderer update

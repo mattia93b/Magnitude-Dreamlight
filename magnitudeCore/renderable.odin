@@ -69,7 +69,7 @@ createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, mat
     append(&cube.vertex, linalg.Vector3f32{ hw, -hh, -hd}) 
     append(&cube.vertex, linalg.Vector3f32{ hw, -hh,  hd}) 
     append(&cube.vertex, linalg.Vector3f32{ hw,  hh,  hd}) 
-    append(&cube.vertex, linalg.Vector3f32{ hw,  hh, -hd}) 
+    append(&cube.vertex, linalg.Vector3f32{ hw,  hh, -hd})
 
     // top 
     append(&cube.vertex, linalg.Vector3f32{-hw,  hh, -hd}) 
@@ -418,7 +418,9 @@ swept_aabb :: proc(r1: ^Renderable, vel1: linalg.Vector3f32, r2: ^Renderable, ve
         normal = {0, 0, -1 if rel_vel.z > 0 else 1}
     }
 
-    return t_entry, normal
+    actual_toi := max(t_entry, 0.0)
+
+    return actual_toi, normal
 }
 
 resolve_swept :: proc(r1: ^Renderable, r2: ^Renderable, deltaTime: f32) -> bool {
@@ -435,14 +437,16 @@ resolve_swept :: proc(r1: ^Renderable, r2: ^Renderable, deltaTime: f32) -> bool 
 
     if !r1.is_static {
         r1.position += vel1 * toi;
-        r1.velocity  = reflect(r1.velocity, normal);
+        //r1.velocity  = reflect(r1.velocity, normal);
+        r1.velocity  -= linalg.dot(r1.velocity, normal) * normal;
         r1.position += r1.velocity * deltaTime * remaining;
         r1.modelMatrix = linalg.matrix4_translate_f32(r1.position);
         r1.physics_resolved = true;
     }
     if !r2.is_static {
         r2.position += vel2 * toi;
-        r2.velocity  = reflect(r2.velocity, -normal);
+        //r2.velocity  = reflect(r2.velocity, -normal);
+        r2.velocity  -= linalg.dot(r2.velocity, -normal) * (-normal);
         r2.position += r2.velocity * deltaTime * remaining;
         r2.modelMatrix = linalg.matrix4_translate_f32(r2.position);
         r2.physics_resolved = true;
@@ -463,4 +467,26 @@ updatePhysics :: proc(r:^Renderable, dt:f32){
     }
     r.position += r.velocity * dt
     r.modelMatrix = linalg.matrix4_translate_f32(r.position)
+}
+
+
+aabb_overlap_check :: proc(r1: ^Renderable, r2: ^Renderable, dt: f32) -> bool {
+    min1, max1 := get_world_aabb(r1)
+    min2, max2 := get_world_aabb(r2)
+
+    // Espandi ogni AABB della velocità * dt per includere il movimento del frame
+    expand1 := linalg.abs(r1.velocity) * dt
+    expand2 := linalg.abs(r2.velocity) * dt
+
+    min1 -= expand1
+    max1 += expand1
+    min2 -= expand2
+    max2 += expand2
+
+    // Se si separano su un qualsiasi asse, non possono collidere
+    if max1.x < min2.x || min1.x > max2.x do return false
+    if max1.y < min2.y || min1.y > max2.y do return false
+    if max1.z < min2.z || min1.z > max2.z do return false
+
+    return true
 }

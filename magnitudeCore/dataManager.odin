@@ -91,9 +91,6 @@ createShader::proc(dataManager:^DataManager, path:cstring, stage:sdl.GPUShaderSt
 
 createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, height:f32, materialID:u32 = 0, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true) -> u32 {
     box := createColoredCube(x, y, z, width, height, materialID, velocity, is_Static);
-    //addRenderable(&dataManager.renderer, box);
-    //cubeIndex := cast(u32)len(dataManager.renderer.scene.renderable) - 1;
-    //return cubeIndex;
     mapIndex := cast(u32)len(dataManager.renderer.scene.renderableMap);
     dataManager.renderer.scene.renderableMap[mapIndex] = box;
     return mapIndex;
@@ -101,17 +98,12 @@ createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, heigh
 
 createSphere::proc(dataManager:^DataManager, xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, materialID:u32 = 0, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true)  -> u32 {
     sphere := createColoredSphere(xPos, yPos, zPos, radius, stackCount, sectorCount, materialID, velocity, is_Static);
-    //addRenderable(&dataManager.renderer, sphere);
-    //sphereIndex := cast(u32)len(dataManager.renderer.scene.renderable) - 1;
-    //return sphereIndex;
-
     mapIndex := cast(u32)len(dataManager.renderer.scene.renderableMap);
     dataManager.renderer.scene.renderableMap[mapIndex] = sphere;
     return mapIndex;
 }
 
 getRenderableObject::proc(dataManager:^DataManager, renderableID:u32) -> ^Renderable {
-    //return &dataManager.renderer.scene.renderable[renderableID];
     return &dataManager.renderer.scene.renderableMap[renderableID];
 }
 
@@ -135,5 +127,28 @@ createMaterialInScene::proc(dataManager:^DataManager, albedo:cstring, metallic:c
 updateAllPhysics :: proc(dataManager: ^DataManager, deltaTime: f32) {
     for _, &r in dataManager.renderer.scene.renderableMap {
         updatePhysics(&r, deltaTime);
+    }
+}
+
+updateAllCollisions :: proc(dataManager: ^DataManager, dt: f32) {
+
+    keys := make([dynamic]u32, context.temp_allocator)
+    for key, _ in dataManager.renderer.scene.renderableMap {
+        append(&keys, key)
+    }
+
+    n := len(keys)
+    for i := 0; i < n; i += 1 {
+        for j := i + 1; j < n; j += 1 {
+
+            r1 := &dataManager.renderer.scene.renderableMap[keys[i]]
+            r2 := &dataManager.renderer.scene.renderableMap[keys[j]]
+
+            if r1.is_static && r2.is_static do continue
+
+            if !aabb_overlap_check(r1, r2, dt) do continue
+
+            resolve_swept(r1, r2, dt)
+        }
     }
 }
