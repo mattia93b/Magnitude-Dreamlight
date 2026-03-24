@@ -181,6 +181,9 @@ main::proc(){
 
     magnitudeCore.addLightToScene(&dataManager, {0.0, 15.0, 10.0});
 
+
+    player := magnitudeCore.playerInit(&dataManager, 0.0, 3.5, -10.0, defaultMaterial);
+
     // Upload renderable in buffer
     //pushRenderableInBuffer(mRenderer);
     //pushRenderableInBufferForInstance(&mRenderer);
@@ -231,6 +234,8 @@ main::proc(){
             magnitudeCore.setVelocity(0.0, 0.0,(r6.velocity.z *-1), r6);
         }
 
+        magnitudeCore.updatePlayer(&player, &dataManager, &dataManager.renderer.input, deltaTime);
+        magnitudeCore.updateThirdPersonCamera(&player, &dataManager, &dataManager.renderer.input, deltaTime);
         magnitudeCore.updateAllCollisions(&dataManager, deltaTime);
         magnitudeCore.updateAllPhysics(&dataManager, deltaTime);
 

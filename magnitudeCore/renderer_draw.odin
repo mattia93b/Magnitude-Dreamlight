@@ -62,7 +62,7 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     renderPass := sdl.BeginGPURenderPass(buffer, &color, 1, &depthTargetInfo);
 
     // Update camera
-    updateCamera(mRenderer, &mRenderer.input, deltatime);
+    //updateCamera(mRenderer, &mRenderer.input, deltatime);
     viewMat := linalg.matrix4_look_at_f32(mRenderer.camera.position, mRenderer.camera.position + mRenderer.camera.front, mRenderer.camera.up);
 
     // Update Renderable position
