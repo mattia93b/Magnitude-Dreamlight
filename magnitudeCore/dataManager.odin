@@ -89,15 +89,15 @@ createShader::proc(dataManager:^DataManager, path:cstring, stage:sdl.GPUShaderSt
     return shaderID;
 }
 
-createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, height:f32, materialID:u32 = 0, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true) -> u32 {
-    box := createColoredCube(x, y, z, width, height, materialID, velocity, is_Static);
+createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, height:f32, materialID:u32 = 0, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, is_ground:bool = false, has_gravity:bool = false) -> u32 {
+    box := createColoredCube(x, y, z, width, height, materialID, velocity, is_Static, is_ground = is_ground, has_gravity = has_gravity);
     mapIndex := cast(u32)len(dataManager.renderer.scene.renderableMap);
     dataManager.renderer.scene.renderableMap[mapIndex] = box;
     return mapIndex;
 }
 
-createSphere::proc(dataManager:^DataManager, xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, materialID:u32 = 0, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true)  -> u32 {
-    sphere := createColoredSphere(xPos, yPos, zPos, radius, stackCount, sectorCount, materialID, velocity, is_Static);
+createSphere::proc(dataManager:^DataManager, xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, materialID:u32 = 0, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, has_gravity:bool = false)  -> u32 {
+    sphere := createColoredSphere(xPos, yPos, zPos, radius, stackCount, sectorCount, materialID, velocity, is_Static, has_gravity = has_gravity);
     mapIndex := cast(u32)len(dataManager.renderer.scene.renderableMap);
     dataManager.renderer.scene.renderableMap[mapIndex] = sphere;
     return mapIndex;
@@ -124,6 +124,14 @@ createMaterialInScene::proc(dataManager:^DataManager, albedo:cstring, metallic:c
 }
 
 
+applyGravityToAll :: proc(dataManager: ^DataManager, deltaTime: f32) {
+    for _, &r in dataManager.renderer.scene.renderableMap {
+        if !r.is_static && r.has_gravity {
+            r.velocity.y += GRAVITY * deltaTime
+        }
+    }
+}
+
 updateAllPhysics :: proc(dataManager: ^DataManager, deltaTime: f32) {
     for _, &r in dataManager.renderer.scene.renderableMap {
         updatePhysics(&r, deltaTime);
@@ -131,6 +139,9 @@ updateAllPhysics :: proc(dataManager: ^DataManager, deltaTime: f32) {
 }
 
 updateAllCollisions :: proc(dataManager: ^DataManager, dt: f32) {
+    for _, &r in dataManager.renderer.scene.renderableMap {
+        r.physics_resolved = false
+    }
 
     keys := make([dynamic]u32, context.temp_allocator)
     for key, _ in dataManager.renderer.scene.renderableMap {
@@ -145,6 +156,8 @@ updateAllCollisions :: proc(dataManager: ^DataManager, dt: f32) {
             r2 := &dataManager.renderer.scene.renderableMap[keys[j]]
 
             if r1.is_static && r2.is_static do continue
+
+            if (r1.is_ground || r2.is_ground) && !(r1.has_gravity || r2.has_gravity) do continue
 
             if !aabb_overlap_check(r1, r2, dt) do continue
 

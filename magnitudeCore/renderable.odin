@@ -23,6 +23,9 @@ Renderable::struct{
     velocity    : linalg.Vector3f32,
     is_static   : bool,
     physics_resolved : bool,
+    is_ground : bool,
+    hitCeilingOrFloor : bool,
+    has_gravity : bool,
 }
 
 
@@ -38,7 +41,7 @@ setVelocity::proc(Vx:f32, Vy:f32, Vz:f32, renderable:^Renderable){
     renderable.velocity = {Vx, Vy, Vz};
 }
 
-createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, materialID:u32, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true) -> Renderable {
+createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, materialID:u32, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, is_ground:bool = false, has_gravity:bool = false) -> Renderable {
 
     // RENDERABLE
     cube := Renderable{}
@@ -179,6 +182,12 @@ createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, mat
     // IS STATIC
     cube.is_static = is_Static;
 
+    // IS GROUND
+    cube.is_ground = is_ground;
+
+    // HAS GRAVITY
+    cube.has_gravity = has_gravity;
+
     // COLLISION
     cube.aabb_min, cube.aabb_max = compute_local_aabb(&cube);
 
@@ -206,7 +215,7 @@ createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, mat
 }
 
 
-createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, materialID:u32, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true)  -> Renderable {
+createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, materialID:u32, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, has_gravity:bool = false)  -> Renderable {
     
     sphere := Renderable{};
 
@@ -313,6 +322,9 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
 
     // IS STATIC
     sphere.is_static = is_Static;
+
+    // HAS GRAVITY
+    sphere.has_gravity = has_gravity;
 
     // COLLISION
     sphere.aabb_min, sphere.aabb_max = compute_local_aabb(&sphere);
@@ -436,20 +448,27 @@ resolve_swept :: proc(r1: ^Renderable, r2: ^Renderable, deltaTime: f32) -> bool 
     remaining := 1.0 - toi;
 
     if !r1.is_static {
-        r1.position += vel1 * toi;
-        //r1.velocity  = reflect(r1.velocity, normal);
-        r1.velocity  -= linalg.dot(r1.velocity, normal) * normal;
-        r1.position += r1.velocity * deltaTime * remaining;
-        r1.modelMatrix = linalg.matrix4_translate_f32(r1.position);
-        r1.physics_resolved = true;
+        dot1 := linalg.dot(r1.velocity, normal)
+        r1.velocity -= dot1 * normal
+        if abs(normal.y) > 0.7 {
+            r1.hitCeilingOrFloor = true
+        }
+        r1.position += vel1 * toi
+        r1.position += r1.velocity * deltaTime * remaining
+        r1.modelMatrix = linalg.matrix4_translate_f32(r1.position)
+        r1.physics_resolved = true
     }
+
     if !r2.is_static {
-        r2.position += vel2 * toi;
-        //r2.velocity  = reflect(r2.velocity, -normal);
-        r2.velocity  -= linalg.dot(r2.velocity, -normal) * (-normal);
-        r2.position += r2.velocity * deltaTime * remaining;
-        r2.modelMatrix = linalg.matrix4_translate_f32(r2.position);
-        r2.physics_resolved = true;
+        dot2 := linalg.dot(r2.velocity, -normal)
+        r2.velocity -= dot2 * (-normal)
+        if abs(normal.y) > 0.7 {
+            r2.hitCeilingOrFloor = true
+        }
+        r2.position += vel2 * toi
+        r2.position += r2.velocity * deltaTime * remaining
+        r2.modelMatrix = linalg.matrix4_translate_f32(r2.position)
+        r2.physics_resolved = true
     }
 
     return true
@@ -474,7 +493,6 @@ aabb_overlap_check :: proc(r1: ^Renderable, r2: ^Renderable, dt: f32) -> bool {
     min1, max1 := get_world_aabb(r1)
     min2, max2 := get_world_aabb(r2)
 
-    // Espandi ogni AABB della velocità * dt per includere il movimento del frame
     expand1 := linalg.abs(r1.velocity) * dt
     expand2 := linalg.abs(r2.velocity) * dt
 
@@ -483,7 +501,6 @@ aabb_overlap_check :: proc(r1: ^Renderable, r2: ^Renderable, dt: f32) -> bool {
     min2 -= expand2
     max2 += expand2
 
-    // Se si separano su un qualsiasi asse, non possono collidere
     if max1.x < min2.x || min1.x > max2.x do return false
     if max1.y < min2.y || min1.y > max2.y do return false
     if max1.z < min2.z || min1.z > max2.z do return false

@@ -20,6 +20,7 @@ mouseKeyboardInput :: struct {
     moveBackward : bool,
     moveLeft     : bool,
     moveRight    : bool,
+    jump : bool,
 }
 
 initInputHandler::proc(renderer: ^Renderer){
@@ -122,6 +123,7 @@ updateThirdPersonCamera :: proc(player: ^Player, dataManager: ^DataManager, inpu
     input.moveBackward = sdl.GetKeyboardState(nil)[sdl.Scancode.S]
     input.moveLeft     = sdl.GetKeyboardState(nil)[sdl.Scancode.A]
     input.moveRight    = sdl.GetKeyboardState(nil)[sdl.Scancode.D]
+    input.jump         = sdl.GetKeyboardState(nil)[sdl.Scancode.SPACE]
 
     sensitivity :f32= 0.15
     player.yaw   += input.mouseDeltaX * sensitivity
@@ -149,9 +151,14 @@ updatePlayer :: proc(player: ^Player, dataManager: ^DataManager, input: ^mouseKe
 
     r := getRenderableObject(dataManager, player.renderableID)
 
-    yawRad := linalg.to_radians(player.yaw)
+    yawRad  := linalg.to_radians(player.yaw)
     forward := linalg.Vector3f32{-linalg.sin(yawRad), 0, -linalg.cos(yawRad)}
     right   := linalg.Vector3f32{ linalg.cos(yawRad), 0, -linalg.sin(yawRad)}
+
+    if r.hitCeilingOrFloor {
+        player.verticalVelocity = r.velocity.y
+        r.hitCeilingOrFloor = false
+    }
 
     move := linalg.Vector3f32{0, 0, 0}
     if input.moveForward  do move += forward
@@ -161,10 +168,26 @@ updatePlayer :: proc(player: ^Player, dataManager: ^DataManager, input: ^mouseKe
 
     if linalg.length(move) > 0 {
         move = linalg.normalize(move)
+        r.velocity.x = move.x * player.speed
+        r.velocity.z = move.z * player.speed
+    } else {
+        r.velocity.x = 0
+        r.velocity.z = 0
     }
 
-    r.position += move * player.speed * dt
+    player.isGrounded = checkGrounded(player, dataManager)
 
-    r.position.y = 5
-    r.modelMatrix = linalg.matrix4_translate_f32(r.position)
+    if player.isGrounded {
+        if player.verticalVelocity < 0 {
+            player.verticalVelocity = 0 
+        }
+        if input.jump {                 
+            player.verticalVelocity = player.jumpForce
+            player.isGrounded = false
+        }
+    } else {
+        player.verticalVelocity += GRAVITY * dt 
+    }
+
+    r.velocity.y = player.verticalVelocity
 }

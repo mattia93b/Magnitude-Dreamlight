@@ -133,7 +133,7 @@ main::proc(){
 
     // Scene
     //boxId := magnitudeCore.createCube(&dataManager, 0.0, 10.0, -20.0, 5.0, 5.0, Rock063);
-    baseId  := magnitudeCore.createCube(&dataManager, 0.0, 3.0, -10.0, 32.0, 0.5, defaultMaterial);
+    baseId  := magnitudeCore.createCube(&dataManager, 0.0, 3.0, -10.0, 32.0, 0.5, defaultMaterial, is_ground = true);
 
     /*if MATERIA_SCENE {
         //
@@ -177,12 +177,12 @@ main::proc(){
     cubeCollision5 := magnitudeCore.createCube(&dataManager, 5.0, 5.0, -10.0, 3.0, 3.0, defaultMaterial, {0,0,5}, false);
     cubeCollision6 := magnitudeCore.createCube(&dataManager, 5.0, 5.0, 10.0, 3.0, 3.0, defaultMaterial, {0,0,-5}, false);
 
-    sphere1Id := magnitudeCore.createSphere(&dataManager, -10.0, 10.0, -15.0, 1.5, 25.0, 25.0, defaultMaterial, {0,0,-5}, true);
+    sphere1Id := magnitudeCore.createSphere(&dataManager, -10.0, 10.0, -15.0, 1.5, 25.0, 25.0, defaultMaterial, {0,0,0}, false, has_gravity = true);
 
     magnitudeCore.addLightToScene(&dataManager, {0.0, 15.0, 10.0});
 
 
-    player := magnitudeCore.playerInit(&dataManager, 0.0, 3.5, -10.0, defaultMaterial);
+    player := magnitudeCore.playerInit(&dataManager, 0.0, 10, -10.0, defaultMaterial);
 
     // Upload renderable in buffer
     //pushRenderableInBuffer(mRenderer);
@@ -198,7 +198,7 @@ main::proc(){
     for isRunning {
         
         newTicks:= sdl.GetTicks();
-        deltaTime := f32(newTicks - lastTicks) / 1000;
+        deltaTime := min(f32(newTicks - lastTicks) / 1000, 0.05); // cap a 50ms (20 FPS min) per evitare physics explosion
         lastTicks = newTicks;
 
         r1 := magnitudeCore.getRenderableObject(&dataManager, cubeCollision1);
@@ -234,8 +234,9 @@ main::proc(){
             magnitudeCore.setVelocity(0.0, 0.0,(r6.velocity.z *-1), r6);
         }
 
-        magnitudeCore.updatePlayer(&player, &dataManager, &dataManager.renderer.input, deltaTime);
         magnitudeCore.updateThirdPersonCamera(&player, &dataManager, &dataManager.renderer.input, deltaTime);
+        magnitudeCore.updatePlayer(&player, &dataManager, &dataManager.renderer.input, deltaTime);
+        magnitudeCore.applyGravityToAll(&dataManager, deltaTime);
         magnitudeCore.updateAllCollisions(&dataManager, deltaTime);
         magnitudeCore.updateAllPhysics(&dataManager, deltaTime);
 
