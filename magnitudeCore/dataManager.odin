@@ -107,10 +107,59 @@ getRenderableObject::proc(dataManager:^DataManager, renderableID:u32) -> ^Render
     return &dataManager.renderer.scene.renderableMap[renderableID];
 }
 
-addLightToScene::proc(dataManager:^DataManager, lightPos: linalg.Vector3f32) -> u32 {
-    addLight(&dataManager.renderer, lightPos);
+addLightToScene::proc(dataManager:^DataManager, lightPos: linalg.Vector3f32, color: linalg.Vector4f32 = {1.0, 1.0, 1.0, 1.0}, intensity: f32 = 1000.0) -> u32 {
+    addLight(&dataManager.renderer, lightPos, color, intensity);
     lightIndex := cast(u32)len(dataManager.renderer.scene.light) - 1;
     return lightIndex;
+}
+
+clearSceneForReload::proc(dataManager:^DataManager) {
+    renderer := &dataManager.renderer;
+
+    // Release GPU geometry buffers (keep device/window/pipelines/sampler/depth)
+    if renderer.geometry.vertexBuffer != nil {
+        sdl.ReleaseGPUBuffer(renderer.gpu.device, renderer.geometry.vertexBuffer);
+        renderer.geometry.vertexBuffer = nil;
+    }
+    if renderer.geometry.indexBuffer != nil {
+        sdl.ReleaseGPUBuffer(renderer.gpu.device, renderer.geometry.indexBuffer);
+        renderer.geometry.indexBuffer = nil;
+    }
+    if renderer.geometry.materialBuffer != nil {
+        sdl.ReleaseGPUBuffer(renderer.gpu.device, renderer.geometry.materialBuffer);
+        renderer.geometry.materialBuffer = nil;
+    }
+    if renderer.geometry.collisionBuffer != nil {
+        sdl.ReleaseGPUBuffer(renderer.gpu.device, renderer.geometry.collisionBuffer);
+        renderer.geometry.collisionBuffer = nil;
+    }
+    if renderer.geometry.collisionIndexBuffer != nil {
+        sdl.ReleaseGPUBuffer(renderer.gpu.device, renderer.geometry.collisionIndexBuffer);
+        renderer.geometry.collisionIndexBuffer = nil;
+    }
+    // Release textures
+    for tex in renderer.allTextures {
+        if tex != nil {
+            sdl.ReleaseGPUTexture(renderer.gpu.device, tex);
+        }
+    }
+
+    // Clear CPU-side geometry arrays
+    clear(&renderer.geometry.allVertices);
+    clear(&renderer.geometry.allIndices);
+    clear(&renderer.geometry.allMaterials);
+    clear(&renderer.geometry.allModelMatrix);
+    clear(&renderer.geometry.allCollisionVertices);
+    clear(&renderer.geometry.allCollisionIndices);
+    // Clear scene arrays
+    clear(&renderer.scene.renderableMap);
+    clear(&renderer.scene.renderableMapIndex);
+    clear(&renderer.scene.materialIndexForTexturebind);
+    clear(&renderer.scene.light);
+    clear(&renderer.scene.material);
+    // Clear texture cache
+    clear(&renderer.allTextures);
+    clear(&renderer.cachedTextureBindings);
 }
 
 uploadAllDataToGPU::proc(dataManager:^DataManager) {

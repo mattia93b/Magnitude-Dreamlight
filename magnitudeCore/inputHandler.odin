@@ -144,6 +144,17 @@ updateThirdPersonCamera :: proc(player: ^Player, dataManager: ^DataManager, inpu
     renderer.camera.position = pivot + camOffset
     renderer.camera.front    = linalg.normalize(pivot - renderer.camera.position)
     renderer.camera.up       = {0, 1, 0}
+
+
+    // light movement
+    speed : f32 = 10 * dt;
+    if input.keys[.DOWN] do renderer.scene.lightInfo.lightPosition.z += speed;
+    if input.keys[.UP] do renderer.scene.lightInfo.lightPosition.z -= speed;
+    if input.keys[.RIGHT] do renderer.scene.lightInfo.lightPosition.x += speed;
+    if input.keys[.LEFT] do renderer.scene.lightInfo.lightPosition.x -= speed;
+    if input.keys[.PAGEUP] do renderer.scene.lightInfo.lightPosition.y += speed;
+    if input.keys[.PAGEDOWN] do renderer.scene.lightInfo.lightPosition.y -= speed;
+
 }
 
 

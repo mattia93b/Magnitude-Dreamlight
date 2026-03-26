@@ -9,6 +9,9 @@ import "magnitudeCore"
 
 MATERIA_SCENE :: false;
 
+LOAD_FROM_JSON  :: true;
+LEVEL_PATH      :: "levels/test_level.json";
+
 main::proc(){
     context.logger = log.create_console_logger();
     // Texture Atlas Demo
@@ -48,14 +51,6 @@ main::proc(){
     // Create Instance Graphic Pipeline
     //createGraphicPipeline(&mRenderer, instanceVertexShader, instanceFragmentShader);
 
-    // Material
-
-    defaultMaterial := magnitudeCore.createMaterialInScene(&dataManager, 
-        "resources/textures/textureDefault.png", 
-        "resources/textures/textureDefault_specular.png",
-        "resources/textures/textureDefault_specular.png", 
-        "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_normal-ogl.png",
-        "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_ao.png");
     /*wood := magnitudeCore.createMaterialInScene(&dataManager, 
         "resources/materials/dark-wood-stain-bl/dark-wood-stain_albedo.png", 
         "resources/materials/dark-wood-stain-bl/dark-wood-stain_metallic.png",
@@ -132,6 +127,70 @@ main::proc(){
 
 
     // Scene
+    // MODE A 
+    when LOAD_FROM_JSON {
+        level_result, level_ok := magnitudeCore.loadLevel(&dataManager, LEVEL_PATH);
+        if !level_ok {
+            log.errorf("Failed to load level: %s", LEVEL_PATH);
+            return;
+        }
+        player : magnitudeCore.Player;
+        if level_result.has_player {
+            player = level_result.player;
+        } else {
+            // Nessun player nel JSON: usa il primo materiale caricato (slot 0 garantito da loadLevel)
+            player = magnitudeCore.playerInit(&dataManager, 0.0, 10, -10.0, 0);
+        }
+        magnitudeCore.uploadAllDataToGPU(&dataManager);
+        // Avvia il game loop con il player caricato
+        isRunning := true;
+        lastTicks := sdl.GetTicks();
+        reload_key_prev := false;
+        for isRunning {
+            newTicks  := sdl.GetTicks();
+            deltaTime := min(f32(newTicks - lastTicks) / 1000, 0.05);
+            lastTicks  = newTicks;
+
+            // Live reload: press R to reload the level from JSON
+            kb := sdl.GetKeyboardState(nil);
+            reload_key_now := bool(kb[sdl.Scancode.R]);
+            if reload_key_now && !reload_key_prev {
+                log.info("[LiveReload] Reloading level...");
+                magnitudeCore.clearSceneForReload(&dataManager);
+                reload_result, reload_ok := magnitudeCore.loadLevel(&dataManager, LEVEL_PATH);
+                if reload_ok {
+                    if reload_result.has_player {
+                        player = reload_result.player;
+                    } else {
+                        player = magnitudeCore.playerInit(&dataManager, 0.0, 10, -10.0, 0);
+                    }
+                    magnitudeCore.uploadAllDataToGPU(&dataManager);
+                    log.info("[LiveReload] Level reloaded successfully.");
+                } else {
+                    log.error("[LiveReload] Failed to reload level.");
+                }
+            }
+            reload_key_prev = reload_key_now;
+
+            magnitudeCore.updateThirdPersonCamera(&player, &dataManager, &dataManager.renderer.input, deltaTime);
+            magnitudeCore.updatePlayer(&player, &dataManager, &dataManager.renderer.input, deltaTime);
+            magnitudeCore.applyGravityToAll(&dataManager, deltaTime);
+            magnitudeCore.updateAllCollisions(&dataManager, deltaTime);
+            magnitudeCore.updateAllPhysics(&dataManager, deltaTime);
+            isRunning = magnitudeCore.update(&dataManager.renderer, deltaTime);
+        }
+        magnitudeCore.cleanRenderer(&dataManager.renderer);
+        return;
+    }
+
+    // MODE B 
+    when !LOAD_FROM_JSON {
+    defaultMaterial := magnitudeCore.createMaterialInScene(&dataManager,
+        "resources/textures/textureDefault.png",
+        "resources/textures/textureDefault_specular.png",
+        "resources/textures/textureDefault_specular.png",
+        "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_normal-ogl.png",
+        "resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_ao.png");
     //boxId := magnitudeCore.createCube(&dataManager, 0.0, 10.0, -20.0, 5.0, 5.0, Rock063);
     baseId  := magnitudeCore.createCube(&dataManager, 0.0, 3.0, -10.0, 32.0, 0.5, defaultMaterial, is_ground = true);
 
@@ -246,4 +305,5 @@ main::proc(){
     }
 
     magnitudeCore.cleanRenderer(&dataManager.renderer);
+    } // when !LOAD_FROM_JSON
 }

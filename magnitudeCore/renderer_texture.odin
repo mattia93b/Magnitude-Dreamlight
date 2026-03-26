@@ -19,7 +19,9 @@ uploadMaterialTexture::proc(renderer: ^Renderer){
     stagingBuffers : [dynamic]^sdl.GPUTransferBuffer
     defer {
         for buf in stagingBuffers {
-            sdl.ReleaseGPUTransferBuffer(renderer.gpu.device, buf)
+            if buf != nil {
+                sdl.ReleaseGPUTransferBuffer(renderer.gpu.device, buf)
+            }
         }
         delete(stagingBuffers)
     }
@@ -73,9 +75,29 @@ uploadMaterialTexture::proc(renderer: ^Renderer){
 }
 
 
+DEFAULT_TEXTURE_PATH :: "resources/textures/textureDefault.png"
+
 loadSingleTexture::proc(renderer:^Renderer ,path:cstring, format:sdl.GPUTextureFormat, copyPass:^sdl.GPUCopyPass) -> ^sdl.GPUTransferBuffer {
 
-    surface := loadTexturePNG(path, 4)
+    // Fall back to default texture if path is empty
+    effective_path := path
+    if path == nil || len(path) == 0 {
+        effective_path = DEFAULT_TEXTURE_PATH
+    }
+
+    surface := loadTexturePNG(effective_path, 4)
+
+    // If loading still failed, try the default texture as last resort
+    if surface == nil && effective_path != DEFAULT_TEXTURE_PATH {
+        log.warnf("Texture '%s' failed to load, using default.", effective_path)
+        surface = loadTexturePNG(DEFAULT_TEXTURE_PATH, 4)
+    }
+
+    // If even the default fails, we cannot continue
+    if surface == nil {
+        log.error("FATAL: Default texture also failed to load.")
+        return nil
+    }
 
     defer sdl.DestroySurface(surface)
 

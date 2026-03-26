@@ -314,6 +314,9 @@ initLight::proc(renderer: ^Renderer){
     renderer.scene.lightInfo.lightIntensity = {1000.0, 1000.0, 1000.0, 1000.0};
 }
 
-addLight::proc(mRenderer:^Renderer, lightPos:linalg.Vector3f32){
-    append(&mRenderer.scene.light, createColoredSphere(mRenderer.scene.lightInfo.lightPosition.x, mRenderer.scene.lightInfo.lightPosition.y, mRenderer.scene.lightInfo.lightPosition.z,0.25, 25.0, 25.0, 0));
+addLight::proc(mRenderer:^Renderer, lightPos:linalg.Vector3f32, color:linalg.Vector4f32 = {1.0, 1.0, 1.0, 1.0}, intensity:f32 = 1000.0){
+    mRenderer.scene.lightInfo.lightPosition = {lightPos.x, lightPos.y, lightPos.z, 0.0};
+    mRenderer.scene.lightInfo.lightColor     = color;
+    mRenderer.scene.lightInfo.lightIntensity = {intensity, intensity, intensity, 1.0};
+    append(&mRenderer.scene.light, createColoredSphere(lightPos.x, lightPos.y, lightPos.z, 0.25, 25.0, 25.0, 0, is_Static = false));
 }

@@ -1,0 +1,160 @@
+{
+  "version": "1.0",
+  "materials": [
+    {
+      "albedo": "C:/Users/matti/Desktop/Magnitude-Dreamlight/resources/textures/textureDefault.png",
+      "metallic": "C:/Users/matti/Desktop/Magnitude-Dreamlight/resources/textures/textureDefault_specular.png",
+      "roughness": "C:/Users/matti/Desktop/Magnitude-Dreamlight/resources/textures/textureDefault_specular.png",
+      "normal": "C:/Users/matti/Desktop/Magnitude-Dreamlight/resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_normal-ogl.png",
+      "ao": "C:/Users/matti/Desktop/Magnitude-Dreamlight/resources/materials/elegant-stone-tiles-bl/elegant-stone-tiles_ao.png",
+      "id": 0
+    },
+    {
+      "albedo": "",
+      "metallic": "",
+      "roughness": "",
+      "normal": "",
+      "ao": "",
+      "id": 1
+    }
+  ],
+  "objects": [
+    {
+      "id": "8a4c44a1",
+      "name": "Cube_002",
+      "type": "cube",
+      "position": {
+        "x": -0.9,
+        "y": -2.0,
+        "z": -5.0
+      },
+      "velocity": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "is_static": true,
+      "is_ground": false,
+      "has_gravity": false,
+      "material_id": 0,
+      "size": {
+        "width": 40.0,
+        "height": 1.0
+      }
+    },
+    {
+      "id": "abcd7a2e",
+      "name": "Cube_005",
+      "type": "cube",
+      "position": {
+        "x": 5.0,
+        "y": 0.0,
+        "z": -2.0
+      },
+      "velocity": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "is_static": true,
+      "is_ground": false,
+      "has_gravity": false,
+      "material_id": 0,
+      "size": {
+        "width": 1.0,
+        "height": 1.0
+      }
+    },
+    {
+      "id": "2b1f00d7",
+      "name": "Cube_006",
+      "type": "cube",
+      "position": {
+        "x": -4.0,
+        "y": 0.0,
+        "z": 3.0
+      },
+      "velocity": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "is_static": true,
+      "is_ground": false,
+      "has_gravity": false,
+      "material_id": 0,
+      "size": {
+        "width": 1.0,
+        "height": 1.0
+      }
+    },
+    {
+      "id": "957b995a",
+      "name": "Cube_004",
+      "type": "cube",
+      "position": {
+        "x": -12.0,
+        "y": 0.0,
+        "z": -7.0
+      },
+      "velocity": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "is_static": true,
+      "is_ground": false,
+      "has_gravity": false,
+      "material_id": 0,
+      "size": {
+        "width": 1.0,
+        "height": 1.0
+      }
+    },
+    {
+      "id": "061751e4",
+      "name": "Sphere_001",
+      "type": "sphere",
+      "position": {
+        "x": 7.0,
+        "y": 0.0,
+        "z": -8.0
+      },
+      "velocity": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "is_static": true,
+      "is_ground": false,
+      "has_gravity": false,
+      "material_id": 0,
+      "radius": 1.0,
+      "stack_count": 24,
+      "sector_count": 25
+    }
+  ],
+  "lights": [
+    {
+      "id": "light_bb3c82",
+      "name": "Light_001",
+      "position": {
+        "x": -9.0,
+        "y": 1.0,
+        "z": 0.0
+      },
+      "color_r": 1.0,
+      "color_g": 1.0,
+      "color_b": 1.0,
+      "intensity": 1000.0
+    }
+  ],
+  "player": {
+    "position": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": -13.0
+    },
+    "material_id": 0
+  }
+}
