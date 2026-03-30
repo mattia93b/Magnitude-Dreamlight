@@ -10,7 +10,7 @@ import "core:math"
 
 Renderable::struct{
     vertex: [dynamic]linalg.Vector3f32,
-    index: [dynamic]u16,
+    index: [dynamic]u32,
     normals: [dynamic]linalg.Vector3f32,
     UVs: [dynamic]linalg.Vector2f32,
     collisionCorners: [8]linalg.Vector3f32,
@@ -41,14 +41,14 @@ setVelocity::proc(Vx:f32, Vy:f32, Vz:f32, renderable:^Renderable){
     renderable.velocity = {Vx, Vy, Vz};
 }
 
-createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, materialID:u32, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, is_ground:bool = false, has_gravity:bool = false) -> Renderable {
+createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, depth:f32, materialID:u32, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, is_ground:bool = false, has_gravity:bool = false) -> Renderable {
 
     // RENDERABLE
     cube := Renderable{}
 
     hw := width / 2.0
     hh := height / 2.0
-    hd := width / 2.0
+    hd := depth / 2.0
 
     // front
     append(&cube.vertex, linalg.Vector3f32{-hw, -hh, -hd}) // 0
@@ -91,13 +91,13 @@ createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, mat
     offset := 0;
     for i := 0; i < 31; i += 6
     {
-        append(&cube.index, cast(u16)(offset + 0));
-        append(&cube.index, cast(u16)(offset + 1));
-        append(&cube.index, cast(u16)(offset + 2));
+        append(&cube.index, cast(u32)(offset + 0));
+        append(&cube.index, cast(u32)(offset + 1));
+        append(&cube.index, cast(u32)(offset + 2));
 
-        append(&cube.index, cast(u16)(offset + 2));
-        append(&cube.index, cast(u16)(offset + 3));
-        append(&cube.index, cast(u16)(offset + 0));
+        append(&cube.index, cast(u32)(offset + 2));
+        append(&cube.index, cast(u32)(offset + 3));
+        append(&cube.index, cast(u32)(offset + 0));
 
         offset += 4;
     }
@@ -278,16 +278,16 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
             // 2 triangles per sector excluding 1st and last stacks
             if (i != 0)
             {
-                append(&sphere.index, cast(u16)k1);   // k1---k2---k1+1
-                append(&sphere.index, cast(u16)k2);   // k1---k2---k1+1
-                append(&sphere.index, cast(u16)(k1 + 1));   // k1---k2---k1+1
+                append(&sphere.index, cast(u32)k1);   // k1---k2---k1+1
+                append(&sphere.index, cast(u32)k2);   // k1---k2---k1+1
+                append(&sphere.index, cast(u32)(k1 + 1));   // k1---k2---k1+1
             }
 
             if (i != (stackCount - 1))
             {
-                append(&sphere.index, cast(u16)(k1 + 1)); // k1+1---k2---k2+1
-                append(&sphere.index ,cast(u16)(k2)); // k1+1---k2---k2+1
-                append(&sphere.index, cast(u16)(k2 + 1)); // k1+1---k2---k2+1
+                append(&sphere.index, cast(u32)(k1 + 1)); // k1+1---k2---k2+1
+                append(&sphere.index ,cast(u32)(k2)); // k1+1---k2---k2+1
+                append(&sphere.index, cast(u32)(k2 + 1)); // k1+1---k2---k2+1
             }
             // increment at the end of operation
             k1=k1+1;

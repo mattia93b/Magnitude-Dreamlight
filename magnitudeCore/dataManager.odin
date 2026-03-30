@@ -89,8 +89,8 @@ createShader::proc(dataManager:^DataManager, path:cstring, stage:sdl.GPUShaderSt
     return shaderID;
 }
 
-createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, height:f32, materialID:u32 = 0, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, is_ground:bool = false, has_gravity:bool = false) -> u32 {
-    box := createColoredCube(x, y, z, width, height, materialID, velocity, is_Static, is_ground = is_ground, has_gravity = has_gravity);
+createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, height:f32, depth:f32, materialID:u32 = 0, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, is_ground:bool = false, has_gravity:bool = false) -> u32 {
+    box := createColoredCube(x, y, z, width, height, depth, materialID, velocity, is_Static, is_ground = is_ground, has_gravity = has_gravity);
     mapIndex := cast(u32)len(dataManager.renderer.scene.renderableMap);
     dataManager.renderer.scene.renderableMap[mapIndex] = box;
     return mapIndex;

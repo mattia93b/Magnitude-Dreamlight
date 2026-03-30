@@ -23,11 +23,11 @@ GeometryBuffers :: struct {
     collisionBuffer         : ^sdl.GPUBuffer,
     collisionIndexBuffer    : ^sdl.GPUBuffer,
     allVertices             : [dynamic]Vertex,
-    allIndices              : [dynamic]u16,
+    allIndices              : [dynamic]u32,
     allMaterials            : [dynamic]MaterialPBR,
     allModelMatrix          : [dynamic]matrix[4,4]f32,
     allCollisionVertices    : [dynamic]CollisionVertex,
-    allCollisionIndices     : [dynamic]u16,
+    allCollisionIndices     : [dynamic]u32,
 }
 
 SceneData :: struct {

@@ -71,8 +71,15 @@ loadLevel :: proc(dataManager: ^DataManager, path: string) -> (result: LevelLoad
                 albedo   := _json_str(mat_obj, "albedo",    "resources/textures/textureDefault.png")
                 metallic := _json_str(mat_obj, "metallic",  "resources/textures/textureDefault_specular.png")
                 roughness:= _json_str(mat_obj, "roughness", "resources/textures/textureDefault_specular.png")
-                normal   := _json_str(mat_obj, "normal",    "resources/textures/textureDefault.png")
-                ao       := _json_str(mat_obj, "ao",        "resources/textures/textureDefault.png")
+                normal   := _json_str(mat_obj, "normal",    "resources/textures/elegant-stone-tiles_normal-ogl.png")
+                ao       := _json_str(mat_obj, "ao",        "resources/textures/elegant-stone-tiles_ao.png")
+
+                // Substitute per-slot defaults when the JSON value is an empty string
+                if len(albedo)    == 0 { albedo    = "resources/textures/textureDefault.png" }
+                if len(metallic)  == 0 { metallic  = "resources/textures/textureDefault_specular.png" }
+                if len(roughness) == 0 { roughness = "resources/textures/textureDefault_specular.png" }
+                if len(normal)    == 0 { normal    = "resources/textures/elegant-stone-tiles_normal-ogl.png" }
+                if len(ao)        == 0 { ao        = "resources/textures/elegant-stone-tiles_ao.png" }
 
                 // Allocate each path as a heap-allocated null-terminated cstring.
                 mat_id := createMaterialInScene(
@@ -96,8 +103,8 @@ loadLevel :: proc(dataManager: ^DataManager, path: string) -> (result: LevelLoad
             "resources/textures/textureDefault.png",
             "resources/textures/textureDefault_specular.png",
             "resources/textures/textureDefault_specular.png",
-            "resources/textures/textureDefault.png",
-            "resources/textures/textureDefault.png",
+            "resources/textures/elegant-stone-tiles_normal-ogl.png",
+            "resources/textures/elegant-stone-tiles_ao.png",
         )
         material_id_map[0] = default_id
         log.warn("[LevelLoader] No materials in JSON — using engine default material at slot 0")
@@ -131,13 +138,15 @@ loadLevel :: proc(dataManager: ^DataManager, path: string) -> (result: LevelLoad
                 case "cube":
                     w : f32 = 1.0
                     h : f32 = 1.0
+                    d : f32 = 1.0
                     if size_val, size_found := obj["size"]; size_found {
                         if size_obj, size_is_obj := size_val.(json.Object); size_is_obj {
                             w = f32(_json_float(size_obj, "width",  1.0))
                             h = f32(_json_float(size_obj, "height", 1.0))
+                            d = f32(_json_float(size_obj, "depth",  1.0))
                         }
                     }
-                    id := createCube(dataManager, pos.x, pos.y, pos.z, w, h,
+                    id := createCube(dataManager, pos.x, pos.y, pos.z, w, h, d,
                         mat_id, vel, is_static, is_ground, has_gravity)
                     log.infof("[LevelLoader] Cube '%s' → id %d", _json_str(obj, "name", "?"), id)
 

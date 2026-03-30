@@ -119,7 +119,7 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
         sdl.BindGPUFragmentSamplers(renderPass, 0, &mRenderer.cachedTextureBindings[16 * numOfTexturebinds], 16)
 
         sdl.BindGPUVertexBuffers(renderPass, 0, &bufferBindings[0], 1);
-        sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.geometry.indexBuffer}, ._16BIT);
+        sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.geometry.indexBuffer}, ._32BIT);
         sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)len(mRenderer.geometry.allIndices[begin:end]), 1, cast(u32)begin, 0, 0);
         
     }
@@ -131,7 +131,7 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     // Uniform 
     sdl.PushGPUVertexUniformData(buffer, 0, &uniformBuffer, size_of(uniformBuffer));
     sdl.BindGPUVertexBuffers(renderPass, 0, &bufferBindings[0], 1);
-    sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.geometry.indexBuffer}, ._16BIT);
+    sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.geometry.indexBuffer}, ._32BIT);
     sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)mRenderer.scene.lightNumberOfIndexInBuffer, 1, 0, 0, 0);
 
 
@@ -146,7 +146,7 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
         // Uniform 
         sdl.PushGPUVertexUniformData(buffer, 0, &uniformBuffer, size_of(uniformBuffer));
         sdl.BindGPUVertexBuffers(renderPass, 0, &collisionBufferBindings[0], 1);
-        sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.geometry.collisionIndexBuffer}, ._16BIT);
+        sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.geometry.collisionIndexBuffer}, ._32BIT);
         sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)len(mRenderer.geometry.allCollisionIndices[:]), 1, 0, 0, 0);
     //}
    

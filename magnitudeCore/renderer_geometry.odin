@@ -46,7 +46,7 @@ renderable_order :: proc(lhs, rhs: Renderable) -> bool {
 
 _sortRenderablesByMaterial::proc(renderer: ^Renderer){
 
-     indexCounter :u32= 0;
+    indexCounter :u32= 0;
     for mat in renderer.scene.material{
         for key, val in renderer.scene.renderableMap {
             if val.materialID == indexCounter{
@@ -66,10 +66,10 @@ _buildLightGeometry::proc(renderer: ^Renderer){
         modelMatrixIndex := cast(u32)len(renderer.geometry.allModelMatrix);
         append(&renderer.geometry.allModelMatrix, el.modelMatrix);
         // Calculate the offset before pushing new data to the VertexBuffer
-        vertex_offset := u16(len(renderer.geometry.allVertices));
+        vertex_offset := u32(len(renderer.geometry.allVertices));
         // Push all vertex indices information inside the IndexBuffer of the renderer
         for idx in el.index {
-            append(&renderer.geometry.allIndices, u16(idx) + vertex_offset);
+            append(&renderer.geometry.allIndices, u32(idx) + vertex_offset);
         }
         // Push all vertex information inside a Vertex Object and store it in the VertexBuffer of the renderer
         for numberProcessedVertex:= 0; numberProcessedVertex < len(el.vertex); numberProcessedVertex = numberProcessedVertex + 1 {
@@ -99,15 +99,15 @@ _buildRenderableGeometry::proc(renderer: ^Renderer){
         modelMatrixIndex := cast(f32)len(renderer.geometry.allModelMatrix);
         append(&renderer.geometry.allModelMatrix, renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].modelMatrix);
         // Calculate the offset before pushing new data to the VertexBuffer
-        vertex_offset := u16(len(renderer.geometry.allVertices));
+        vertex_offset := u32(len(renderer.geometry.allVertices));
         // Push all vertex indices information inside the IndexBuffer of the renderer
         for idx in renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].index {
-            append(&renderer.geometry.allIndices, u16(idx) + vertex_offset);
+            append(&renderer.geometry.allIndices, u32(idx) + vertex_offset);
         }
         // COLLISION INDEX
-        vertex_collision_offset := u16(len(renderer.geometry.allCollisionVertices));
+        vertex_collision_offset := u32(len(renderer.geometry.allCollisionVertices));
         for idx in renderer.scene.renderableMap[renderer.scene.renderableMapIndex[i]].collisionIndices {
-            append(&renderer.geometry.allCollisionIndices, u16(idx) + vertex_collision_offset);
+            append(&renderer.geometry.allCollisionIndices, u32(idx) + vertex_collision_offset);
         }
 
         // Push all vertex information inside a Vertex Object and store it in the VertexBuffer of the renderer
@@ -144,7 +144,7 @@ uploadGeometry::proc(renderer: ^Renderer){
     renderer.geometry.vertexBuffer= sdl.CreateGPUBuffer(renderer.gpu.device, bufferInfo);
 
 
-    index_bytes := len(renderer.geometry.allIndices) * size_of(u16);
+    index_bytes := len(renderer.geometry.allIndices) * size_of(u32);
 
     indexBufferInfo := sdl.GPUBufferCreateInfo{};
     indexBufferInfo.size = cast(u32)index_bytes;
@@ -241,7 +241,7 @@ uploadCollisionGeometry::proc(renderer: ^Renderer){
     renderer.geometry.collisionBuffer= sdl.CreateGPUBuffer(renderer.gpu.device, bufferInfo);
 
 
-    index_bytes := len(renderer.geometry.allCollisionIndices) * size_of(u16);
+    index_bytes := len(renderer.geometry.allCollisionIndices) * size_of(u32);
 
     indexBufferInfo := sdl.GPUBufferCreateInfo{};
     indexBufferInfo.size = cast(u32)index_bytes;
