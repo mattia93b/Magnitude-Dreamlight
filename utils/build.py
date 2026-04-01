@@ -13,12 +13,12 @@ import sys
 platform = sys.platform
 
 if platform == "darwin" or platform == "linux":
-    WORKING_DIR = os.path.expanduser("./")
-    BIN_INSTALL_DIR = os.path.expanduser("./")
-    LIB_INSTALL_DIR = os.path.expanduser("./")
+    WORKING_DIR = os.path.abspath("./")
+    BIN_INSTALL_DIR = os.path.abspath("./")
+    LIB_INSTALL_DIR = os.path.abspath("./")
 elif platform == "win32":
-    WORKING_DIR = os.path.expanduser("./")
-    BIN_INSTALL_DIR = os.path.expanduser("./")
+    WORKING_DIR = os.path.abspath("./")
+    BIN_INSTALL_DIR = os.path.abspath("./")
     LIB_INSTALL_DIR = BIN_INSTALL_DIR
 else:
     raise RuntimeError("Unsupported platform")
@@ -72,7 +72,7 @@ def build_sdl():
 
 
 def build_shadercross():
-    shadercross_dir = os.path.join(WORKING_DIR, "SDLShadercross")
+    shadercross_dir = os.path.join(WORKING_DIR, "SDLShaderCross")
 
     build_dir = os.path.join(shadercross_dir, "build")
     if os.path.exists(build_dir):
@@ -98,7 +98,7 @@ def build_shadercross():
 def install_binaries_macos():
     print(f"Installing binaries to {BIN_INSTALL_DIR} and libraries to {LIB_INSTALL_DIR}")
 
-    shadercross_build_dir = os.path.join(WORKING_DIR, "SDLShadercross", "build")
+    shadercross_build_dir = os.path.join(WORKING_DIR, "SDLShaderCross", "build")
 
     shutil.copy(os.path.join(shadercross_build_dir, "shadercross"), BIN_INSTALL_DIR)
 
@@ -143,7 +143,7 @@ def install_binaries_macos():
 def install_binaries_windows():
     print(f"Installing binaries to {BIN_INSTALL_DIR} and libraries to {LIB_INSTALL_DIR}")
 
-    shadercross_build_dir = os.path.join(WORKING_DIR, "SDLShadercross", "build")
+    shadercross_build_dir = os.path.join(WORKING_DIR, "SDLShaderCross", "build")
 
     shutil.copy(os.path.join(shadercross_build_dir, "shadercross.exe"), BIN_INSTALL_DIR)
 
@@ -165,7 +165,7 @@ def install_binaries_windows():
 def install_binaries_linux():
     print(f"Installing binaries to {BIN_INSTALL_DIR} and libraries to {LIB_INSTALL_DIR}")
 
-    shadercross_build_dir = os.path.join(WORKING_DIR, "SDLShadercross", "build")
+    shadercross_build_dir = os.path.join(WORKING_DIR, "SDLShaderCross", "build")
 
     shutil.copy(os.path.join(shadercross_build_dir, "shadercross"), BIN_INSTALL_DIR)
 
@@ -191,7 +191,7 @@ def install_binaries_linux():
 def cleanup():
     print("Cleaning-up")
     shutil.rmtree(os.path.join(WORKING_DIR, "SDL", "build"))
-    shutil.rmtree(os.path.join(WORKING_DIR, "SDLShadercross", "build"))
+    shutil.rmtree(os.path.join(WORKING_DIR, "SDLShaderCross", "build"))
 
 
 def run(purpose, cmd_line, cwd=None):

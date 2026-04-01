@@ -34,8 +34,8 @@ LevelLoadResult :: struct {
 loadLevel :: proc(dataManager: ^DataManager, path: string) -> (result: LevelLoadResult, ok: bool) {
 
     // --- Read file ---
-    raw_data, file_ok := os.read_entire_file(path)
-    if !file_ok {
+   raw_data, err := os.read_entire_file_from_path(path, context.allocator)
+    if err != nil {
         log.errorf("[LevelLoader] Cannot read file: %s", path)
         return result, false
     }

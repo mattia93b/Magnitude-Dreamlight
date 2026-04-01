@@ -1,18 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# ==========================================
-# CONFIGURATION
-# ==========================================
-# Note: Ensure the shadercross binary is the macOS version and has execute permissions (chmod +x)
 SHADERCROSS="utils/shadercross"
-export DYLD_LIBRARY_PATH="$(pwd)/utils:$DYLD_LIBRARY_PATH"
 SHADER_DIR="shaders"
 OUT_DIR="shaders/compiled"
+UTILS_DIR="$(cd "$(dirname "$0")/utils" && pwd)"
 
 ODIN_MAIN="./"
-ODIN_EXE="app" # Removed .exe for macOS
+ODIN_EXE="app"
 
-# Create directories (-p creates them only if they don't exist, suppressing errors)
 mkdir -p "$OUT_DIR/direct3d12"
 mkdir -p "$OUT_DIR/vulkan"
 mkdir -p "$OUT_DIR/metal"
@@ -25,80 +21,64 @@ echo "============================="
 echo "SHADER BUILD"
 echo "============================="
 
-# ==========================================
-# FUNCTION DEFINITION
-# ==========================================
 compile_shader() {
     local SRC="$1"
     local NAME="$2"
     local TARGET="$3"
     local OUTFILE="$4"
 
-    # Run the compilation
-    # "$SHADERCROSS" "$SRC" -o "$OUTFILE"
-    # Note: Depending on your SDL_shadercross version, you might need specific flags for targets
-    # Assuming standard CLI usage matches your batch file:
+    # Skip recompile if output is newer than source
+    if [[ -f "$OUTFILE" && "$OUTFILE" -nt "$SRC" ]]; then
+        return 0
+    fi
+
     "$SHADERCROSS" "$SRC" -o "$OUTFILE"
 
-    if [ $? -ne 0 ]; then
+    if [[ $? -ne 0 ]]; then
         echo "[ERROR] $NAME $TARGET"
         BUILD_FAILED=1
         return 1
     fi
 
-    ((REBUILT_COUNT++))
+    REBUILT_COUNT=$((REBUILT_COUNT + 1))
 }
 
-# ==========================================
-# MAIN LOOP
-# ==========================================
-# Loop through all .hlsl files
-for f in "$SHADER_DIR"/*.hlsl; do
-    # Check if file exists to avoid errors if directory is empty
-    [ -e "$f" ] || continue
+for SRC in "$SHADER_DIR"/*.hlsl; do
+    [[ -f "$SRC" ]] || continue
 
-    FILENAME=$(basename -- "$f")
-    NAME="${FILENAME%.*}" # Remove extension
+    NAME=$(basename "$SRC" .hlsl)
     STAGE=""
 
-    # Check for .vert. or .frag. in the filename
-    if [[ "$f" == *".vert."* ]]; then
-        STAGE="vertex"
-    elif [[ "$f" == *".frag."* ]]; then
-        STAGE="fragment"
-    fi
+    [[ "$SRC" == *.vert.* ]] && STAGE="vertex"
+    [[ "$SRC" == *.frag.* ]] && STAGE="fragment"
 
-    if [ -n "$STAGE" ]; then
-        # Call the compile function for each backend
-        compile_shader "$f" "$NAME" "spirv" "$OUT_DIR/vulkan/$NAME.spv"
-        compile_shader "$f" "$NAME" "dxil"  "$OUT_DIR/direct3d12/$NAME.dxil"
-        compile_shader "$f" "$NAME" "metal" "$OUT_DIR/metal/$NAME.msl"
+    if [[ -n "$STAGE" ]]; then
+        compile_shader "$SRC" "$NAME" spirv  "$OUT_DIR/vulkan/$NAME.spv"
+        compile_shader "$SRC" "$NAME" dxil   "$OUT_DIR/direct3d12/$NAME.dxil"
+        compile_shader "$SRC" "$NAME" metal  "$OUT_DIR/metal/$NAME.msl"
     else
-        echo "[SKIP] $FILENAME stage not recognized"
+        echo "[SKIP] $SRC stage non riconosciuto"
     fi
 done
 
 echo ""
 echo "Shader rebuilt: $REBUILT_COUNT"
 
-if [ $BUILD_FAILED -eq 1 ]; then
-    echo "BUILD SHADER FAILED"
+if [[ $BUILD_FAILED -eq 1 ]]; then
+    echo "BUILD SHADER FALLITA"
     exit 1
 fi
 
 echo ""
-echo "============================="
-echo "ODIN BUILD"
-echo "============================="
+# =============================
+# ODIN BUILD
+# =============================
 
-# Build Odin project
-odin build "$ODIN_MAIN" -out:"$ODIN_EXE"
-
-if [ $? -ne 0 ]; then
+odin build "$ODIN_MAIN" -out:"$ODIN_EXE" \
+    -extra-linker-flags:"-L$UTILS_DIR -rpath $UTILS_DIR"
+if [[ $? -ne 0 ]]; then
     echo "Odin build failed"
     exit 1
 fi
 
-# Run the app
-echo "Running $ODIN_EXE..."
 ./"$ODIN_EXE"
