@@ -152,6 +152,12 @@ uploadGeometry::proc(renderer: ^Renderer){
     indexBufferInfo.usage = {.INDEX};
     renderer.geometry.indexBuffer= sdl.CreateGPUBuffer(renderer.gpu.device, indexBufferInfo);
 
+    modelMatrix_bytes := len(renderer.geometry.allModelMatrix) * size_of(matrix[4,4]f32);
+
+    modelMatrixBufferInfo := sdl.GPUBufferCreateInfo{};
+    modelMatrixBufferInfo.size = cast(u32)modelMatrix_bytes;
+    modelMatrixBufferInfo.usage = {.GRAPHICS_STORAGE_READ};
+    renderer.geometry.modelMatrixBuffer= sdl.CreateGPUBuffer(renderer.gpu.device, modelMatrixBufferInfo);
 
     materials_bytes := len(renderer.geometry.allMaterials) * size_of(MaterialPBR);
 
@@ -162,7 +168,8 @@ uploadGeometry::proc(renderer: ^Renderer){
 
     vertex_offset_in_transfer := 0
     index_offset_in_transfer  := alignUp(vertex_bytes, 256)
-    materials_offset_in_transfer := alignUp(index_offset_in_transfer + index_bytes, 256)
+    modelMatrix_offset_in_transfer := alignUp(index_offset_in_transfer + index_bytes, 256)
+    materials_offset_in_transfer := alignUp(modelMatrix_offset_in_transfer + index_bytes, 256)
     total_transfer_size := materials_offset_in_transfer + materials_bytes
 
     // Transfer Buffer 
@@ -176,6 +183,8 @@ uploadGeometry::proc(renderer: ^Renderer){
     sdl.memcpy(data, raw_data(renderer.geometry.allVertices), cast(uint)vertex_bytes);
     // Index copy
     sdl.memcpy(data[index_offset_in_transfer:], raw_data(renderer.geometry.allIndices), cast(uint)index_bytes);
+    // Model Matrix
+    sdl.memcpy(data[modelMatrix_offset_in_transfer:], raw_data(renderer.geometry.allModelMatrix), cast(uint)modelMatrix_bytes);
     // Materials copy
     sdl.memcpy(data[materials_offset_in_transfer:], raw_data(renderer.geometry.allMaterials), cast(uint)materials_bytes);
 
@@ -210,6 +219,17 @@ uploadGeometry::proc(renderer: ^Renderer){
     // Upload Index
     sdl.UploadToGPUBuffer(copyPass, indexLocation, indexRegion, true);
 
+    // MODEL MATRIX BUFFER UPLOAD
+    modelMatrixLocation:= sdl.GPUTransferBufferLocation{};   
+    modelMatrixLocation.transfer_buffer = transferBuffer;
+    modelMatrixLocation.offset = cast(u32)modelMatrix_offset_in_transfer;//cast(u32)vertex_bytes + cast(u32)index_bytes;
+
+    modelMatrixRegion := sdl.GPUBufferRegion{};
+    modelMatrixRegion.buffer = renderer.geometry.modelMatrixBuffer;
+    modelMatrixRegion.size = cast(u32)modelMatrix_bytes;
+    modelMatrixRegion.offset = 0;
+    // Upload ModelMatrix
+    sdl.UploadToGPUBuffer(copyPass, modelMatrixLocation, modelMatrixRegion, true);
 
     // MATERIALS BUFFER UPLOAD
     materialsLocation:= sdl.GPUTransferBufferLocation{};   
@@ -249,17 +269,9 @@ uploadCollisionGeometry::proc(renderer: ^Renderer){
     indexBufferInfo.usage = {.INDEX};
     renderer.geometry.collisionIndexBuffer= sdl.CreateGPUBuffer(renderer.gpu.device, indexBufferInfo);
 
-    modelMatrix_bytes := len(renderer.geometry.allModelMatrix) * size_of(matrix[4,4]f32);
-
-    modelMatrixBufferInfo := sdl.GPUBufferCreateInfo{};
-    modelMatrixBufferInfo.size = cast(u32)modelMatrix_bytes;
-    modelMatrixBufferInfo.usage = {.GRAPHICS_STORAGE_READ};
-    renderer.geometry.modelMatrixBuffer= sdl.CreateGPUBuffer(renderer.gpu.device, modelMatrixBufferInfo);
-
     vertex_offset_in_transfer := 0
     index_offset_in_transfer  := alignUp(vertex_bytes, 256)
-    modelMatrix_offset_in_transfer := alignUp(index_offset_in_transfer + index_bytes, 256)
-    total_transfer_size := modelMatrix_offset_in_transfer + modelMatrix_bytes
+    total_transfer_size := index_offset_in_transfer + index_bytes
 
     // Transfer Buffer 
     transferInfo := sdl.GPUTransferBufferCreateInfo{};
@@ -272,8 +284,6 @@ uploadCollisionGeometry::proc(renderer: ^Renderer){
     sdl.memcpy(data, raw_data(renderer.geometry.allCollisionVertices), cast(uint)vertex_bytes);
     // Index copy
     sdl.memcpy(data[index_offset_in_transfer:], raw_data(renderer.geometry.allCollisionIndices), cast(uint)index_bytes);
-    // Model Matrix
-    sdl.memcpy(data[modelMatrix_offset_in_transfer:], raw_data(renderer.geometry.allModelMatrix), cast(uint)modelMatrix_bytes);
 
     sdl.UnmapGPUTransferBuffer(renderer.gpu.device, transferBuffer);
 
@@ -305,18 +315,6 @@ uploadCollisionGeometry::proc(renderer: ^Renderer){
     indexRegion.offset = 0;
     // Upload Index
     sdl.UploadToGPUBuffer(copyPass, indexLocation, indexRegion, true);
-
-    // MODEL MATRIX BUFFER UPLOAD
-    modelMatrixLocation:= sdl.GPUTransferBufferLocation{};   
-    modelMatrixLocation.transfer_buffer = transferBuffer;
-    modelMatrixLocation.offset = cast(u32)modelMatrix_offset_in_transfer;//cast(u32)vertex_bytes + cast(u32)index_bytes;
-
-    modelMatrixRegion := sdl.GPUBufferRegion{};
-    modelMatrixRegion.buffer = renderer.geometry.modelMatrixBuffer;
-    modelMatrixRegion.size = cast(u32)modelMatrix_bytes;
-    modelMatrixRegion.offset = 0;
-    // Upload ModelMatrix
-    sdl.UploadToGPUBuffer(copyPass, modelMatrixLocation, modelMatrixRegion, true);
 
     sdl.EndGPUCopyPass(copyPass);
     if sdl.SubmitGPUCommandBuffer(buffer){

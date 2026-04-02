@@ -331,7 +331,9 @@ pushRenderableInBuffer::proc(mRenderer:^Renderer){
     buildGeometry(mRenderer);
     uploadGeometry(mRenderer);
     cacheTexture(mRenderer);
-    uploadCollisionGeometry(mRenderer);
+    if mRenderer.debugCollisionIsActive {
+        uploadCollisionGeometry(mRenderer);
+    }
 }
 
 

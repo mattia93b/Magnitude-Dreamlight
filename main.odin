@@ -20,34 +20,39 @@ main::proc(){
     // Data Manager Creation
     dataManager : magnitudeCore.DataManager;
     // Create Renderer
-    magnitudeCore.createRenderer(&dataManager);
+    magnitudeCore.createRenderer(&dataManager, true);
 
     // Load vertex shader
-    vertexShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/vertex.vert." + magnitudeCore.SHADER_EXT, .VERTEX, 1, 0);
+    vertexShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/vertex.vert." + magnitudeCore.SHADER_EXT, .VERTEX, 1, 1);
     // Load fragment shader
     fragmentShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/fragmentMaterialPBR.frag." + magnitudeCore.SHADER_EXT, .FRAGMENT, 2, 1, 16);
     // Load Light vertex shader
     lightVertexShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/light.vert." + magnitudeCore.SHADER_EXT, .VERTEX, 3, 0);
     // Load Light fragment shader
     lightFragmentShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/light.frag." + magnitudeCore.SHADER_EXT, .FRAGMENT, 0, 0);
-    // Load Collision vertex shader
-    CollisionVertexShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/vertexBoundigBox.vert." + magnitudeCore.SHADER_EXT, .VERTEX, 1, 1);
-    // Load Collision fragment shader
-    CollisionFragmentShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/fragmentBoundingBox.frag." + magnitudeCore.SHADER_EXT, .FRAGMENT, 0, 0);
-
-    // Load Light vertex shader
-    //instanceVertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/instanceVertex.vert." + SHADER_EXT, .VERTEX, 1, 0);
-    // Load Light fragment shader
-    //instanceFragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/instanceFragment.frag." + SHADER_EXT, .FRAGMENT, 2, 1);
-
+    
     // Create Graphic Pipeline
     //createGraphicPipeline(&mRenderer, vertexShader, fragmentShader);
     // New datamanger System
     magnitudeCore.createGraphicPipelineDataManager(&dataManager, vertexShaderIndex, fragmentShaderIndex);
     // Create Light Graphic Pipeline
     magnitudeCore.createGraphicPipelineDataManager(&dataManager, lightVertexShaderIndex, lightFragmentShaderIndex);
-    // Create Collision Graphic Pipeline
-    magnitudeCore.createDebugGraphicPipelineDataManager(&dataManager, CollisionVertexShaderIndex, CollisionFragmentShaderIndex);
+
+    if dataManager.renderer.debugCollisionIsActive{
+        // Load Collision vertex shader
+        CollisionVertexShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/vertexBoundigBox.vert." + magnitudeCore.SHADER_EXT, .VERTEX, 1, 1);
+        // Load Collision fragment shader
+        CollisionFragmentShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/fragmentBoundingBox.frag." + magnitudeCore.SHADER_EXT, .FRAGMENT, 0, 0);
+        // Create Collision Graphic Pipeline
+        magnitudeCore.createDebugGraphicPipelineDataManager(&dataManager, CollisionVertexShaderIndex, CollisionFragmentShaderIndex);
+    }
+    // Load Light vertex shader
+    //instanceVertexShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/instanceVertex.vert." + SHADER_EXT, .VERTEX, 1, 0);
+    // Load Light fragment shader
+    //instanceFragmentShader := loadShader(&mRenderer, "shaders/compiled/"+ DEFAULT_RENDER_API +"/instanceFragment.frag." + SHADER_EXT, .FRAGMENT, 2, 1);
+
+
+
     // Create Instance Graphic Pipeline
     //createGraphicPipeline(&mRenderer, instanceVertexShader, instanceFragmentShader);
 

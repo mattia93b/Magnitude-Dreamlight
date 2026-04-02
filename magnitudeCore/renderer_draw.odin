@@ -11,7 +11,7 @@ import "core:math/linalg"
 UBO::struct #align(16){
     projMat : matrix[4,4]f32,
     viewMat : matrix[4,4]f32,
-    modelMat : [100]matrix[4,4]f32,
+    //modelMat : [100]matrix[4,4]f32,
 }
 
 // Light info
@@ -78,11 +78,11 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
         viewMat = viewMat,
     }
 
-    n_to_copy := min(len(mRenderer.geometry.allModelMatrix), 100);
+    //n_to_copy := min(len(mRenderer.geometry.allModelMatrix), 100);
     
-    if n_to_copy > 0 {
-        copy(uniformBuffer.modelMat[:n_to_copy], mRenderer.geometry.allModelMatrix[:n_to_copy]);
-    }
+    //if n_to_copy > 0 {
+    //    copy(uniformBuffer.modelMat[:n_to_copy], mRenderer.geometry.allModelMatrix[:n_to_copy]);
+    //}
 
     //log.info("UNIFORM Model Matrix: ", uniformBuffer.modelMat[:]);
 
@@ -108,8 +108,10 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     bufferBindings[0].buffer = mRenderer.geometry.vertexBuffer;
     bufferBindings[0].offset = 0;
 
-    // Texture Bindings
+    // Buffer
+    sdl.BindGPUVertexStorageBuffers(renderPass, 0, &mRenderer.geometry.modelMatrixBuffer, 1);
 
+    // Texture Bindings
     for numOfTexturebinds := 0 ; numOfTexturebinds < len(mRenderer.scene.materialIndexForTexturebind); numOfTexturebinds = numOfTexturebinds + 1{
 
         begin := mRenderer.scene.materialIndexForTexturebind[numOfTexturebinds];
@@ -129,7 +131,7 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     // Light 
     // Bind pipeline
     sdl.BindGPUGraphicsPipeline(renderPass, mRenderer.gpu.graphicsPipeline[1]);
-    uniformBuffer.modelMat[0] = linalg.matrix4_translate_f32(mRenderer.scene.lightInfo.lightPosition.xyz);
+    //uniformBuffer.modelMat[0] = linalg.matrix4_translate_f32(mRenderer.scene.lightInfo.lightPosition.xyz);
     // Uniform 
     sdl.PushGPUVertexUniformData(buffer, 0, &uniformBuffer, size_of(uniformBuffer));
     sdl.BindGPUVertexBuffers(renderPass, 0, &bufferBindings[0], 1);
@@ -137,7 +139,7 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)mRenderer.scene.lightNumberOfIndexInBuffer, 1, 0, 0, 0);
 
     // Collision Boundig Box
-    //if mRenderer.debugCollisionIsActive {
+    if mRenderer.debugCollisionIsActive {
         // bind vertexBuffer
         collisionBufferBindings :[1]sdl.GPUBufferBinding;
         collisionBufferBindings[0].buffer = mRenderer.geometry.collisionBuffer;
@@ -151,7 +153,7 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
         sdl.BindGPUVertexBuffers(renderPass, 0, &collisionBufferBindings[0], 1);
         sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.geometry.collisionIndexBuffer}, ._32BIT);
         sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)len(mRenderer.geometry.allCollisionIndices[:]), 1, 0, 0, 0);
-    //}
+    }
    
 
 

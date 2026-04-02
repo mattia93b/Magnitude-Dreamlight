@@ -58,7 +58,7 @@ createGPUDevice::proc(mWindow:^sdl.Window) -> ^sdl.GPUDevice {
 }
 
 // Create Renderer and store in dataManager
-createRenderer::proc(dataManager:^DataManager) {
+createRenderer::proc(dataManager:^DataManager, debugCollisionIsActive:bool) {
 
     window := createWindow();
     gpuDevice :=  createGPUDevice(window);
@@ -69,6 +69,7 @@ createRenderer::proc(dataManager:^DataManager) {
     dataManager.window = window;
     dataManager.gpuDevice = gpuDevice;   
     dataManager.renderer = mRenderer;
+    dataManager.renderer.debugCollisionIsActive = debugCollisionIsActive;
 
     initRenderer(&dataManager.renderer, gpuDevice, window);
 }
