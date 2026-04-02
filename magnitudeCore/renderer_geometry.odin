@@ -1,5 +1,6 @@
 package magnitudeCore
 
+import "core:math/linalg/glsl"
 // logger
 import "core:log"
 // SDL3 bindings
@@ -248,9 +249,17 @@ uploadCollisionGeometry::proc(renderer: ^Renderer){
     indexBufferInfo.usage = {.INDEX};
     renderer.geometry.collisionIndexBuffer= sdl.CreateGPUBuffer(renderer.gpu.device, indexBufferInfo);
 
+    modelMatrix_bytes := len(renderer.geometry.allModelMatrix) * size_of(matrix[4,4]f32);
+
+    modelMatrixBufferInfo := sdl.GPUBufferCreateInfo{};
+    modelMatrixBufferInfo.size = cast(u32)modelMatrix_bytes;
+    modelMatrixBufferInfo.usage = {.GRAPHICS_STORAGE_READ};
+    renderer.geometry.modelMatrixBuffer= sdl.CreateGPUBuffer(renderer.gpu.device, modelMatrixBufferInfo);
+
     vertex_offset_in_transfer := 0
     index_offset_in_transfer  := alignUp(vertex_bytes, 256)
-    total_transfer_size := alignUp(index_offset_in_transfer + index_bytes, 256)
+    modelMatrix_offset_in_transfer := alignUp(index_offset_in_transfer + index_bytes, 256)
+    total_transfer_size := modelMatrix_offset_in_transfer + modelMatrix_bytes
 
     // Transfer Buffer 
     transferInfo := sdl.GPUTransferBufferCreateInfo{};
@@ -263,6 +272,8 @@ uploadCollisionGeometry::proc(renderer: ^Renderer){
     sdl.memcpy(data, raw_data(renderer.geometry.allCollisionVertices), cast(uint)vertex_bytes);
     // Index copy
     sdl.memcpy(data[index_offset_in_transfer:], raw_data(renderer.geometry.allCollisionIndices), cast(uint)index_bytes);
+    // Model Matrix
+    sdl.memcpy(data[modelMatrix_offset_in_transfer:], raw_data(renderer.geometry.allModelMatrix), cast(uint)modelMatrix_bytes);
 
     sdl.UnmapGPUTransferBuffer(renderer.gpu.device, transferBuffer);
 
@@ -282,7 +293,7 @@ uploadCollisionGeometry::proc(renderer: ^Renderer){
     // Upload Vertex
     sdl.UploadToGPUBuffer(copyPass, vertexLocation, vertexRegion, true);
 
-
+    
     // INDEX BUFFER UPLOAD
     indexLocation:= sdl.GPUTransferBufferLocation{};
     indexLocation.transfer_buffer = transferBuffer;
@@ -295,6 +306,18 @@ uploadCollisionGeometry::proc(renderer: ^Renderer){
     // Upload Index
     sdl.UploadToGPUBuffer(copyPass, indexLocation, indexRegion, true);
 
+    // MODEL MATRIX BUFFER UPLOAD
+    modelMatrixLocation:= sdl.GPUTransferBufferLocation{};   
+    modelMatrixLocation.transfer_buffer = transferBuffer;
+    modelMatrixLocation.offset = cast(u32)modelMatrix_offset_in_transfer;//cast(u32)vertex_bytes + cast(u32)index_bytes;
+
+    modelMatrixRegion := sdl.GPUBufferRegion{};
+    modelMatrixRegion.buffer = renderer.geometry.modelMatrixBuffer;
+    modelMatrixRegion.size = cast(u32)modelMatrix_bytes;
+    modelMatrixRegion.offset = 0;
+    // Upload ModelMatrix
+    sdl.UploadToGPUBuffer(copyPass, modelMatrixLocation, modelMatrixRegion, true);
+
     sdl.EndGPUCopyPass(copyPass);
     if sdl.SubmitGPUCommandBuffer(buffer){
         log.info("Submit buffert to GPU succesfully", true);
@@ -302,6 +325,27 @@ uploadCollisionGeometry::proc(renderer: ^Renderer){
 
     sdl.ReleaseGPUTransferBuffer(renderer.gpu.device, transferBuffer);
 
+}
+
+uploadModelMatrices :: proc(renderer: ^Renderer, buffer: ^sdl.GPUCommandBuffer) {
+    model_bytes := len(renderer.geometry.allModelMatrix) * size_of(matrix[4,4]f32)
+    if model_bytes == 0 do return
+
+    transferInfo := sdl.GPUTransferBufferCreateInfo{ size = cast(u32)model_bytes, usage = .UPLOAD }
+    tb := sdl.CreateGPUTransferBuffer(renderer.gpu.device, transferInfo)
+
+    data := transmute([^]byte)sdl.MapGPUTransferBuffer(renderer.gpu.device, tb, false)
+    sdl.memcpy(data, raw_data(renderer.geometry.allModelMatrix), cast(uint)model_bytes)
+    sdl.UnmapGPUTransferBuffer(renderer.gpu.device, tb)
+
+    // Use the passed-in buffer — no separate acquire/submit
+    cp := sdl.BeginGPUCopyPass(buffer)
+    loc := sdl.GPUTransferBufferLocation{ transfer_buffer = tb }
+    reg := sdl.GPUBufferRegion{ buffer = renderer.geometry.modelMatrixBuffer, size = cast(u32)model_bytes }
+    sdl.UploadToGPUBuffer(cp, loc, reg, true)
+    sdl.EndGPUCopyPass(cp)
+
+    sdl.ReleaseGPUTransferBuffer(renderer.gpu.device, tb)
 }
 
 
@@ -318,5 +362,5 @@ addLight::proc(mRenderer:^Renderer, lightPos:linalg.Vector3f32, color:linalg.Vec
     mRenderer.scene.lightInfo.lightPosition = {lightPos.x, lightPos.y, lightPos.z, 0.0};
     mRenderer.scene.lightInfo.lightColor     = color;
     mRenderer.scene.lightInfo.lightIntensity = {intensity, intensity, intensity, 1.0};
-    append(&mRenderer.scene.light, createColoredSphere(lightPos.x, lightPos.y, lightPos.z, 0.25, 25.0, 25.0, 0, is_Static = false));
+    append(&mRenderer.scene.light, createColoredSphere(lightPos.x, lightPos.y, lightPos.z, 0.25, 25.0, 25.0,{0,0,0}, 0, 1.0, 0, is_Static = false));
 }

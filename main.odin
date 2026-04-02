@@ -31,7 +31,7 @@ main::proc(){
     // Load Light fragment shader
     lightFragmentShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/light.frag." + magnitudeCore.SHADER_EXT, .FRAGMENT, 0, 0);
     // Load Collision vertex shader
-    CollisionVertexShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/vertexBoundigBox.vert." + magnitudeCore.SHADER_EXT, .VERTEX, 3, 0);
+    CollisionVertexShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/vertexBoundigBox.vert." + magnitudeCore.SHADER_EXT, .VERTEX, 1, 1);
     // Load Collision fragment shader
     CollisionFragmentShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/fragmentBoundingBox.frag." + magnitudeCore.SHADER_EXT, .FRAGMENT, 0, 0);
 

@@ -1,3 +1,5 @@
+// MODEL MATRIX BUFFER
+StructuredBuffer<float4x4> modelMatrixBuffer : register(t0, space0);
 // INPUT
 struct SPIRV_Cross_Input
 {
@@ -23,7 +25,7 @@ SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
     float3 a_position = stage_input.a_position;
     uint safeIndex = min((uint)stage_input.modelMatrixIndex, MAX_OBJECTS - 1);
 
-    float4 worldPos     = mul(u_ModelMatrix[safeIndex], float4(a_position, 1.0f));
+    float4 worldPos     = mul(modelMatrixBuffer[safeIndex], float4(a_position, 1.0f));
     float4 viewPos      = mul(u_ViewMatrix, worldPos);
     float4 gl_Position  = mul(u_ProjectionMatrix, viewPos);
 

@@ -16,7 +16,7 @@ Player::struct{
 
 playerInit::proc(dataManager: ^DataManager, x:f32,y:f32,z:f32, materialID:u32) -> Player{
     player := Player{};
-    player.renderableID = createCube(dataManager, x,y,z, 1.0, 1.0, 1.0,  materialID, is_Static = false);
+    player.renderableID = createCube(dataManager, x,y,z, 1.0, 1.0, 1.0, {0, 0, 0}, 0, {1, 1, 1} ,materialID, is_Static = false);
     player.speed = 8.0;
     player.yaw = 0.0;
     player.pitch = 30.0;

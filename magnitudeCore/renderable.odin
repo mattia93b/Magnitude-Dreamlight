@@ -41,7 +41,13 @@ setVelocity::proc(Vx:f32, Vy:f32, Vz:f32, renderable:^Renderable){
     renderable.velocity = {Vx, Vy, Vz};
 }
 
-createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, depth:f32, materialID:u32, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, is_ground:bool = false, has_gravity:bool = false) -> Renderable {
+createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, 
+    width:f32, height:f32, depth:f32, 
+    rotation: linalg.Vector3f32,
+    angleRotation : f32,
+    scale: linalg.Vector3f32,
+    materialID:u32, 
+    velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, is_ground:bool = false, has_gravity:bool = false) -> Renderable {
 
     // RENDERABLE
     cube := Renderable{}
@@ -171,7 +177,7 @@ createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, dep
     cube.materialID = materialID;
 
     // MODEL MATRIX
-    cube.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos});
+    cube.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos}) * linalg.matrix4_rotate_f32(angleRotation, rotation) * linalg.matrix4_scale_f32(scale);
 
     // POSITION
     cube.position = {xPos, yPos, zPos};
@@ -215,7 +221,13 @@ createColoredCube::proc(xPos:f32, yPos:f32, zPos:f32, width:f32, height:f32, dep
 }
 
 
-createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, materialID:u32, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, has_gravity:bool = false)  -> Renderable {
+createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32,
+    radius:f64, stackCount:int, sectorCount:int, 
+    rotation: linalg.Vector3f32,
+    angleRotation : f32,
+    scale: linalg.Vector3f32,
+    materialID:u32, 
+    velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, has_gravity:bool = false)  -> Renderable {
     
     sphere := Renderable{};
 
@@ -312,7 +324,7 @@ createColoredSphere::proc(xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:i
     sphere.materialID = materialID;
 
     // MODEL MATRIX
-    sphere.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos});
+    sphere.modelMatrix = linalg.matrix4_translate_f32({xPos, yPos, zPos}) * linalg.matrix4_rotate_f32(angleRotation, rotation) * linalg.matrix4_scale_f32(scale);
 
     // POSITION
     sphere.position = {xPos, yPos, zPos};

@@ -20,6 +20,7 @@ GeometryBuffers :: struct {
     vertexBuffer            : ^sdl.GPUBuffer,
     indexBuffer             : ^sdl.GPUBuffer,
     materialBuffer          : ^sdl.GPUBuffer,
+    modelMatrixBuffer   : ^sdl.GPUBuffer,
     collisionBuffer         : ^sdl.GPUBuffer,
     collisionIndexBuffer    : ^sdl.GPUBuffer,
     allVertices             : [dynamic]Vertex,

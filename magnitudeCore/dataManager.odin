@@ -89,15 +89,27 @@ createShader::proc(dataManager:^DataManager, path:cstring, stage:sdl.GPUShaderSt
     return shaderID;
 }
 
-createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, width:f32, height:f32, depth:f32, materialID:u32 = 0, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, is_ground:bool = false, has_gravity:bool = false) -> u32 {
-    box := createColoredCube(x, y, z, width, height, depth, materialID, velocity, is_Static, is_ground = is_ground, has_gravity = has_gravity);
+createCube::proc(dataManager:^DataManager, x:f32, y:f32, z:f32, 
+    width:f32, height:f32, depth:f32, 
+    rotation: linalg.Vector3f32 = {0, 0, 0},
+    angleRotation : f32 = 0,
+    scale: linalg.Vector3f32 = {1, 1, 1},
+    materialID:u32 = 0, 
+    velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, is_ground:bool = false, has_gravity:bool = false) -> u32 {
+    box := createColoredCube(x, y, z, width, height, depth, rotation, angleRotation, scale, materialID, velocity, is_Static, is_ground = is_ground, has_gravity = has_gravity);
     mapIndex := cast(u32)len(dataManager.renderer.scene.renderableMap);
     dataManager.renderer.scene.renderableMap[mapIndex] = box;
     return mapIndex;
 }
 
-createSphere::proc(dataManager:^DataManager, xPos:f32, yPos:f32, zPos:f32, radius:f64, stackCount:int, sectorCount:int, materialID:u32 = 0, velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, has_gravity:bool = false)  -> u32 {
-    sphere := createColoredSphere(xPos, yPos, zPos, radius, stackCount, sectorCount, materialID, velocity, is_Static, has_gravity = has_gravity);
+createSphere::proc(dataManager:^DataManager, xPos:f32, yPos:f32, zPos:f32,
+    radius:f64, stackCount:int, sectorCount:int,
+    rotation: linalg.Vector3f32 = {0, 0, 0},
+    angleRotation : f32 = 0,
+    scale: linalg.Vector3f32 = {1, 1, 1},
+    materialID:u32 = 0, 
+    velocity:linalg.Vector3f32={0,0,0}, is_Static:bool = true, has_gravity:bool = false)  -> u32 {
+    sphere := createColoredSphere(xPos, yPos, zPos, radius, stackCount, sectorCount,rotation, angleRotation, scale, materialID, velocity, is_Static, has_gravity = has_gravity);
     mapIndex := cast(u32)len(dataManager.renderer.scene.renderableMap);
     dataManager.renderer.scene.renderableMap[mapIndex] = sphere;
     return mapIndex;

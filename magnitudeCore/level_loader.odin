@@ -147,6 +147,9 @@ loadLevel :: proc(dataManager: ^DataManager, path: string) -> (result: LevelLoad
                         }
                     }
                     id := createCube(dataManager, pos.x, pos.y, pos.z, w, h, d,
+                        {0, 1, 0},
+                        0,
+                        {1, 1, 1},
                         mat_id, vel, is_static, is_ground, has_gravity)
                     log.infof("[LevelLoader] Cube '%s' → id %d", _json_str(obj, "name", "?"), id)
 
@@ -156,6 +159,9 @@ loadLevel :: proc(dataManager: ^DataManager, path: string) -> (result: LevelLoad
                     sector_count := int(_json_int(obj, "sector_count", 25))
                     id := createSphere(dataManager, pos.x, pos.y, pos.z,
                         radius, stack_count, sector_count,
+                        {0, 1, 0},
+                        0,
+                        {1, 1, 1},
                         mat_id, vel, is_static, has_gravity)
                     log.infof("[LevelLoader] Sphere '%s' → id %d", _json_str(obj, "name", "?"), id)
 

@@ -37,7 +37,12 @@ _syncModelMatrices :: proc(renderer: ^Renderer) {
 
 update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
 
+    // Update Renderable position
+    _syncModelMatrices(mRenderer);
+
     buffer := sdl.AcquireGPUCommandBuffer(mRenderer.gpu.device);
+
+    uploadModelMatrices(mRenderer, buffer);
 
     // get the swapchain texture
     swapChainTexture : ^sdl.GPUTexture;
@@ -64,9 +69,6 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     // Update camera
     //updateCamera(mRenderer, &mRenderer.input, deltatime);
     viewMat := linalg.matrix4_look_at_f32(mRenderer.camera.position, mRenderer.camera.position + mRenderer.camera.front, mRenderer.camera.up);
-
-    // Update Renderable position
-    _syncModelMatrices(mRenderer);
 
     // Get Windows size to calculate the projection Matrix
     win_size:[2]i32;
@@ -134,7 +136,6 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     sdl.BindGPUIndexBuffer(renderPass, {buffer = mRenderer.geometry.indexBuffer}, ._32BIT);
     sdl.DrawGPUIndexedPrimitives(renderPass, cast(u32)mRenderer.scene.lightNumberOfIndexInBuffer, 1, 0, 0, 0);
 
-
     // Collision Boundig Box
     //if mRenderer.debugCollisionIsActive {
         // bind vertexBuffer
@@ -143,6 +144,8 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
         collisionBufferBindings[0].offset = 0;
         // Bind pipeline
         sdl.BindGPUGraphicsPipeline(renderPass, mRenderer.gpu.graphicsPipeline[2]);
+        // Buffer
+        sdl.BindGPUVertexStorageBuffers(renderPass, 0, &mRenderer.geometry.modelMatrixBuffer, 1);
         // Uniform 
         sdl.PushGPUVertexUniformData(buffer, 0, &uniformBuffer, size_of(uniformBuffer));
         sdl.BindGPUVertexBuffers(renderPass, 0, &collisionBufferBindings[0], 1);
