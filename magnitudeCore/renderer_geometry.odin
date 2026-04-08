@@ -166,11 +166,19 @@ uploadGeometry::proc(renderer: ^Renderer){
     materialsBufferInfo.usage = {.GRAPHICS_STORAGE_READ};
     renderer.geometry.materialBuffer= sdl.CreateGPUBuffer(renderer.gpu.device, materialsBufferInfo);
 
+    lights_bytes := len(renderer.scene.lightInfo) * size_of(LightInfo);
+
+    lightsBufferInfo := sdl.GPUBufferCreateInfo{};
+    lightsBufferInfo.size = cast(u32)lights_bytes;
+    lightsBufferInfo.usage = {.GRAPHICS_STORAGE_READ};
+    renderer.scene.lightBuffer= sdl.CreateGPUBuffer(renderer.gpu.device, lightsBufferInfo);
+
     vertex_offset_in_transfer := 0
     index_offset_in_transfer  := alignUp(vertex_bytes, 256)
     modelMatrix_offset_in_transfer := alignUp(index_offset_in_transfer + index_bytes, 256)
-    materials_offset_in_transfer := alignUp(modelMatrix_offset_in_transfer + index_bytes, 256)
-    total_transfer_size := materials_offset_in_transfer + materials_bytes
+    materials_offset_in_transfer := alignUp(modelMatrix_offset_in_transfer + modelMatrix_bytes, 256)
+    lights_offser_in_transfer := alignUp(materials_offset_in_transfer + materials_bytes, 256)
+    total_transfer_size := lights_offser_in_transfer + lights_bytes
 
     // Transfer Buffer 
     transferInfo := sdl.GPUTransferBufferCreateInfo{};
@@ -183,10 +191,12 @@ uploadGeometry::proc(renderer: ^Renderer){
     sdl.memcpy(data, raw_data(renderer.geometry.allVertices), cast(uint)vertex_bytes);
     // Index copy
     sdl.memcpy(data[index_offset_in_transfer:], raw_data(renderer.geometry.allIndices), cast(uint)index_bytes);
-    // Model Matrix
+    // Model Matrix copy
     sdl.memcpy(data[modelMatrix_offset_in_transfer:], raw_data(renderer.geometry.allModelMatrix), cast(uint)modelMatrix_bytes);
     // Materials copy
     sdl.memcpy(data[materials_offset_in_transfer:], raw_data(renderer.geometry.allMaterials), cast(uint)materials_bytes);
+    // Lights copy
+    sdl.memcpy(data[lights_offser_in_transfer:], raw_data(renderer.scene.lightInfo), cast(uint)lights_bytes);
 
     sdl.UnmapGPUTransferBuffer(renderer.gpu.device, transferBuffer);
 
@@ -205,7 +215,6 @@ uploadGeometry::proc(renderer: ^Renderer){
     vertexRegion.offset = 0;
     // Upload Vertex
     sdl.UploadToGPUBuffer(copyPass, vertexLocation, vertexRegion, true);
-
 
     // INDEX BUFFER UPLOAD
     indexLocation:= sdl.GPUTransferBufferLocation{};
@@ -242,6 +251,18 @@ uploadGeometry::proc(renderer: ^Renderer){
     materialsRegion.offset = 0;
     // Upload Materials
     sdl.UploadToGPUBuffer(copyPass, materialsLocation, materialsRegion, true);
+
+    // LIGHTS BUFFER UPLOAD
+    lightsLocation:= sdl.GPUTransferBufferLocation{};   
+    lightsLocation.transfer_buffer = transferBuffer;
+    lightsLocation.offset = cast(u32)lights_offser_in_transfer;//cast(u32)vertex_bytes + cast(u32)index_bytes;
+
+    lightsRegion := sdl.GPUBufferRegion{};
+    lightsRegion.buffer = renderer.scene.lightBuffer;
+    lightsRegion.size = cast(u32)lights_bytes;
+    lightsRegion.offset = 0;
+    // Upload Lights
+    sdl.UploadToGPUBuffer(copyPass, lightsLocation, lightsRegion, true);
 
     sdl.EndGPUCopyPass(copyPass);
     if sdl.SubmitGPUCommandBuffer(buffer){
@@ -351,14 +372,23 @@ uploadModelMatrices :: proc(renderer: ^Renderer, buffer: ^sdl.GPUCommandBuffer) 
 
 initLight::proc(renderer: ^Renderer){
     // Light set up
-    renderer.scene.lightInfo.lightPosition = {0.0, 15.0, -10.0, 0.0};
-    renderer.scene.lightInfo.lightColor = {1.0, 1.0, 1.0, 1.0};
-    renderer.scene.lightInfo.lightIntensity = {1000.0, 1000.0, 1000.0, 1000.0};
+    light := LightInfo{
+        lightPosition = {0.0, 15.0, -10.0, 0.0},
+        lightColor = {1.0, 1.0, 1.0, 1.0},
+        lightIntensity = {1000.0, 1000.0, 1000.0, 1000.0}
+    }
+
+    append(&renderer.scene.lightInfo, light);
 }
 
 addLight::proc(mRenderer:^Renderer, lightPos:linalg.Vector3f32, color:linalg.Vector4f32 = {1.0, 1.0, 1.0, 1.0}, intensity:f32 = 1000.0){
-    mRenderer.scene.lightInfo.lightPosition = {lightPos.x, lightPos.y, lightPos.z, 0.0};
-    mRenderer.scene.lightInfo.lightColor     = color;
-    mRenderer.scene.lightInfo.lightIntensity = {intensity, intensity, intensity, 1.0};
-    append(&mRenderer.scene.light, createColoredSphere(lightPos.x, lightPos.y, lightPos.z, 0.25, 25.0, 25.0,{0,0,0}, 0, 1.0, 0, is_Static = false));
+    light := LightInfo{
+        lightPosition = {lightPos.x, lightPos.y, lightPos.z, 0.0},
+        lightColor = color,
+        lightIntensity = {intensity, intensity, intensity, 1.0}
+    }
+
+    append(&mRenderer.scene.lightInfo, light);
+
+    append(&mRenderer.scene.light, createColoredSphere(lightPos.x, lightPos.y, lightPos.z, 0.25, 25.0, 25.0,{0,1,0}, 0, 1.0, 0, is_Static = false));
 }

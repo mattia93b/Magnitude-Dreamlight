@@ -103,12 +103,12 @@ updateCamera :: proc(mRenderer: ^Renderer, state: ^mouseKeyboardInput, dt: f32){
     if state.keys[.E] do cam.position += cam.up * speed;
     if state.keys[.Q] do cam.position -= cam.up * speed;
     
-    if state.keys[.DOWN] do mRenderer.scene.lightInfo.lightPosition.z += speed;
+    /*if state.keys[.DOWN] do mRenderer.scene.lightInfo.lightPosition.z += speed;
     if state.keys[.UP] do mRenderer.scene.lightInfo.lightPosition.z -= speed;
     if state.keys[.RIGHT] do mRenderer.scene.lightInfo.lightPosition.x += speed;
     if state.keys[.LEFT] do mRenderer.scene.lightInfo.lightPosition.x -= speed;
     if state.keys[.PAGEUP] do mRenderer.scene.lightInfo.lightPosition.y += speed;
-    if state.keys[.PAGEDOWN] do mRenderer.scene.lightInfo.lightPosition.y -= speed;
+    if state.keys[.PAGEDOWN] do mRenderer.scene.lightInfo.lightPosition.y -= speed;*/
 }
 
 
@@ -148,12 +148,12 @@ updateThirdPersonCamera :: proc(player: ^Player, dataManager: ^DataManager, inpu
 
     // light movement
     speed : f32 = 10 * dt;
-    if input.keys[.DOWN] do renderer.scene.lightInfo.lightPosition.z += speed;
+    /*if input.keys[.DOWN] do renderer.scene.lightInfo.lightPosition.z += speed;
     if input.keys[.UP] do renderer.scene.lightInfo.lightPosition.z -= speed;
     if input.keys[.RIGHT] do renderer.scene.lightInfo.lightPosition.x += speed;
     if input.keys[.LEFT] do renderer.scene.lightInfo.lightPosition.x -= speed;
     if input.keys[.PAGEUP] do renderer.scene.lightInfo.lightPosition.y += speed;
-    if input.keys[.PAGEDOWN] do renderer.scene.lightInfo.lightPosition.y -= speed;
+    if input.keys[.PAGEDOWN] do renderer.scene.lightInfo.lightPosition.y -= speed;*/
 
 }
 

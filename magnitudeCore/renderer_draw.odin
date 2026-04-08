@@ -93,14 +93,15 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     sdl.PushGPUVertexUniformData(buffer, 0, &uniformBuffer, size_of(uniformBuffer));
     
     // Light Uniform 
-    sdl.PushGPUFragmentUniformData(buffer, 0, &mRenderer.scene.lightInfo, size_of(LightInfo));
+    lightNumber := cast(u32)len(mRenderer.scene.lightInfo);
+    sdl.PushGPUFragmentUniformData(buffer, 0, &lightNumber, size_of(u32));
 
     // Camera Uniform
     camera:= linalg.Vector4f32{mRenderer.camera.position.x, mRenderer.camera.position.y, mRenderer.camera.position.z, 0.0};
 
     sdl.PushGPUFragmentUniformData(buffer, 1, &camera, size_of(camera));
 
-
+    // Materia Buffer
     sdl.BindGPUFragmentStorageBuffers(renderPass, 0, &mRenderer.geometry.materialBuffer, 1);
 
     // bind vertexBuffer
@@ -108,8 +109,10 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     bufferBindings[0].buffer = mRenderer.geometry.vertexBuffer;
     bufferBindings[0].offset = 0;
 
-    // Buffer
+    // Model Matrix Buffer
     sdl.BindGPUVertexStorageBuffers(renderPass, 0, &mRenderer.geometry.modelMatrixBuffer, 1);
+    // Lights Buffer
+    sdl.BindGPUFragmentStorageBuffers(renderPass, 1, &mRenderer.scene.lightBuffer, 1);
 
     // Texture Bindings
     for numOfTexturebinds := 0 ; numOfTexturebinds < len(mRenderer.scene.materialIndexForTexturebind); numOfTexturebinds = numOfTexturebinds + 1{
@@ -132,6 +135,8 @@ update::proc(mRenderer:^Renderer, deltatime:f32) -> bool{
     // Bind pipeline
     sdl.BindGPUGraphicsPipeline(renderPass, mRenderer.gpu.graphicsPipeline[1]);
     //uniformBuffer.modelMat[0] = linalg.matrix4_translate_f32(mRenderer.scene.lightInfo.lightPosition.xyz);
+    // Model Matrix Buffer
+    sdl.BindGPUVertexStorageBuffers(renderPass, 0, &mRenderer.geometry.modelMatrixBuffer, 1);
     // Uniform 
     sdl.PushGPUVertexUniformData(buffer, 0, &uniformBuffer, size_of(uniformBuffer));
     sdl.BindGPUVertexBuffers(renderPass, 0, &bufferBindings[0], 1);

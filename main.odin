@@ -25,9 +25,9 @@ main::proc(){
     // Load vertex shader
     vertexShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/vertex.vert." + magnitudeCore.SHADER_EXT, .VERTEX, 1, 1);
     // Load fragment shader
-    fragmentShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/fragmentMaterialPBR.frag." + magnitudeCore.SHADER_EXT, .FRAGMENT, 2, 1, 16);
+    fragmentShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/fragmentMaterialPBR.frag." + magnitudeCore.SHADER_EXT, .FRAGMENT, 2, 2, 16);
     // Load Light vertex shader
-    lightVertexShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/light.vert." + magnitudeCore.SHADER_EXT, .VERTEX, 3, 0);
+    lightVertexShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/light.vert." + magnitudeCore.SHADER_EXT, .VERTEX, 1, 1);
     // Load Light fragment shader
     lightFragmentShaderIndex := magnitudeCore.createShader(&dataManager, "shaders/compiled/"+ magnitudeCore.DEFAULT_RENDER_API +"/light.frag." + magnitudeCore.SHADER_EXT, .FRAGMENT, 0, 0);
     
@@ -243,8 +243,9 @@ main::proc(){
 
     sphere1Id := magnitudeCore.createSphere(&dataManager, -10.0, 10.0, -15.0, 1.5, 25.0, 25.0, defaultMaterial, {0,0,0}, false, has_gravity = true);
 
-    magnitudeCore.addLightToScene(&dataManager, {0.0, 15.0, 10.0});
+    magnitudeCore.addLightToScene(&dataManager, {-5.0, 15.0, 10.0});
 
+    magnitudeCore.addLightToScene(&dataManager, {5.0, 15.0, 10.0});
 
     player := magnitudeCore.playerInit(&dataManager, 0.0, 10, -10.0, defaultMaterial);
 

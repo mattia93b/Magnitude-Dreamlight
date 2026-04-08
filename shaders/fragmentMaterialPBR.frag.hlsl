@@ -9,11 +9,19 @@ struct Material
     uint texture_idx_ao;
 };
 
+struct PointLight {
+    float4 position;
+    float4 color;
+    float4 intensity;
+};
+
 // TEXTURE
 Texture2D u_Textures[16] : register(t0, space2);
 SamplerState u_Sampler   : register(s0, space2);
 // MATERIAL BUFFER
 StructuredBuffer<Material> materials : register(t16, space2);
+// LIGHT BUFFER
+StructuredBuffer<PointLight> lights : register(t17, space2);
 
 // INPUT
 struct SPIRV_Cross_Input
@@ -30,9 +38,7 @@ struct SPIRV_Cross_Output
 };
 // UNIFORMS
 cbuffer lightInfo : register(b0, space3){
-    float4 u_lightPosition :  packoffset(c0);
-    float4 u_lightColor :     packoffset(c1);
-    float4 u_lightIntensity : packoffset(c2);
+    uint u_lightCount :  packoffset(c0);
 };
 
 cbuffer cameraInfo : register(b1, space3){
@@ -116,29 +122,35 @@ SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input)
     //F0 = materials[index].specular_color;
     F0 = lerp(F0, albedo, metallic);
 
-    float3 L = normalize(u_lightPosition.xyz - stage_input.v_position);
-    float3 H = normalize(V + L);
-    
-    float distance = length(u_lightPosition.xyz - stage_input.v_position);
-    float attenuation = 1.0 / (distance * distance);
-    //float attenuation = 1.0;
-    float3 radiance = u_lightColor.xyz * u_lightIntensity.x * attenuation;
+    float3 Lo = float3(0.0, 0.0, 0.0);
 
-    float NDF = DistributionGGX(N, H, roughness);   
-    float G   = GeometrySmith(N, V, L, roughness);    
-    float3 F  = FresnelSchlick(max(dot(H, V), 0.0), F0);      
+    for (uint i = 0; i < u_lightCount; i++) {
+        float3 lightPos   = lights[i].position.xyz;
+        float3 lightColor = lights[i].color.rgb;
+        float  intensity  = lights[i].intensity.x;
 
-    float3 numerator    = NDF * G * F; 
-    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
-    float3 specular = numerator / denominator;
+        float3 L = normalize(lightPos - stage_input.v_position);
+        float3 H = normalize(V + L);
 
-    float3 kS = F;
-    float3 kD = float3(1.0, 1.0, 1.0) - kS;
-    kD *= 1.0 - metallic;
+        float dist        = length(lightPos - stage_input.v_position);
+        float attenuation = 1.0 / (dist * dist);
+        float3 radiance   = lightColor * intensity * attenuation;
 
-    float NdotL = max(dot(N, L), 0.0);
+        float  NDF = DistributionGGX(N, H, roughness);
+        float  G   = GeometrySmith(N, V, L, roughness);
+        float3 F   = FresnelSchlick(max(dot(H, V), 0.0), F0);
 
-    float3 Lo = (kD * albedo / PI + specular) * radiance * NdotL;
+        float3 numerator   = NDF * G * F;
+        float  denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
+        float3 specular    = numerator / denominator;
+
+        float3 kS = F;
+        float3 kD = float3(1.0, 1.0, 1.0) - kS;
+        kD *= 1.0 - metallic;
+
+        float NdotL = max(dot(N, L), 0.0);
+        Lo += (kD * albedo / PI + specular) * radiance * NdotL;
+    }
 
     float3 ambient = float3(0.03, 0.03, 0.03) * albedo * ao;
 

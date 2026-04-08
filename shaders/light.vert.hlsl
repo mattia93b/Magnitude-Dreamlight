@@ -1,3 +1,6 @@
+// MODEL MATRIX BUFFER
+StructuredBuffer<float4x4> modelMatrixBuffer : register(t0, space0);
+
 static float4 gl_Position;
 
 struct SPIRV_Cross_Input
@@ -25,7 +28,7 @@ cbuffer UniformBlock : register(b0, space1){
 
 SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input){
 
-    float4 worldPos = mul(ModelMatrix[stage_input.modelMatrixIndex], float4(stage_input.a_position, 1.0f));
+    float4 worldPos = mul(modelMatrixBuffer[stage_input.modelMatrixIndex], float4(stage_input.a_position, 1.0f));
     float4 viewPos  = mul(ViewMatrix, worldPos);
     gl_Position     = mul(ProjectionMatrix, viewPos);
     

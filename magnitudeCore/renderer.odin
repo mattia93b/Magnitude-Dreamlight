@@ -20,7 +20,7 @@ GeometryBuffers :: struct {
     vertexBuffer            : ^sdl.GPUBuffer,
     indexBuffer             : ^sdl.GPUBuffer,
     materialBuffer          : ^sdl.GPUBuffer,
-    modelMatrixBuffer   : ^sdl.GPUBuffer,
+    modelMatrixBuffer       : ^sdl.GPUBuffer,
     collisionBuffer         : ^sdl.GPUBuffer,
     collisionIndexBuffer    : ^sdl.GPUBuffer,
     allVertices             : [dynamic]Vertex,
@@ -38,7 +38,8 @@ SceneData :: struct {
     light                       : [dynamic]Renderable,
     material                    : [dynamic]TextureMaterialPBR,
     lightNumberOfIndexInBuffer  : int,
-    lightInfo                   : LightInfo,
+    lightInfo                   : [dynamic]LightInfo,
+    lightBuffer                 : ^sdl.GPUBuffer,
 }
 
 
